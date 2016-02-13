@@ -1,0 +1,7 @@
+# Go OWNERS, should be more specific in sub packages/modules.
+inherited: false
+owners:
+- bsiravara@vmware.com
+- jdsa@vmware.com
+- molteanu@vmware.com
+- hgadgil@vmware.com
