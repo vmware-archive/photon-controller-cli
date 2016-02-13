@@ -1,0 +1,7 @@
+Verified+1: Gerrit-Jenkins
+Code-Review+2: Adrian Schroeter <aschroeter@vmware.com>
+Submitted-by: Yin Ding <yding@vmware.com>
+Submitted-at: Fri, 12 Feb 2016 16:10:20 -0800
+Reviewed-on: https://review.ec.eng.vmware.com/11830
+Project: photon-controller-cli
+Branch: refs/heads/develop
