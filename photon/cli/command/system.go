@@ -36,6 +36,9 @@ type Deployment struct {
 	NTPEndpoint             interface{} `yaml:"ntp_endpoint"`
 	UseImageDatastoreForVms bool        `yaml:"use_image_datastore_for_vms"`
 	SyslogEndpoint          interface{} `yaml:"syslog_endpoint"`
+	StatsStoreEndpoint      string      `yaml:"stats_store_endpoint"`
+	StatsPort               int         `yaml:"stats_port"`
+	StatsEnabled            bool        `yaml:"stats_enabled"`
 	ImageDatastores         string      `yaml:"image_datastores"`
 	AuthEnabled             bool        `yaml:"auth_enabled"`
 	AuthEndpoint            string      `yaml:"oauth_endpoint"`
@@ -318,11 +321,19 @@ func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
 		Password:       dcMap.Deployment.AuthPassword,
 		SecurityGroups: dcMap.Deployment.AuthSecurityGroups,
 	}
+
+	statsInfo := &photon.StatsInfo{
+		Enabled:       dcMap.Deployment.StatsEnabled,
+		StoreEndpoint: dcMap.Deployment.StatsStoreEndpoint,
+		StorePort:     dcMap.Deployment.StatsPort,
+	}
+
 	deploymentSpec := &photon.DeploymentCreateSpec{
-		Auth:                    authInfo,
-		ImageDatastores:         regexp.MustCompile(`\s*,\s*`).Split(dcMap.Deployment.ImageDatastores, -1),
-		NTPEndpoint:             dcMap.Deployment.NTPEndpoint,
-		SyslogEndpoint:          dcMap.Deployment.SyslogEndpoint,
+		Auth:            authInfo,
+		ImageDatastores: regexp.MustCompile(`\s*,\s*`).Split(dcMap.Deployment.ImageDatastores, -1),
+		NTPEndpoint:     dcMap.Deployment.NTPEndpoint,
+		SyslogEndpoint:  dcMap.Deployment.SyslogEndpoint,
+		Stats:           statsInfo,
 		UseImageDatastoreForVms: dcMap.Deployment.UseImageDatastoreForVms,
 	}
 

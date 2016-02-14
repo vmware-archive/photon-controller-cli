@@ -166,11 +166,15 @@ func TestGetDeployment(t *testing.T) {
 	auth := &photon.AuthInfo{
 		Enabled: false,
 	}
+	stats := &photon.StatsInfo{
+		Enabled: false,
+	}
 	getStruct := photon.Deployment{
 		ImageDatastores: []string{"testname"},
 		ID:              "1",
 		Auth:            auth,
 		State:           "COMPLETED",
+		Stats:           stats,
 	}
 
 	response, err := json.Marshal(getStruct)

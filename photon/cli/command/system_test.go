@@ -77,6 +77,7 @@ func TestDeploy(t *testing.T) {
 	dcmap := `deployment:
   image_datastores: datastore1
   syslog_endpoint: 10.146.64.230
+  stats_store_endpoint: 10.146.64.111
   ntp_endpoint: 10.20.144.1
   use_image_datastore_for_vms: true
   auth_enabled: true
