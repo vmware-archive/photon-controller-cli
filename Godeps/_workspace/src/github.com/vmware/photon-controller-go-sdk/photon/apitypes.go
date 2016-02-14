@@ -67,8 +67,8 @@ type TaskTimeoutError struct {
 
 // Implement Go error interface for TaskTimeoutError.
 func (e TaskTimeoutError) Error() string {
-	return fmt.Sprintf("photon: Timed out waiting for task '%s'. "+
-		"Task may not be in error state, examine task for full details.", e.ID)
+	return fmt.Sprintf("photon: Timed out waiting for task '%s'. " +
+	"Task may not be in error state, examine task for full details.", e.ID)
 }
 
 // Represents an operation (Step) within a Task.
@@ -89,8 +89,8 @@ type Step struct {
 
 // Implement Go error interface for Step.
 func GetStep(s Step) string {
-	return fmt.Sprintf("{\"sequence\"=>\"%d\",\"state\"=>\"%s\",\"errors\"=>%s,\"warnings\"=>%s,\"operation\"=>\"%s\","+
-		"\"startedTime\"=>\"%d\",\"queuedTime\"=>\"%d\",\"endTime\"=>\"%d\",\"options\"=>%s}",
+	return fmt.Sprintf("{\"sequence\"=>\"%d\",\"state\"=>\"%s\",\"errors\"=>%s,\"warnings\"=>%s,\"operation\"=>\"%s\"," +
+	"\"startedTime\"=>\"%d\",\"queuedTime\"=>\"%d\",\"endTime\"=>\"%d\",\"options\"=>%s}",
 		s.Sequence, s.State, s.Errors, s.Warnings, s.Operation, s.StartedTime, s.QueuedTime,
 		s.EndTime, s.Options)
 
@@ -428,29 +428,38 @@ type Hosts struct {
 
 // Creation spec for deployments.
 type DeploymentCreateSpec struct {
-	NTPEndpoint             interface{} `json:"ntpEndpoint"`
-	UseImageDatastoreForVms bool        `json:"useImageDatastoreForVms"`
-	SyslogEndpoint          interface{} `json:"syslogEndpoint"`
-	ImageDatastores         []string    `json:"imageDatastores"`
-	Auth                    *AuthInfo   `json:"auth"`
+	NTPEndpoint             interface{}  `json:"ntpEndpoint"`
+	UseImageDatastoreForVms bool         `json:"useImageDatastoreForVms"`
+	SyslogEndpoint          interface{}  `json:"syslogEndpoint"`
+	Stats                   *StatsInfo   `json:"stats"`
+	ImageDatastores         []string     `json:"imageDatastores"`
+	Auth                    *AuthInfo    `json:"auth"`
 }
 
 // Represents a deployment
 type Deployment struct {
-	NTPEndpoint             string    `json:"ntpEndpoint,omitempty"`
-	UseImageDatastoreForVms bool      `json:"useImageDatastoreForVms,omitempty"`
-	Auth                    *AuthInfo `json:"auth"`
-	Kind                    string    `json:"kind"`
-	SyslogEndpoint          string    `json:"syslogEndpoint,omitempty"`
-	State                   string    `json:"state"`
-	ID                      string    `json:"id"`
-	ImageDatastores         []string  `json:"imageDatastores"`
-	SelfLink                string    `json:"selfLink"`
+	NTPEndpoint             string     `json:"ntpEndpoint,omitempty"`
+	UseImageDatastoreForVms bool       `json:"useImageDatastoreForVms,omitempty"`
+	Auth                    *AuthInfo  `json:"auth"`
+	Kind                    string     `json:"kind"`
+	SyslogEndpoint          string     `json:"syslogEndpoint,omitempty"`
+	Stats                   *StatsInfo `json:"stats,omitempty"`
+	State                   string     `json:"state"`
+	ID                      string     `json:"id"`
+	ImageDatastores         []string   `json:"imageDatastores"`
+	SelfLink                string     `json:"selfLink"`
 }
 
 // Represents multiple deployments returned by the API.
 type Deployments struct {
 	Items []Deployment `json:"items"`
+}
+
+// Represents stats information
+type StatsInfo struct {
+	Enabled       bool     `json:"enabled,omitempty"`
+	StoreEndpoint string   `json:"storeEndpoint,omitempty"`
+	StorePort     int      `json:"storePort,omitempty"`
 }
 
 // Represents authentication information
