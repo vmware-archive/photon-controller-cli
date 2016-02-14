@@ -5,12 +5,12 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strconv"
 	"text/tabwriter"
-
-	"github.com/vmware/photon-controller-cli/photon/cli/client"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
+	"github.com/vmware/photon-controller-cli/photon/cli/client"
 )
 
 // Creates a cli.Command for deployments
@@ -54,6 +54,10 @@ func GetDeploymentsCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "syslog_endpoint, s",
 						Usage: "Syslog Endpoint",
+					},
+					cli.StringFlag{
+						Name:  "stats_store_endpoint, s",
+						Usage: "Stats Store Endpoint",
 					},
 					cli.StringFlag{
 						Name:  "ntp_endpoint, n",
@@ -173,6 +177,9 @@ func createDeployment(c *cli.Context) error {
 	oauthUsername := c.String("oauth_username")
 	oauthPassword := c.String("oauth_password")
 	syslogEndpoint := c.String("syslog_endpoint")
+	statsStoreEndpoint := c.String("stats_store_endpoint")
+	enableStats := c.Bool("enable_stats")
+	statsStorePort := c.Int("stats_store_port")
 	ntpEndpoint := c.String("ntp_endpoint")
 	useDatastoreVMs := c.Bool("use_image_datastore_for_vms")
 	enableAuth := c.Bool("enable_auth")
@@ -204,6 +211,15 @@ func createDeployment(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		statsStoreEndpoint, err = askForInput("Stats Store Endpoint: ", statsStoreEndpoint)
+		if err != nil {
+			return err
+		}
+		statsStorePortString, err := askForInput("Stats Store Port: ", "")
+		statsStorePort, err = strconv.Atoi(statsStorePortString)
+		if err != nil {
+			return err
+		}
 		ntpEndpoint, err = askForInput("Ntp Endpoint: ", ntpEndpoint)
 		if err != nil {
 			return err
@@ -224,11 +240,18 @@ func createDeployment(c *cli.Context) error {
 		Password: oauthPassword,
 	}
 
+	statsInfo := &photon.StatsInfo{
+		Enabled:       enableStats,
+		StoreEndpoint: statsStoreEndpoint,
+		StorePort:     statsStorePort,
+	}
+
 	deploymentSpec := &photon.DeploymentCreateSpec{
-		Auth:                    authInfo,
-		ImageDatastores:         imageDatastoreList,
-		NTPEndpoint:             ntpEndpoint,
-		SyslogEndpoint:          syslogEndpoint,
+		Auth:            authInfo,
+		ImageDatastores: imageDatastoreList,
+		NTPEndpoint:     ntpEndpoint,
+		SyslogEndpoint:  syslogEndpoint,
+		Stats:           statsInfo,
 		UseImageDatastoreForVms: useDatastoreVMs,
 	}
 
@@ -366,14 +389,19 @@ func showDeployment(c *cli.Context) error {
 	if len(deployment.SyslogEndpoint) == 0 {
 		syslogEndpoint = "-"
 	}
+	statsStoreEndpoint := deployment.Stats.StoreEndpoint
+	if len(deployment.Stats.StoreEndpoint) == 0 {
+		statsStoreEndpoint = "-"
+	}
 	ntpEndpoint := deployment.NTPEndpoint
 	if len(deployment.NTPEndpoint) == 0 {
 		ntpEndpoint = "-"
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%t\t%t\t%s\t%s\t%s\t%s\n", deployment.ID, deployment.State, deployment.ImageDatastores,
-			deployment.UseImageDatastoreForVms, deployment.Auth.Enabled, authEndpoint, authTenant, syslogEndpoint, ntpEndpoint)
+		fmt.Printf("%s\t%s\t%s\t%t\t%t\t%s\t%s\t%s\t%s\t%t\t%s\t%d\n", deployment.ID, deployment.State, deployment.ImageDatastores,
+			deployment.UseImageDatastoreForVms, deployment.Auth.Enabled, authEndpoint, authTenant, syslogEndpoint,
+			ntpEndpoint, deployment.Stats.Enabled, statsStoreEndpoint, deployment.Stats.StorePort)
 
 	} else {
 		fmt.Printf("Deployment ID: %s\n", deployment.ID)
@@ -385,6 +413,9 @@ func showDeployment(c *cli.Context) error {
 		fmt.Printf("  Auth Tenant:                 %s\n\n", authTenant)
 		fmt.Printf("  Syslog Endpoint:             %s\n", syslogEndpoint)
 		fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
+		fmt.Printf("  Stats Enabled:               %t\n", deployment.Stats.Enabled)
+		fmt.Printf("  Stats Store Endpoint:        %s\n", statsStoreEndpoint)
+		fmt.Printf("  Stats Store Port:            %d\n", deployment.Stats.StorePort)
 	}
 
 	return nil
