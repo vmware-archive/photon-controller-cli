@@ -27,6 +27,7 @@ type Deployment struct {
 	NTPEndpoint             interface{} `yaml:"ntp_endpoint"`
 	UseImageDatastoreForVms bool        `yaml:"use_image_datastore_for_vms"`
 	SyslogEndpoint          interface{} `yaml:"syslog_endpoint"`
+	StatsStoreEndpoint      interface{} `yaml:"stats_store_endpoint"`
 	ImageDatastores         string      `yaml:"image_datastores"`
 	AuthEnabled             bool        `yaml:"auth_enabled"`
 	AuthEndpoint            string      `yaml:"oauth_endpoint"`
@@ -314,6 +315,7 @@ func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
 		ImageDatastores:         regexp.MustCompile(`\s*,\s*`).Split(dcMap.Deployment.ImageDatastores, -1),
 		NTPEndpoint:             dcMap.Deployment.NTPEndpoint,
 		SyslogEndpoint:          dcMap.Deployment.SyslogEndpoint,
+		StatsStoreEndpoint:      dcMap.Deployment.StatsStoreEndpoint,
 		UseImageDatastoreForVms: dcMap.Deployment.UseImageDatastoreForVms,
 	}
 

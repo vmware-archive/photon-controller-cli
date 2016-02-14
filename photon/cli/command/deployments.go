@@ -56,6 +56,10 @@ func GetDeploymentsCommand() cli.Command {
 						Usage: "Syslog Endpoint",
 					},
 					cli.StringFlag{
+						Name:  "stats_store_endpoint, s",
+						Usage: "Stats Store Endpoint",
+					},
+					cli.StringFlag{
 						Name:  "ntp_endpoint, n",
 						Usage: "Ntp Endpoint",
 					},
@@ -173,6 +177,7 @@ func createDeployment(c *cli.Context) error {
 	oauthUsername := c.String("oauth_username")
 	oauthPassword := c.String("oauth_password")
 	syslogEndpoint := c.String("syslog_endpoint")
+	statsStoreEndpoint := c.String("stats_store_endpoint")
 	ntpEndpoint := c.String("ntp_endpoint")
 	useDatastoreVMs := c.Bool("use_image_datastore_for_vms")
 	enableAuth := c.Bool("enable_auth")
@@ -204,6 +209,10 @@ func createDeployment(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		statsStoreEndpoint, err = askForInput("Stats Store Endpoint: ", statsStoreEndpoint)
+		if err != nil {
+			return err
+		}
 		ntpEndpoint, err = askForInput("Ntp Endpoint: ", ntpEndpoint)
 		if err != nil {
 			return err
@@ -229,6 +238,7 @@ func createDeployment(c *cli.Context) error {
 		ImageDatastores:         imageDatastoreList,
 		NTPEndpoint:             ntpEndpoint,
 		SyslogEndpoint:          syslogEndpoint,
+		StatsStoreEndpoint:      statsStoreEndpoint,
 		UseImageDatastoreForVms: useDatastoreVMs,
 	}
 
@@ -238,6 +248,10 @@ func createDeployment(c *cli.Context) error {
 
 	if len(syslogEndpoint) == 0 {
 		deploymentSpec.SyslogEndpoint = nil
+	}
+
+	if len(statsStoreEndpoint) == 0 {
+		deploymentSpec.StatsStoreEndpoint = nil
 	}
 
 	if confirmed(c.GlobalIsSet("non-interactive")) {
@@ -366,14 +380,19 @@ func showDeployment(c *cli.Context) error {
 	if len(deployment.SyslogEndpoint) == 0 {
 		syslogEndpoint = "-"
 	}
+	statsStoreEndpoint := deployment.StatsStoreEndpoint
+	if len(deployment.StatsStoreEndpoint) == 0 {
+		statsStoreEndpoint = "-"
+	}
 	ntpEndpoint := deployment.NTPEndpoint
 	if len(deployment.NTPEndpoint) == 0 {
 		ntpEndpoint = "-"
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%t\t%t\t%s\t%s\t%s\t%s\n", deployment.ID, deployment.State, deployment.ImageDatastores,
-			deployment.UseImageDatastoreForVms, deployment.Auth.Enabled, authEndpoint, authTenant, syslogEndpoint, ntpEndpoint)
+		fmt.Printf("%s\t%s\t%s\t%t\t%t\t%s\t%s\t%s\t%s\t%s\n", deployment.ID, deployment.State, deployment.ImageDatastores,
+			deployment.UseImageDatastoreForVms, deployment.Auth.Enabled, authEndpoint, authTenant, syslogEndpoint,
+			statsStoreEndpoint, ntpEndpoint)
 
 	} else {
 		fmt.Printf("Deployment ID: %s\n", deployment.ID)
@@ -384,6 +403,7 @@ func showDeployment(c *cli.Context) error {
 		fmt.Printf("  Auth Endpoint:               %s\n", authEndpoint)
 		fmt.Printf("  Auth Tenant:                 %s\n\n", authTenant)
 		fmt.Printf("  Syslog Endpoint:             %s\n", syslogEndpoint)
+		fmt.Printf("  Stats Store Endpoint:        %s\n", statsStoreEndpoint)
 		fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
 	}
 

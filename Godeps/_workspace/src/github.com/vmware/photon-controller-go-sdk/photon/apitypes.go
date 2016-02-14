@@ -431,6 +431,7 @@ type DeploymentCreateSpec struct {
 	NTPEndpoint             interface{} `json:"ntpEndpoint"`
 	UseImageDatastoreForVms bool        `json:"useImageDatastoreForVms"`
 	SyslogEndpoint          interface{} `json:"syslogEndpoint"`
+	StatsStoreEndpoint      interface{} `json:"statsStoreEndpoint"`
 	ImageDatastores         []string    `json:"imageDatastores"`
 	Auth                    *AuthInfo   `json:"auth"`
 }
@@ -442,6 +443,7 @@ type Deployment struct {
 	Auth                    *AuthInfo `json:"auth"`
 	Kind                    string    `json:"kind"`
 	SyslogEndpoint          string    `json:"syslogEndpoint,omitempty"`
+	StatsStoreEndpoint      string    `json:"statsStoreEndpoint,omitempty"`
 	State                   string    `json:"state"`
 	ID                      string    `json:"id"`
 	ImageDatastores         []string  `json:"imageDatastores"`
