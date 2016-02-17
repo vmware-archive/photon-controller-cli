@@ -192,3 +192,51 @@ func (api *DeploymentsAPI) UpdateImageDatastores(id string, imageDatastores *Ima
 	task, err = getTask(getError(res))
 	return
 }
+
+// Pause system with specified deployment ID.
+func (api *DeploymentsAPI) PauseSystem(id string) (task *Task, err error) {
+	res, err := rest.Post(api.client.httpClient,
+		api.client.Endpoint+deploymentUrl+"/"+id+"/pause_system",
+		"application/json",
+		bytes.NewBuffer([]byte("")),
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+
+	task, err = getTask(getError(res))
+	return
+}
+
+// Pause background tasks of system with specified deployment ID.
+func (api *DeploymentsAPI) PauseBackgroundTasks(id string) (task *Task, err error) {
+	res, err := rest.Post(api.client.httpClient,
+		api.client.Endpoint+deploymentUrl+"/"+id+"/pause_background_tasks",
+		"application/json",
+		bytes.NewBuffer([]byte("")),
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+
+	task, err = getTask(getError(res))
+	return
+}
+
+// Pause background tasks of system with specified deployment ID.
+func (api *DeploymentsAPI) ResumeSystem(id string) (task *Task, err error) {
+	res, err := rest.Post(api.client.httpClient,
+		api.client.Endpoint+deploymentUrl+"/"+id+"/resume_system",
+		"application/json",
+		bytes.NewBuffer([]byte("")),
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+
+	task, err = getTask(getError(res))
+	return
+}

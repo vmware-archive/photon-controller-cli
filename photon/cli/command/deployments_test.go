@@ -456,3 +456,153 @@ func TestUpdateImageDatastores(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestPauseSystem(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "PAUSE_SYSTEM",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+	completedTask := &photon.Task{
+		Operation: "PAUSE_SYSTEM",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/deployments/"+queuedTask.Entity.ID+"/pause_system",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{queuedTask.Entity.ID})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = pauseSystem(cxt)
+	if err != nil {
+		t.Error(err)
+		t.Error("Not expecting pauseSystem to fail")
+	}
+}
+
+func TestPauseBackgroundTasks(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "PAUSE_BACKGROUND_TASKS",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+	completedTask := &photon.Task{
+		Operation: "PAUSE_BACKGROUND_TASKS",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/deployments/"+queuedTask.Entity.ID+"/pause_background_tasks",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{queuedTask.Entity.ID})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = pauseBackgroundTasks(cxt)
+	if err != nil {
+		t.Error(err)
+		t.Error("Not expecting pauseBackgroundTasks to fail")
+	}
+}
+
+func TestResumeSystem(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "RESUME_SYSTEM",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+	completedTask := &photon.Task{
+		Operation: "RESUME_SYSTEM",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/deployments/"+queuedTask.Entity.ID+"/resume_system",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{queuedTask.Entity.ID})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = resumeSystem(cxt)
+	if err != nil {
+		t.Error(err)
+		t.Error("Not expecting resumeSystem to fail")
+	}
+}

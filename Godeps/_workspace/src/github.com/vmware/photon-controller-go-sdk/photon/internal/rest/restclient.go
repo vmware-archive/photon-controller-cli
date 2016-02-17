@@ -12,6 +12,7 @@ package rest
 import (
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -67,6 +68,10 @@ func GetList(client *http.Client, endpoint string, url string, token string) (re
 	res, err := Do(client, &req)
 	if err != nil {
 		return
+	}
+	if res.StatusCode != 200 {
+		errMsg := fmt.Sprintf("photon: HTTP %d: %v", res.StatusCode, res.Body)
+		return nil, errors.New(errMsg)
 	}
 
 	decoder := json.NewDecoder(res.Body)

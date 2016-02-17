@@ -20,8 +20,11 @@ import (
 //              show;       Usage: deployment show <id>
 //              list-hosts; Usage: deployment list-hosts <id>
 //              list-vms;   Usage: deployment list-vms <id>
-//							prepare-deployment-migration; 	Usage: deployment prepare migration <sourceDeploymentAddress> <id>
-//							finalize-deployment-migration; 	Usage: deployment finalize migration <sourceDeploymentAddress> <id>
+//              prepare-deployment-migration;   Usage: deployment prepare migration <sourceDeploymentAddress> <id>
+//              finalize-deployment-migration;  Usage: deployment finalize migration <sourceDeploymentAddress> <id>
+//              pause_system;                   Usage: deployment pause_system <id>
+//              pause_background_tasks;         Usage: deployment pause_background_tasks <id>
+//              resume_system;                  Usage: deployment resume_system <id>
 func GetDeploymentsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "deployment",
@@ -150,6 +153,36 @@ func GetDeploymentsCommand() cli.Command {
 				Usage: "Updates the list of image datastores",
 				Action: func(c *cli.Context) {
 					err := updateImageDatastores(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "pause_system",
+				Usage: "Pause system under the deployment",
+				Action: func(c *cli.Context) {
+					err := pauseSystem(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "pause_background_tasks",
+				Usage: "Pause system's background tasks under the deployment",
+				Action: func(c *cli.Context) {
+					err := pauseBackgroundTasks(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "resume_system",
+				Usage: "Resume system under the deployment",
+				Action: func(c *cli.Context) {
+					err := resumeSystem(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -519,5 +552,83 @@ func updateImageDatastores(c *cli.Context) error {
 	}
 
 	fmt.Printf("Image datastores of deployment %s is finished\n", task.Entity.ID)
+	return nil
+}
+
+// Sends a pause system task to client
+func pauseSystem(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "deployment pause_system <id>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	pauseSystemTask, err := client.Esxclient.Deployments.PauseSystem(id)
+	if err != nil {
+		return err
+	}
+
+	err = waitOnTaskOperation(pauseSystemTask.ID, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Sends a pause background task to client
+func pauseBackgroundTasks(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "deployment pause_background_tasks <id>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	pauseBackgroundTask, err := client.Esxclient.Deployments.PauseBackgroundTasks(id)
+	if err != nil {
+		return err
+	}
+
+	err = waitOnTaskOperation(pauseBackgroundTask.ID, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Sends a resume system task to client
+func resumeSystem(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "deployment resume_system <id>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	resumeSystemTask, err := client.Esxclient.Deployments.ResumeSystem(id)
+	if err != nil {
+		return err
+	}
+
+	err = waitOnTaskOperation(resumeSystemTask.ID, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
