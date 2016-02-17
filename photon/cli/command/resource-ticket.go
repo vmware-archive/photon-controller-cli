@@ -206,7 +206,7 @@ func showResourceTicket(c *cli.Context) error {
 	if c.GlobalIsSet("non-interactive") {
 		usage := quotaLineItemListToString(rt.Usage)
 		limits := quotaLineItemListToString(rt.Limits)
-		fmt.Printf("%s\t%s\t%s\t%s\n", rt.Name, rt.ID, limits, usage)
+		fmt.Printf("%s\t%s\t%s\t%s\n", rt.ID, rt.Name, limits, usage)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -257,15 +257,26 @@ func listResourceTickets(c *cli.Context) error {
 	if c.GlobalIsSet("non-interactive") {
 		fmt.Println(len(tickets.Items))
 		for _, t := range tickets.Items {
+			usage := quotaLineItemListToString(t.Usage)
 			limits := quotaLineItemListToString(t.Limits)
-			fmt.Printf("%s\t%s\t%s\n", t.ID, t.Name, limits)
+			fmt.Printf("%s\t%s\t%s\t%s\n", t.ID, t.Name, limits, usage)
 		}
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
 		fmt.Fprintf(w, "ID\tName\tLimit\n")
-		for _, t := range tickets.Items {
-			printQuotaList(w, t.Limits, t.ID, t.Name)
+		for _, rt := range tickets.Items {
+			for i := 0; i < len(rt.Limits); i++ {
+				if i == 0 {
+					fmt.Fprintf(w, "%s\t%s\t%s %g %s\t%s %g %s\n", rt.ID, rt.Name,
+						rt.Limits[i].Key, rt.Limits[i].Value, rt.Limits[i].Unit,
+						rt.Usage[i].Key, rt.Usage[i].Value, rt.Usage[i].Unit)
+				} else {
+					fmt.Fprintf(w, "\t\t%s %g %s\t%s %g %s\n",
+						rt.Limits[i].Key, rt.Limits[i].Value, rt.Limits[i].Unit,
+						rt.Usage[i].Key, rt.Usage[i].Value, rt.Usage[i].Unit)
+				}
+			}
 		}
 		err := w.Flush()
 		if err != nil {
