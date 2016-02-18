@@ -31,7 +31,7 @@ type MockTasksPage struct {
 func TestListTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{
-			photon.Task{
+			{
 				Operation: "CREATE_FLAVOR",
 				State:     "COMPLETED",
 				ID:        "fake-flavor-task-id",

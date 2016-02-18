@@ -128,7 +128,7 @@ func TestListNetworks(t *testing.T) {
 
 	expectedList := MockNetworksPage{
 		Items: []photon.Network{
-			photon.Network{
+			{
 				ID:         "network_id",
 				Name:       "network_name",
 				PortGroups: []string{"port", "group"},

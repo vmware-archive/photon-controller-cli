@@ -31,7 +31,7 @@ type MockClustersPage struct {
 func TestCreateDeleteCluster(t *testing.T) {
 	tenantStruct := photon.Tenants{
 		Items: []photon.Tenant{
-			photon.Tenant{
+			{
 				Name: "fake_tenant_name",
 				ID:   "fake_tenant_id",
 			},
@@ -44,7 +44,7 @@ func TestCreateDeleteCluster(t *testing.T) {
 
 	projectStruct := photon.ProjectList{
 		Items: []photon.ProjectCompact{
-			photon.ProjectCompact{
+			{
 				Name: "fake_project_name",
 				ID:   "fake_project_id",
 			},
@@ -186,7 +186,7 @@ func TestShowCluster(t *testing.T) {
 
 	vmListStruct := photon.VMs{
 		Items: []photon.VM{
-			photon.VM{
+			{
 				Name:          "fake_vm_name",
 				ID:            "fake_vm_id",
 				Flavor:        "fake_vm_flavor_name",
@@ -198,7 +198,7 @@ func TestShowCluster(t *testing.T) {
 					"cluster:" + cluster.ID + ":master",
 				},
 				AttachedDisks: []photon.AttachedDisk{
-					photon.AttachedDisk{
+					{
 						Name:       "d1",
 						Kind:       "ephemeral-disk",
 						Flavor:     "fake_ephemeral_flavor_id",
@@ -284,7 +284,7 @@ func TestShowCluster(t *testing.T) {
 func TestListClusters(t *testing.T) {
 	tenantStruct := photon.Tenants{
 		Items: []photon.Tenant{
-			photon.Tenant{
+			{
 				Name: "fake_tenant_name",
 				ID:   "fake_tenant_id",
 			},
@@ -297,7 +297,7 @@ func TestListClusters(t *testing.T) {
 
 	projectStruct := photon.ProjectList{
 		Items: []photon.ProjectCompact{
-			photon.ProjectCompact{
+			{
 				Name: "fake_project_name",
 				ID:   "fake_project_id",
 			},
@@ -310,7 +310,7 @@ func TestListClusters(t *testing.T) {
 
 	firstClustersPage := MockClustersPage{
 		Items: []photon.Cluster{
-			photon.Cluster{
+			{
 				Name:       "fake_cluster_name",
 				State:      "READY",
 				ID:         "fake_cluster_id",
@@ -439,7 +439,7 @@ func TestListClusterVms(t *testing.T) {
 
 	vmList := MockVMsPage{
 		Items: []photon.VM{
-			photon.VM{
+			{
 				Name:          "fake_vm_name",
 				ID:            "fake_vm_ID",
 				Flavor:        "fake_vm_flavor_name",
@@ -448,7 +448,7 @@ func TestListClusterVms(t *testing.T) {
 				Host:          "fake_host_ip",
 				Datastore:     "fake_datastore_ID",
 				AttachedDisks: []photon.AttachedDisk{
-					photon.AttachedDisk{
+					{
 						Name:       "d1",
 						Kind:       "ephemeral-disk",
 						Flavor:     "fake_ephemeral_flavor_ID",

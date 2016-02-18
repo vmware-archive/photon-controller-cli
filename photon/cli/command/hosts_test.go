@@ -72,7 +72,7 @@ func TestCreateDeleteHost(t *testing.T) {
 
 	expectedStruct := photon.Deployments{
 		Items: []photon.Deployment{
-			photon.Deployment{
+			{
 				ImageDatastores: []string{"testname"},
 				ID:              "fake-deployment-id",
 			},
@@ -223,7 +223,7 @@ func TestSetHostAvailabilityZone(t *testing.T) {
 func TestHostTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{
-			photon.Task{
+			{
 				Operation: "CREATE_HOST",
 				State:     "COMPLETED",
 				ID:        "1",
@@ -281,7 +281,7 @@ func TestHostTasks(t *testing.T) {
 func TestHostGetVMs(t *testing.T) {
 	vmListStruct := photon.VMs{
 		Items: []photon.VM{
-			photon.VM{
+			{
 				Name:          "fake_vm_name",
 				ID:            "fake_vm_ID",
 				Flavor:        "fake_vm_flavor_name",
@@ -290,7 +290,7 @@ func TestHostGetVMs(t *testing.T) {
 				Host:          "fake_host_ip",
 				Datastore:     "fake_datastore_ID",
 				AttachedDisks: []photon.AttachedDisk{
-					photon.AttachedDisk{
+					{
 						Name:       "d1",
 						Kind:       "ephemeral-disk",
 						Flavor:     "fake_ephemeral_flavor_ID",

@@ -31,7 +31,7 @@ type MockDisksPage struct {
 func TestCreateDisk(t *testing.T) {
 	tenantStruct := photon.Tenants{
 		Items: []photon.Tenant{
-			photon.Tenant{
+			{
 				Name: "fake_tenant_name",
 				ID:   "fake_tenant_ID",
 			},
@@ -44,7 +44,7 @@ func TestCreateDisk(t *testing.T) {
 
 	projectStruct := photon.ProjectList{
 		Items: []photon.ProjectCompact{
-			photon.ProjectCompact{
+			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
 			},
@@ -161,7 +161,7 @@ func TestShowDisk(t *testing.T) {
 func TestListDisks(t *testing.T) {
 	diskList := MockDisksPage{
 		Items: []photon.PersistentDisk{
-			photon.PersistentDisk{
+			{
 				Name:       "fake_disk_name",
 				ID:         "fake_disk_ID",
 				Flavor:     "fake_flavor_name",
@@ -213,7 +213,7 @@ func TestListDisks(t *testing.T) {
 func TestListDiskTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{
-			photon.Task{
+			{
 				Operation: "CREATE_DISK",
 				State:     "COMPLETED",
 			},

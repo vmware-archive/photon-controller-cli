@@ -267,11 +267,11 @@ func TestDestroy(t *testing.T) {
 
 	expectedStruct := photon.Deployments{
 		Items: []photon.Deployment{
-			photon.Deployment{
+			{
 				ImageDatastores: []string{"testname"},
 				ID:              "1",
 			},
-			photon.Deployment{
+			{
 				ImageDatastores: []string{"secondname"},
 				ID:              "2",
 			},
@@ -353,7 +353,7 @@ func TestDestroy(t *testing.T) {
 
 	gethostexpectedStruct := MockHostsPage{
 		Items: []photon.Host{
-			photon.Host{
+			{
 				ID:       "fake-host-id",
 				Address:  "196.128.1.1",
 				Tags:     []string{"CLOUD", "MGMT"},

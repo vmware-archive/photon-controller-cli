@@ -32,7 +32,7 @@ type MockProjectsPage struct {
 func TestCreateProject(t *testing.T) {
 	tenantStruct := photon.Tenants{
 		Items: []photon.Tenant{
-			photon.Tenant{
+			{
 				Name: "fake_tenant_name",
 				ID:   "fake_tenant_ID",
 			},
@@ -113,12 +113,12 @@ func TestSetShowProject(t *testing.T) {
 
 	projectListStruct := photon.ProjectList{
 		Items: []photon.ProjectCompact{
-			photon.ProjectCompact{
+			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
 				ResourceTicket: photon.ProjectTicket{
-					Limits: []photon.QuotaLineItem{photon.QuotaLineItem{Key: "vm.test1", Value: 1, Unit: "B"}},
-					Usage:  []photon.QuotaLineItem{photon.QuotaLineItem{Key: "vm.test1", Value: 0, Unit: "B"}},
+					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
+					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
 				},
 			},
 		},
@@ -174,12 +174,12 @@ func TestSetShowProject(t *testing.T) {
 func TestListProjects(t *testing.T) {
 	projectList := MockProjectsPage{
 		Items: []photon.ProjectCompact{
-			photon.ProjectCompact{
+			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
 				ResourceTicket: photon.ProjectTicket{
-					Limits: []photon.QuotaLineItem{photon.QuotaLineItem{Key: "vm.test1", Value: 1, Unit: "B"}},
-					Usage:  []photon.QuotaLineItem{photon.QuotaLineItem{Key: "vm.test1", Value: 0, Unit: "B"}},
+					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
+					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
 				},
 			},
 		},
@@ -230,7 +230,7 @@ func TestListProjects(t *testing.T) {
 func TestListProjectTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{
-			photon.Task{
+			{
 				Operation: "CREATE_PROJECT",
 				State:     "COMPLETED",
 				ID:        "fake_project_task_id",

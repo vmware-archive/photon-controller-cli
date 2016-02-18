@@ -43,7 +43,7 @@ func TestCreateResourceTicket(t *testing.T) {
 
 	tenantStruct := photon.Tenants{
 		Items: []photon.Tenant{
-			photon.Tenant{
+			{
 				Name: tenantName,
 				ID:   tenantID,
 			},
@@ -117,11 +117,11 @@ func TestCreateResourceTicket(t *testing.T) {
 func TestShowResourceTicket(t *testing.T) {
 	rtListStruct := photon.ResourceList{
 		Items: []photon.ResourceTicket{
-			photon.ResourceTicket{
+			{
 				Name:   rtName,
 				ID:     rtID,
-				Limits: []photon.QuotaLineItem{photon.QuotaLineItem{Key: "k", Value: 1, Unit: "B"}},
-				Usage:  []photon.QuotaLineItem{photon.QuotaLineItem{Key: "k", Value: 0, Unit: "B"}},
+				Limits: []photon.QuotaLineItem{{Key: "k", Value: 1, Unit: "B"}},
+				Usage:  []photon.QuotaLineItem{{Key: "k", Value: 0, Unit: "B"}},
 			},
 		},
 	}
@@ -156,11 +156,11 @@ func TestShowResourceTicket(t *testing.T) {
 func TestListResourceTickets(t *testing.T) {
 	rtList := MockResourceTicketsPage{
 		Items: []photon.ResourceTicket{
-			photon.ResourceTicket{
+			{
 				Name:   rtName,
 				ID:     rtID,
-				Limits: []photon.QuotaLineItem{photon.QuotaLineItem{Key: "k", Value: 1, Unit: "B"}},
-				Usage:  []photon.QuotaLineItem{photon.QuotaLineItem{Key: "k", Value: 0, Unit: "B"}},
+				Limits: []photon.QuotaLineItem{{Key: "k", Value: 1, Unit: "B"}},
+				Usage:  []photon.QuotaLineItem{{Key: "k", Value: 0, Unit: "B"}},
 			},
 		},
 		NextPageLink:     "fake-next-page-link",
@@ -204,7 +204,7 @@ func TestListResourceTickets(t *testing.T) {
 func TestListResourceTicketTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{
-			photon.Task{
+			{
 				Operation: "CREATE_RESOURCE_TICKET",
 				State:     "COMPLETED",
 				ID:        "fake-rt-task-id",

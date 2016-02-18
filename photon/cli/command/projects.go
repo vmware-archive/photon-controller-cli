@@ -192,7 +192,7 @@ func createProject(c *cli.Context) error {
 	}
 	if c.IsSet("percent") {
 		limitsList = []photon.QuotaLineItem{
-			photon.QuotaLineItem{Key: "subdivide.percent", Value: percent, Unit: "COUNT"}}
+			{Key: "subdivide.percent", Value: percent, Unit: "COUNT"}}
 	}
 
 	if !c.GlobalIsSet("non-interactive") {

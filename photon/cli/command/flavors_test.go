@@ -84,10 +84,10 @@ func TestCreateDeleteFlavor(t *testing.T) {
 
 	expectedStruct := photon.FlavorList{
 		Items: []photon.Flavor{
-			photon.Flavor{
+			{
 				Name: "testname",
 				Kind: "vm",
-				Cost: []photon.QuotaLineItem{photon.QuotaLineItem{Key: "k", Value: 1, Unit: "B"}},
+				Cost: []photon.QuotaLineItem{{Key: "k", Value: 1, Unit: "B"}},
 				ID:   "1",
 			},
 		},
@@ -153,7 +153,7 @@ func TestShowFlavor(t *testing.T) {
 		Name: "testname",
 		ID:   "1",
 		Kind: "persistent-disk",
-		Cost: []photon.QuotaLineItem{photon.QuotaLineItem{Key: "k", Value: 1, Unit: "B"}},
+		Cost: []photon.QuotaLineItem{{Key: "k", Value: 1, Unit: "B"}},
 	}
 
 	response, err := json.Marshal(getStruct)
@@ -188,7 +188,7 @@ func TestShowFlavor(t *testing.T) {
 func TestFlavorTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{
-			photon.Task{
+			{
 				Operation: "CREATE_FLAVOR",
 				State:     "COMPLETED",
 				ID:        "1",
@@ -246,11 +246,11 @@ func TestFlavorTasks(t *testing.T) {
 func TestListFlavors(t *testing.T) {
 	flavorLists := MockFlavorsPage{
 		Items: []photon.Flavor{
-			photon.Flavor{
+			{
 				Name: "f1",
 				Kind: "vm",
 			},
-			photon.Flavor{
+			{
 				Name: "f2",
 				Kind: "disk",
 			},

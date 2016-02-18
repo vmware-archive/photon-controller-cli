@@ -122,11 +122,11 @@ func TestCreateDeleteTenant(t *testing.T) {
 func TestListTenant(t *testing.T) {
 	expectedTenants := MockTenantsPage{
 		Items: []photon.Tenant{
-			photon.Tenant{
+			{
 				Name: "testname",
 				ID:   "1",
 			},
-			photon.Tenant{
+			{
 				Name: "secondname",
 				ID:   "2",
 			},
@@ -321,7 +321,7 @@ func TestSetTenantAfterDelete(t *testing.T) {
 func TestTenantTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{
-			photon.Task{
+			{
 				Operation: "CREATE_TENANT",
 				State:     "COMPLETED",
 				ID:        "1",

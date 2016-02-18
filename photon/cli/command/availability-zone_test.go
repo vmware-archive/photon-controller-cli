@@ -154,11 +154,11 @@ func TestListAvailabilityZones(t *testing.T) {
 
 	expectedList := MockAvailZonePage{
 		Items: []photon.AvailabilityZone{
-			photon.AvailabilityZone{
+			{
 				Name: "testname",
 				ID:   "1",
 			},
-			photon.AvailabilityZone{
+			{
 				Name: "secondname",
 				ID:   "2",
 			},
@@ -208,7 +208,7 @@ func TestListAvailabilityZones(t *testing.T) {
 func TestAvailabilityZoneTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{
-			photon.Task{
+			{
 				Operation: "CREATE_AVAILABILITYZONE",
 				State:     "COMPLETED",
 				ID:        "1",

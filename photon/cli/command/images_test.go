@@ -130,14 +130,14 @@ func TestCreateDeleteImage(t *testing.T) {
 func TestListImage(t *testing.T) {
 	expectedImageList := MockImagesPage{
 		Items: []photon.Image{
-			photon.Image{
+			{
 				Name:            "test",
 				Size:            10,
 				State:           "COMPLETED",
 				ID:              "1",
 				ReplicationType: "EAGER",
 				Settings: []photon.ImageSetting{
-					photon.ImageSetting{
+					{
 						Name:         "test-setting",
 						DefaultValue: "test-default-value",
 					},
@@ -195,7 +195,7 @@ func TestListImage(t *testing.T) {
 func TestImageTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{
-			photon.Task{
+			{
 				Operation: "CREATE_IMAGE",
 				State:     "COMPLETED",
 				ID:        "1",

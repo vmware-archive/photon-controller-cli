@@ -92,11 +92,11 @@ func TestCreateDeleteDeployment(t *testing.T) {
 
 	expectedStruct := photon.Deployments{
 		Items: []photon.Deployment{
-			photon.Deployment{
+			{
 				ImageDatastores: []string{"testname"},
 				ID:              "1",
 			},
-			photon.Deployment{
+			{
 				ImageDatastores: []string{"secondname"},
 				ID:              "2",
 			},
@@ -205,7 +205,7 @@ func TestGetDeployment(t *testing.T) {
 func TestListDeploymentHosts(t *testing.T) {
 	hostList := MockHostsPage{
 		Items: []photon.Host{
-			photon.Host{
+			{
 				Username: "u",
 				Password: "p",
 				Address:  "testIP",
@@ -268,7 +268,7 @@ func TestListDeploymentVms(t *testing.T) {
 
 	vmList := MockVMsPage{
 		Items: []photon.VM{
-			photon.VM{
+			{
 				Name:          "fake_vm_name",
 				ID:            "fake_vm_ID",
 				Flavor:        "fake_vm_flavor_name",
@@ -277,7 +277,7 @@ func TestListDeploymentVms(t *testing.T) {
 				Host:          "fake_host_ip",
 				Datastore:     "fake_datastore_ID",
 				AttachedDisks: []photon.AttachedDisk{
-					photon.AttachedDisk{
+					{
 						Name:       "d1",
 						Kind:       "ephemeral-disk",
 						Flavor:     "fake_ephemeral_flavor_ID",

@@ -31,7 +31,7 @@ type MockVMsPage struct {
 func TestCreateDeleteVM(t *testing.T) {
 	tenantStruct := photon.Tenants{
 		Items: []photon.Tenant{
-			photon.Tenant{
+			{
 				Name: "fake_tenant_name",
 				ID:   "fake_tenant_ID",
 			},
@@ -44,7 +44,7 @@ func TestCreateDeleteVM(t *testing.T) {
 
 	projectStruct := photon.ProjectList{
 		Items: []photon.ProjectCompact{
-			photon.ProjectCompact{
+			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
 			},
@@ -176,7 +176,7 @@ func TestShowVM(t *testing.T) {
 		Host:          "fake_host_ip",
 		Datastore:     "fake_datastore_ID",
 		AttachedDisks: []photon.AttachedDisk{
-			photon.AttachedDisk{
+			{
 				Name:       "d1",
 				Kind:       "ephemeral-disk",
 				Flavor:     "fake_ephemeral_flavor_ID",
@@ -614,7 +614,7 @@ func TestAttachDetachISO(t *testing.T) {
 func TestListVMs(t *testing.T) {
 	vmList := MockVMsPage{
 		Items: []photon.VM{
-			photon.VM{
+			{
 				Name:          "fake_vm_name",
 				ID:            "fake_vm_ID",
 				Flavor:        "fake_vm_flavor_name",
@@ -623,7 +623,7 @@ func TestListVMs(t *testing.T) {
 				Host:          "fake_host_ip",
 				Datastore:     "fake_datastore_ID",
 				AttachedDisks: []photon.AttachedDisk{
-					photon.AttachedDisk{
+					{
 						Name:       "d1",
 						Kind:       "ephemeral-disk",
 						Flavor:     "fake_ephemeral_flavor_ID",
@@ -655,7 +655,7 @@ func TestListVMs(t *testing.T) {
 
 	expectedStruct := photon.Tenants{
 		Items: []photon.Tenant{
-			photon.Tenant{
+			{
 				Name: "fake_tenant_name",
 				ID:   "fake_tenant_ID",
 			},
@@ -669,12 +669,12 @@ func TestListVMs(t *testing.T) {
 
 	projectListStruct := photon.ProjectList{
 		Items: []photon.ProjectCompact{
-			photon.ProjectCompact{
+			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
 				ResourceTicket: photon.ProjectTicket{
-					Limits: []photon.QuotaLineItem{photon.QuotaLineItem{Key: "vm.test1", Value: 1, Unit: "B"}},
-					Usage:  []photon.QuotaLineItem{photon.QuotaLineItem{Key: "vm.test1", Value: 0, Unit: "B"}},
+					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
+					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
 				},
 			},
 		},
@@ -721,7 +721,7 @@ func TestListVMs(t *testing.T) {
 func TestListVMTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{
-			photon.Task{
+			{
 				Operation: "CREATE_VM",
 				State:     "COMPLETED",
 			},
