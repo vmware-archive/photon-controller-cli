@@ -431,26 +431,44 @@ type DeploymentCreateSpec struct {
 	NTPEndpoint             interface{} `json:"ntpEndpoint"`
 	UseImageDatastoreForVms bool        `json:"useImageDatastoreForVms"`
 	SyslogEndpoint          interface{} `json:"syslogEndpoint"`
+	Stats                   *StatsInfo  `json:"stats"`
 	ImageDatastores         []string    `json:"imageDatastores"`
 	Auth                    *AuthInfo   `json:"auth"`
 }
 
+type MigrationStatus struct {
+	CompletedDataMigrationCycles int `json:"completedDataMigrationCycles"`
+	DataMigrationCycleProgress   int `json:"dataMigrationCycleProgress"`
+	DataMigrationCycleSize       int `json:"dataMigrationCycleSize"`
+	VibsUploaded                 int `json:"vibsUploaded"`
+	VibsUploading                int `json:"vibsUploading"`
+}
+
 // Represents a deployment
 type Deployment struct {
-	NTPEndpoint             string    `json:"ntpEndpoint,omitempty"`
-	UseImageDatastoreForVms bool      `json:"useImageDatastoreForVms,omitempty"`
-	Auth                    *AuthInfo `json:"auth"`
-	Kind                    string    `json:"kind"`
-	SyslogEndpoint          string    `json:"syslogEndpoint,omitempty"`
-	State                   string    `json:"state"`
-	ID                      string    `json:"id"`
-	ImageDatastores         []string  `json:"imageDatastores"`
-	SelfLink                string    `json:"selfLink"`
+	NTPEndpoint             string           `json:"ntpEndpoint,omitempty"`
+	UseImageDatastoreForVms bool             `json:"useImageDatastoreForVms,omitempty"`
+	Auth                    *AuthInfo        `json:"auth"`
+	Kind                    string           `json:"kind"`
+	SyslogEndpoint          string           `json:"syslogEndpoint,omitempty"`
+	Stats                   *StatsInfo       `json:"stats,omitempty"`
+	State                   string           `json:"state"`
+	ID                      string           `json:"id"`
+	ImageDatastores         []string         `json:"imageDatastores"`
+	SelfLink                string           `json:"selfLink"`
+	Migration               *MigrationStatus `json:"migrationStatus,omitempty"`
 }
 
 // Represents multiple deployments returned by the API.
 type Deployments struct {
 	Items []Deployment `json:"items"`
+}
+
+// Represents stats information
+type StatsInfo struct {
+	Enabled       bool   `json:"enabled,omitempty"`
+	StoreEndpoint string `json:"storeEndpoint,omitempty"`
+	StorePort     int    `json:"storePort,omitempty"`
 }
 
 // Represents authentication information

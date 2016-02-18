@@ -429,6 +429,21 @@ func showDeployment(c *cli.Context) error {
 		fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
 	}
 
+	if deployment.Migration != nil {
+		migration := deployment.Migration
+		if c.GlobalIsSet("non-interactive") {
+			fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
+				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading)
+		} else {
+			fmt.Printf("\n")
+			fmt.Printf("Migration status:")
+			fmt.Printf("  Completed data migration cycles:        %d\n", migration.CompletedDataMigrationCycles)
+			fmt.Printf("  Current data migration cycles progress: %d / %d\n", migration.DataMigrationCycleProgress,
+				migration.DataMigrationCycleSize)
+			fmt.Printf("  VIB upload progress:                    %d / %d\n", migration.VibsUploaded, migration.VibsUploading)
+		}
+	}
+
 	return nil
 }
 
