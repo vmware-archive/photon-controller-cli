@@ -15,6 +15,7 @@ import (
 	"log"
 	"net"
 	"regexp"
+	"time"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
@@ -485,7 +486,7 @@ func doDeploy(deploymentID string) error {
 		return err
 	}
 
-	_, err = pollTask(deployTask.ID)
+	_, err = pollTaskWithTimeout(deployTask.ID, 120*time.Minute)
 	if err != nil {
 		return err
 	}

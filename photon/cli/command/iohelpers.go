@@ -646,10 +646,13 @@ func displayTaskProgress(start time.Time) {
 
 // Wait for task to finish and display task progress
 func pollTask(id string) (task *photon.Task, err error) {
+	return pollTaskWithTimeout(id, 30*time.Minute)
+}
+
+func pollTaskWithTimeout(id string, taskPollTimeout time.Duration) (task *photon.Task, err error) {
 	start := time.Now()
 	numErr := 0
 
-	taskPollTimeout := 30 * time.Minute
 	taskPollDelay := 500 * time.Millisecond
 	taskRetryCount := 3
 
