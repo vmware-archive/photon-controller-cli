@@ -434,6 +434,7 @@ type DeploymentCreateSpec struct {
 	Stats                   *StatsInfo  `json:"stats"`
 	ImageDatastores         []string    `json:"imageDatastores"`
 	Auth                    *AuthInfo   `json:"auth"`
+	LoadBalancerEnabled     bool        `json:"loadBalancerEnabled"`
 }
 
 type MigrationStatus struct {
@@ -446,17 +447,19 @@ type MigrationStatus struct {
 
 // Represents a deployment
 type Deployment struct {
-	NTPEndpoint             string           `json:"ntpEndpoint,omitempty"`
-	UseImageDatastoreForVms bool             `json:"useImageDatastoreForVms,omitempty"`
-	Auth                    *AuthInfo        `json:"auth"`
-	Kind                    string           `json:"kind"`
-	SyslogEndpoint          string           `json:"syslogEndpoint,omitempty"`
-	Stats                   *StatsInfo       `json:"stats,omitempty"`
-	State                   string           `json:"state"`
-	ID                      string           `json:"id"`
-	ImageDatastores         []string         `json:"imageDatastores"`
-	SelfLink                string           `json:"selfLink"`
-	Migration               *MigrationStatus `json:"migrationStatus,omitempty"`
+	NTPEndpoint             string                 `json:"ntpEndpoint,omitempty"`
+	UseImageDatastoreForVms bool                   `json:"useImageDatastoreForVms,omitempty"`
+	Auth                    *AuthInfo              `json:"auth"`
+	Kind                    string                 `json:"kind"`
+	SyslogEndpoint          string                 `json:"syslogEndpoint,omitempty"`
+	Stats                   *StatsInfo             `json:"stats,omitempty"`
+	State                   string                 `json:"state"`
+	ID                      string                 `json:"id"`
+	ImageDatastores         []string               `json:"imageDatastores"`
+	SelfLink                string                 `json:"selfLink"`
+	Migration               *MigrationStatus       `json:"migrationStatus,omitempty"`
+	ClusterConfigurations   []ClusterConfiguration `json:"clusterConfigurations,omitempty"`
+	LoadBalancerEnabled     bool                   `json:"loadBalancerEnabled"`
 }
 
 // Represents multiple deployments returned by the API.
@@ -504,6 +507,19 @@ type Network struct {
 // Represents multiple networks returned by the API
 type Networks struct {
 	Items []Network `json:"items"`
+}
+
+// Creation spec for Cluster Configuration.
+type ClusterConfigurationSpec struct {
+	Type    string `json:"type"`
+	ImageID string `json:"imageId"`
+}
+
+// Represnts a Cluster configuration.
+type ClusterConfiguration struct {
+	Kind    string `json:"kind"`
+	Type    string `json:"type"`
+	ImageID string `json:"imageId"`
 }
 
 // Creation spec for clusters.
