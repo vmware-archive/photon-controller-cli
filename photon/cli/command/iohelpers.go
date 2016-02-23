@@ -743,3 +743,31 @@ func waitOnTaskOperation(taskId string, isScripting bool) error {
 	}
 	return nil
 }
+
+func validate_deployment_arguments(imageDatastoreNames string, enableAuth bool, oauthEndpoint string, oauthPort int,
+	oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups string) error {
+	if len(imageDatastoreNames) == 0 {
+		return fmt.Errorf("Image datastore names cannot be nil.")
+	}
+	if enableAuth {
+		if oauthEndpoint == "" {
+			return fmt.Errorf("OAuth endpoint cannot be nil when auth is enabled.")
+		}
+		if oauthPort == 0 {
+			return fmt.Errorf("OAuth port cannot be nil when auth is enabled.")
+		}
+		if oauthTenant == "" {
+			return fmt.Errorf("OAuth tenant cannot be nil when auth is enabled.")
+		}
+		if oauthUsername == "" {
+			return fmt.Errorf("OAuth username cannot be nil when auth is enabled.")
+		}
+		if oauthPassword == "" {
+			return fmt.Errorf("OAuth password cannot be nil when auth is enabled.")
+		}
+		if oauthSecurityGroups == "" {
+			return fmt.Errorf("OAuth security groups cannot be nil when auth is enabled.")
+		}
+	}
+	return nil
+}
