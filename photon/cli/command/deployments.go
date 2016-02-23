@@ -15,6 +15,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
@@ -64,6 +65,14 @@ func GetDeploymentsCommand() cli.Command {
 						Usage: "Oauth Password",
 					},
 					cli.StringFlag{
+						Name:  "oauth_port, r",
+						Usage: "Oauth Port",
+					},
+					cli.StringFlag{
+						Name:  "oauth_security_groups, g",
+						Usage: "Oauth Security Groups",
+					},
+					cli.StringFlag{
 						Name:  "syslog_endpoint, s",
 						Usage: "Syslog Endpoint",
 					},
@@ -90,6 +99,10 @@ func GetDeploymentsCommand() cli.Command {
 					cli.BoolFlag{
 						Name:  "enable_auth, a",
 						Usage: "Enable authentication/authorization for deployment",
+					},
+					cli.BoolFlag{
+						Name:  "enable_loadbalancer, l",
+						Usage: "Enable Load balancer",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -206,6 +219,8 @@ func createDeployment(c *cli.Context) error {
 	oauthTenant := c.String("oauth_tenant")
 	oauthUsername := c.String("oauth_username")
 	oauthPassword := c.String("oauth_password")
+	oauthPort := c.Int("oauth_port")
+	oauthSecurityGroups := c.String("oauth_security_groups")
 	syslogEndpoint := c.String("syslog_endpoint")
 	statsStoreEndpoint := c.String("stats_store_endpoint")
 	enableStats := c.Bool("enable_stats")
@@ -213,6 +228,10 @@ func createDeployment(c *cli.Context) error {
 	ntpEndpoint := c.String("ntp_endpoint")
 	useDatastoreVMs := c.Bool("use_image_datastore_for_vms")
 	enableAuth := c.Bool("enable_auth")
+	enableLoadBalancer := true
+	if c.IsSet("enable_loadbalancer") {
+		enableLoadBalancer = c.Bool("enable_loadbalancer")
+	}
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
@@ -237,6 +256,20 @@ func createDeployment(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		if !c.IsSet("oauth_port") {
+			port, err := askForInput("OAuth Port: ", "")
+			if err != nil {
+				return err
+			}
+			oauthPort, err = strconv.Atoi(port)
+			if err != nil {
+				return err
+			}
+		}
+		oauthSecurityGroups, err = askForInput("Comma-separated oauth security group names: ", oauthSecurityGroups)
+		if err != nil {
+			return err
+		}
 		syslogEndpoint, err = askForInput("Syslog Endpoint: ", syslogEndpoint)
 		if err != nil {
 			return err
@@ -255,19 +288,28 @@ func createDeployment(c *cli.Context) error {
 			return err
 		}
 	}
-
-	if len(imageDatastoreNames) == 0 {
-		return fmt.Errorf("Image datastore names cannot be nil.")
+	err = validate_deployment_arguments(imageDatastoreNames, enableAuth, oauthEndpoint, oauthPort,
+		oauthTenant, oauthUsername, oauthPassword, oauthSecurityGroups, enableStats, statsStoreEndpoint, statsStorePort)
+	if err != nil {
+		return err
 	}
+
 	imageDatastoreList := []string{}
 	imageDatastoreList = regexp.MustCompile(`\s*,\s*`).Split(imageDatastoreNames, -1)
 
+	oauthSecurityGroupList := []string{}
+	if oauthSecurityGroups != "" {
+		oauthSecurityGroupList = regexp.MustCompile(`\s*,\s*`).Split(oauthSecurityGroups, -1)
+	}
+
 	authInfo := &photon.AuthInfo{
-		Enabled:  enableAuth,
-		Tenant:   oauthTenant,
-		Endpoint: oauthEndpoint,
-		Username: oauthUsername,
-		Password: oauthPassword,
+		Enabled:        enableAuth,
+		Tenant:         oauthTenant,
+		Endpoint:       oauthEndpoint,
+		Username:       oauthUsername,
+		Password:       oauthPassword,
+		Port:           oauthPort,
+		SecurityGroups: oauthSecurityGroupList,
 	}
 
 	statsInfo := &photon.StatsInfo{
@@ -283,6 +325,7 @@ func createDeployment(c *cli.Context) error {
 		SyslogEndpoint:  syslogEndpoint,
 		Stats:           statsInfo,
 		UseImageDatastoreForVms: useDatastoreVMs,
+		LoadBalancerEnabled:     enableLoadBalancer,
 	}
 
 	if len(ntpEndpoint) == 0 {
@@ -407,45 +450,76 @@ func showDeployment(c *cli.Context) error {
 		return err
 	}
 
-	authEndpoint := deployment.Auth.Endpoint
-	if len(deployment.Auth.Endpoint) == 0 {
-		authEndpoint = "-"
-	}
-	authTenant := deployment.Auth.Tenant
-	if len(deployment.Auth.Tenant) == 0 {
-		authTenant = "-"
-	}
-	syslogEndpoint := deployment.SyslogEndpoint
-	if len(deployment.SyslogEndpoint) == 0 {
-		syslogEndpoint = "-"
-	}
-	statsStoreEndpoint := deployment.Stats.StoreEndpoint
-	if len(deployment.Stats.StoreEndpoint) == 0 {
-		statsStoreEndpoint = "-"
-	}
-	ntpEndpoint := deployment.NTPEndpoint
-	if len(deployment.NTPEndpoint) == 0 {
-		ntpEndpoint = "-"
-	}
-
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%t\t%t\t%s\t%s\t%s\t%s\t%t\t%s\t%d\n", deployment.ID, deployment.State, deployment.ImageDatastores,
-			deployment.UseImageDatastoreForVms, deployment.Auth.Enabled, authEndpoint, authTenant, syslogEndpoint,
-			ntpEndpoint, deployment.Stats.Enabled, statsStoreEndpoint, deployment.Stats.StorePort)
+		imageDataStores := getCommaSeparatedStringFromStringArray(deployment.ImageDatastores)
+		securityGroups := getCommaSeparatedStringFromStringArray(deployment.Auth.SecurityGroups)
+
+		fmt.Printf("%s\t%s\t%s\t%t\t%s\t%s\t%t\n", deployment.ID, deployment.State,
+			imageDataStores, deployment.UseImageDatastoreForVms, deployment.SyslogEndpoint,
+			deployment.NTPEndpoint, deployment.LoadBalancerEnabled)
+
+		fmt.Printf("%t\t%s\t%s\t%s\t%s\t%d\t%s\n", deployment.Auth.Enabled, deployment.Auth.Username,
+			deployment.Auth.Password, deployment.Auth.Endpoint, deployment.Auth.Tenant, deployment.Auth.Port, securityGroups)
 
 	} else {
+		syslogEndpoint := deployment.SyslogEndpoint
+		if len(deployment.SyslogEndpoint) == 0 {
+			syslogEndpoint = "-"
+		}
+		ntpEndpoint := deployment.NTPEndpoint
+		if len(deployment.NTPEndpoint) == 0 {
+			ntpEndpoint = "-"
+		}
+		authUsername := deployment.Auth.Username
+		if len(deployment.Auth.Username) == 0 {
+			authUsername = "-"
+		}
+		authPassword := deployment.Auth.Password
+		if len(deployment.Auth.Tenant) == 0 {
+			authPassword = "-"
+		}
+		authEndpoint := deployment.Auth.Endpoint
+		if len(deployment.Auth.Endpoint) == 0 {
+			authEndpoint = "-"
+		}
+		authTenant := deployment.Auth.Tenant
+		if len(deployment.Auth.Tenant) == 0 {
+			authTenant = "-"
+		}
 		fmt.Printf("Deployment ID: %s\n", deployment.ID)
 		fmt.Printf("  State:                       %s\n", deployment.State)
 		fmt.Printf("  Image Datastores:            %s\n", deployment.ImageDatastores)
 		fmt.Printf("  Use image datastore for vms: %t\n\n", deployment.UseImageDatastoreForVms)
-		fmt.Printf("  Auth Enabled:                %t\n", deployment.Auth.Enabled)
-		fmt.Printf("  Auth Endpoint:               %s\n", authEndpoint)
-		fmt.Printf("  Auth Tenant:                 %s\n\n", authTenant)
 		fmt.Printf("  Syslog Endpoint:             %s\n", syslogEndpoint)
 		fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
-		fmt.Printf("  Stats Enabled:               %t\n", deployment.Stats.Enabled)
-		fmt.Printf("  Stats Store Endpoint:        %s\n", statsStoreEndpoint)
-		fmt.Printf("  Stats Store Port:            %d\n", deployment.Stats.StorePort)
+		fmt.Printf("  Auth:\n")
+		fmt.Printf("    Enabled:                %t\n", deployment.Auth.Enabled)
+		fmt.Printf("    UserName:               %s\n", authUsername)
+		fmt.Printf("    Password:               %s\n", authPassword)
+		fmt.Printf("    Endpoint:               %s\n", authEndpoint)
+		fmt.Printf("    Tenant:                 %s\n", authTenant)
+		fmt.Printf("    Port:                   %d\n", deployment.Auth.Port)
+		fmt.Printf("    Securitygroups:         %v\n", deployment.Auth.SecurityGroups)
+	}
+
+	if deployment.Stats != nil {
+		stats := deployment.Stats
+		if c.GlobalIsSet("non-interactive") {
+			fmt.Printf("%t\t%s\t%d\n", stats.Enabled, stats.StoreEndpoint, stats.StorePort)
+		} else {
+			statsStoreEndpoint := deployment.Stats.StoreEndpoint
+			if len(stats.StoreEndpoint) == 0 {
+				statsStoreEndpoint = "-"
+			}
+			fmt.Printf("  Stats:\n")
+			fmt.Printf("    Enabled:               %t\n", stats.Enabled)
+			fmt.Printf("    Store Endpoint:        %s\n", statsStoreEndpoint)
+			fmt.Printf("    Store Port:            %d\n", stats.StorePort)
+		}
+	} else {
+		if c.GlobalIsSet("non-interactive") {
+			fmt.Printf("\n")
+		}
 	}
 
 	if deployment.Migration != nil {
@@ -454,12 +528,39 @@ func showDeployment(c *cli.Context) error {
 			fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
 				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading)
 		} else {
-			fmt.Printf("\n")
-			fmt.Printf("Migration status:\n")
-			fmt.Printf("  Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
-			fmt.Printf("  Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
+			fmt.Printf("  Migration status:\n")
+			fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
+			fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
 				migration.DataMigrationCycleSize)
-			fmt.Printf("  VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+			fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+		}
+	} else {
+		if c.GlobalIsSet("non-interactive") {
+			fmt.Printf("\n")
+		}
+	}
+
+	if deployment.ClusterConfigurations != nil {
+		if c.GlobalIsSet("non-interactive") {
+			clusterConfigurations := []string{}
+			for _, c := range deployment.ClusterConfigurations {
+				clusterConfigurations = append(clusterConfigurations, fmt.Sprintf("%s\t%s", c.Type, c.ImageID))
+			}
+			scriptClusterConfigurations := strings.Join(clusterConfigurations, ",")
+			fmt.Println(len(deployment.ClusterConfigurations))
+			fmt.Printf("%s\n", scriptClusterConfigurations)
+		} else {
+			fmt.Println("  Cluster Configurations:")
+			for i, c := range deployment.ClusterConfigurations {
+				fmt.Printf("    ClusterConfiguration %d:\n", i+1)
+				fmt.Println("      Kind:     ", c.Kind)
+				fmt.Println("      Type:     ", c.Type)
+				fmt.Println("      ImageID:  ", c.ImageID)
+			}
+		}
+	} else {
+		if c.GlobalIsSet("non-interactive") {
+			fmt.Printf("\n")
 		}
 	}
 

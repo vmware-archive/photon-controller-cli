@@ -746,11 +746,48 @@ func waitOnTaskOperation(taskId string, isScripting bool) error {
 
 func getCommaSeparatedStringFromStringArray(arr []string) string {
 	res := ""
-	for _,element := range arr{
+	for _, element := range arr {
 		res += element + ","
 	}
 	if res != "" {
-		res = strings.TrimSuffix(res,",")
+		res = strings.TrimSuffix(res, ",")
 	}
 	return res
+}
+
+func validate_deployment_arguments(imageDatastoreNames string, enableAuth bool, oauthEndpoint string, oauthPort int,
+	oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups string,
+	enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
+	if len(imageDatastoreNames) == 0 {
+		return fmt.Errorf("Image datastore names cannot be nil.")
+	}
+	if enableAuth {
+		if oauthEndpoint == "" {
+			return fmt.Errorf("OAuth endpoint cannot be nil when auth is enabled.")
+		}
+		if oauthPort == 0 {
+			return fmt.Errorf("OAuth port cannot be nil when auth is enabled.")
+		}
+		if oauthTenant == "" {
+			return fmt.Errorf("OAuth tenant cannot be nil when auth is enabled.")
+		}
+		if oauthUsername == "" {
+			return fmt.Errorf("OAuth username cannot be nil when auth is enabled.")
+		}
+		if oauthPassword == "" {
+			return fmt.Errorf("OAuth password cannot be nil when auth is enabled.")
+		}
+		if oauthSecurityGroups == "" {
+			return fmt.Errorf("OAuth security groups cannot be nil when auth is enabled.")
+		}
+	}
+	if enableStats {
+		if statsStoreEndpoint == "" {
+			return fmt.Errorf("Stats store endpoint cannot be nil when stats is enabled.")
+		}
+		if statsStorePort == 0 {
+			return fmt.Errorf("Stats store port cannot be nil when stats is enabled.")
+		}
+	}
+	return nil
 }
