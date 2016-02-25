@@ -12,8 +12,8 @@
 		},
 		{
 			"ImportPath": "github.com/vmware/photon-controller-go-sdk/photon",
-			"Comment": "PROMOTED-57",
-			"Rev": "39060a0603bdfc157283ba1c870dd910eecb34ca"
+			"Comment": "PROMOTED-65",
+			"Rev": "df47eae58a0cb9a836eaba63e7f347f29045bc5c"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
