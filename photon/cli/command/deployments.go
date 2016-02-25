@@ -138,26 +138,6 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "prepare-deployment-migration",
-				Usage: "Prepares migration of deployment from source to destination",
-				Action: func(c *cli.Context) {
-					err := initializeMigrateDeployment(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:  "finalize-deployment-migration",
-				Usage: "Finalizes migration of deployment from source to destination",
-				Action: func(c *cli.Context) {
-					err := finalizeMigrateDeployment(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
 				Name:  "update-image-datastores",
 				Usage: "Updates the list of image datastores",
 				Action: func(c *cli.Context) {
@@ -477,60 +457,6 @@ func listDeploymentVms(c *cli.Context) error {
 	}
 
 	err = printVMList(vms.Items, c.GlobalIsSet("non-interactive"), false)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Sends a initialize migrate deployment task to client
-func initializeMigrateDeployment(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 2, "deployment prepare migration <sourceDeploymentAddress> <id>")
-	if err != nil {
-		return err
-	}
-	sourceDeploymentAddress := c.Args()[0]
-	id := c.Args()[1]
-
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
-	if err != nil {
-		return err
-	}
-
-	initializeMigrateTask, err := client.Esxclient.Deployments.InitializeDeploymentMigration(sourceDeploymentAddress, id)
-	if err != nil {
-		return err
-	}
-
-	err = waitOnTaskOperation(initializeMigrateTask.ID, c.GlobalIsSet("non-interactive"))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Sends a finalize migrate deployment task to client
-func finalizeMigrateDeployment(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 2, "deployment finalize migration <sourceDeploymentAddress> <id>")
-	if err != nil {
-		return err
-	}
-	sourceDeploymentAddress := c.Args()[0]
-	id := c.Args()[1]
-
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
-	if err != nil {
-		return err
-	}
-
-	finalizeMigrateTask, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(sourceDeploymentAddress, id)
-	if err != nil {
-		return err
-	}
-
-	err = waitOnTaskOperation(finalizeMigrateTask.ID, c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return err
 	}

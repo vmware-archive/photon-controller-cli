@@ -474,5 +474,130 @@ func TestDestroy(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+}
 
+func TestInitializeMigrateDeployment(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "INITIALIZE_MIGRATE_DEPLOYMENT",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+	completedTask := &photon.Task{
+		Operation: "INITIALIZE_MIGRATE_DEPLOYMENT",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+	deployment := photon.Deployment{
+		ID: "1",
+	}
+	deployments := &photon.Deployments{
+		[]photon.Deployment{deployment},
+	}
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected createTask")
+	}
+	taskresponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected createTask")
+	}
+	deploymensResponse, err := json.Marshal(deployments)
+	if err != nil {
+		t.Error("Not expecting error serializing deployment list")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/deployments",
+		mocks.CreateResponder(200, string(deploymensResponse[:])),
+	)
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/deployments/1/initialize_migration",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskresponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"0.0.0.0:9000"})
+	if err != nil {
+		t.Error("Not expecting argument parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, nil)
+	err = deploymentMigrationPrepare(cxt)
+	if err != nil {
+		t.Error(err)
+		t.Error("Not expecting initialize Deployment to fail")
+	}
+}
+
+func TestFinalizeeMigrateDeployment(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "FINALIZE_MIGRATE_DEPLOYMENT",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+	completedTask := &photon.Task{
+		Operation: "FINALIZE_MIGRATE_DEPLOYMENT",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+	deployment := photon.Deployment{
+		ID: "1",
+	}
+	deployments := &photon.Deployments{
+		[]photon.Deployment{deployment},
+	}
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected createTask")
+	}
+	taskresponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected createTask")
+	}
+	deploymensResponse, err := json.Marshal(deployments)
+	if err != nil {
+		t.Error("Not expecting error serializing deployment list")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/deployments",
+		mocks.CreateResponder(200, string(deploymensResponse[:])),
+	)
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/deployments/1/finalize_migration",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskresponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"0.0.0.0:9000"})
+	if err != nil {
+		t.Error("Not expecting argument parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, nil)
+	err = deploymentMigrationFinalize(cxt)
+	if err != nil {
+		t.Error(err)
+		t.Error("Not expecting initialize Deployment to fail")
+	}
 }
