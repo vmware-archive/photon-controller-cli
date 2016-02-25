@@ -497,13 +497,16 @@ func showCluster(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%s\t%d\n", cluster.ID, cluster.Name, cluster.State, cluster.Type, cluster.SlaveCount)
+		extendedProperties := strings.Trim(strings.TrimLeft(fmt.Sprint(cluster.ExtendedProperties), "map"), "[]")
+		fmt.Printf("%s\t%s\t%s\t%s\t%d\t%s\n", cluster.ID, cluster.Name, cluster.State, cluster.Type,
+			cluster.SlaveCount, extendedProperties)
 	} else {
-		fmt.Println("Cluster ID:    ", cluster.ID)
-		fmt.Println("  Name:        ", cluster.Name)
-		fmt.Println("  State:       ", cluster.State)
-		fmt.Println("  Type:        ", cluster.Type)
-		fmt.Println("  Slave count: ", cluster.SlaveCount)
+		fmt.Println("Cluster ID:            ", cluster.ID)
+		fmt.Println("  Name:                ", cluster.Name)
+		fmt.Println("  State:               ", cluster.State)
+		fmt.Println("  Type:                ", cluster.Type)
+		fmt.Println("  Slave count:         ", cluster.SlaveCount)
+		fmt.Println("  Extended Properties: ", cluster.ExtendedProperties)
 		fmt.Println()
 	}
 
