@@ -84,7 +84,7 @@ func GetSystemCommand() cli.Command {
 			},
 			{
 				Name:  "deploy",
-				Usage: "Deploy Phonton using DC Map",
+				Usage: "Deploy Photon using DC Map",
 				Action: func(c *cli.Context) {
 					err := deploy(c)
 					if err != nil {
@@ -94,12 +94,38 @@ func GetSystemCommand() cli.Command {
 			},
 			{
 				Name:  "destroy",
-				Usage: "destroy Phonton deployment",
+				Usage: "destroy Photon deployment",
 				Action: func(c *cli.Context) {
 					err := destroy(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
+				},
+			},
+			{
+				Name: "migration",
+				Usage: "migrates state and hosts between photon controller deployments",
+				Subcommands: []cli.Command{
+					{
+					  Name: "prepare",
+						Usage: "initializes the migration",
+						Action: func(c *cli.Context) {
+								err := deploymentMigrationPrepare(c)
+								if err != nil {
+									log.Fatal("Error: ", err)
+								}
+						},
+					},
+					{
+					  Name: "finalize",
+						Usage: "finalizes the migration",
+						Action: func(c *cli.Context) {
+								err := deploymentMigrationFinalize(c)
+								if err != nil {
+									log.Fatal("Error: ", err)
+								}
+						},
+					},
 				},
 			},
 		},
@@ -246,26 +272,16 @@ func destroy(c *cli.Context) error {
 
 // Starts the recurring copy state of source system into destination
 func deploymentMigrationPrepare(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "system migration prepare <sourceAddress>")
-	if err != nil {
-		return err
-	}
+	err := checkArgNum(c.Args(), 1, "system migration prepare <old_management_endpoint>"); if err != nil { return err }
 	sourceAddress := c.Args().First()
-
-	deployments, err := client.Esxclient.Deployments.GetAll()
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive")); if err != nil { return err }
+	deployments, err := client.Esxclient.Deployments.GetAll(); if err != nil { return err }
 
 	// Initialize deployment migration
 	for _, deployment := range deployments.Items {
-		initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(sourceAddress, deployment.ID)
-		if err != nil {
-			return err
-		}
-
-		_, err = pollTask(initializeMigrate.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Deployment '%s' migration started '%s'.\n", deployment.ID, sourceAddress)
+		initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(sourceAddress, deployment.ID); if err != nil { return err }
+		_, err = pollTask(initializeMigrate.ID); if err != nil { return err }
+		fmt.Printf("Deployment '%s' migration started [source management endpoint: '%s'].\n", deployment.ID, sourceAddress)
 
 		return nil
 	}
@@ -275,26 +291,16 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 
 // Finishes the copy state of source system into destination and makes this system the active one
 func deploymentMigrationFinalize(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "system migration finalize <sourceAddress>")
-	if err != nil {
-		return err
-	}
+	fmt.Printf("'%d'",len(c.Args()))
+	err := checkArgNum(c.Args(), 1, "system migration finalize <old_management_endpoint>"); if err != nil { return err }
 	sourceAddress := c.Args().First()
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive")); if err != nil { return err }
+	deployments, err := client.Esxclient.Deployments.GetAll(); if err != nil { return err }
 
-	deployments, err := client.Esxclient.Deployments.GetAll()
-
-	// Initialize deployment migration
+	// Finalize deployment migration
 	for _, deployment := range deployments.Items {
-		finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(sourceAddress, deployment.ID)
-		if err != nil {
-			return err
-		}
-
-		_, err = pollTask(finalizeMigrate.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Deployment '%s' migration started '%s' to finalize.\n", deployment.ID, sourceAddress)
+		finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(sourceAddress, deployment.ID); if err != nil { return err }
+		_, err = pollTask(finalizeMigrate.ID); if err != nil { return err }
 
 		return nil
 	}
