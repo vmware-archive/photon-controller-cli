@@ -250,7 +250,8 @@ func showNetwork(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State, network.PortGroups, network.Description)
+		portGroups := getCommaSeparatedStringFromStringArray(network.PortGroups)
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State, portGroups, network.Description)
 	} else {
 		fmt.Printf("Network ID: %s\n", network.ID)
 		fmt.Printf("  Name:        %s\n", network.Name)

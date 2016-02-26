@@ -743,3 +743,14 @@ func waitOnTaskOperation(taskId string, isScripting bool) error {
 	}
 	return nil
 }
+
+func getCommaSeparatedStringFromStringArray(arr []string) string {
+	res := ""
+	for _,element := range arr{
+		res += element + ","
+	}
+	if res != "" {
+		res = strings.TrimSuffix(res,",")
+	}
+	return res
+}
