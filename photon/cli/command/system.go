@@ -15,6 +15,7 @@ import (
 	"log"
 	"net"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
@@ -40,6 +41,7 @@ type Deployment struct {
 	StatsStoreEndpoint      string      `yaml:"stats_store_endpoint"`
 	StatsPort               int         `yaml:"stats_port"`
 	StatsEnabled            bool        `yaml:"stats_enabled"`
+	LoadBalancerEnabled     string      `yaml:"enable_loadbalancer"`
 	ImageDatastores         string      `yaml:"image_datastores"`
 	AuthEnabled             bool        `yaml:"auth_enabled"`
 	AuthEndpoint            string      `yaml:"oauth_endpoint"`
@@ -319,6 +321,15 @@ func getDcMap(file string) (res *DcMap, err error) {
 }
 
 func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
+	lbEnabledString := dcMap.Deployment.LoadBalancerEnabled
+	lbEnabled := true
+	if len(lbEnabledString) > 0 {
+		lbEnabled, err = strconv.ParseBool(lbEnabledString)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	authInfo := &photon.AuthInfo{
 		Enabled:        dcMap.Deployment.AuthEnabled,
 		Endpoint:       dcMap.Deployment.AuthEndpoint,
@@ -342,6 +353,7 @@ func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
 		SyslogEndpoint:  dcMap.Deployment.SyslogEndpoint,
 		Stats:           statsInfo,
 		UseImageDatastoreForVms: dcMap.Deployment.UseImageDatastoreForVms,
+		LoadBalancerEnabled: lbEnabled,
 	}
 
 	createDeploymentTask, err := client.Esxclient.Deployments.Create(deploymentSpec)
