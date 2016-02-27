@@ -455,11 +455,11 @@ func showDeployment(c *cli.Context) error {
 				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading)
 		} else {
 			fmt.Printf("\n")
-			fmt.Printf("Migration status:")
-			fmt.Printf("  Completed data migration cycles:        %d\n", migration.CompletedDataMigrationCycles)
-			fmt.Printf("  Current data migration cycles progress: %d / %d\n", migration.DataMigrationCycleProgress,
+			fmt.Printf("Migration status:\n")
+			fmt.Printf("  Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
+			fmt.Printf("  Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
 				migration.DataMigrationCycleSize)
-			fmt.Printf("  VIB upload progress:                    %d / %d\n", migration.VibsUploaded, migration.VibsUploading)
+			fmt.Printf("  VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
 		}
 	}
 
