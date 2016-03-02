@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/cli/client"
@@ -298,17 +299,25 @@ func showImage(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%d\t%s\n", image.ID, image.Name, image.State, image.Size, image.ReplicationType)
-		fmt.Println(len(image.Settings))
+		fmt.Printf("%s\t%s\t%s\t%d\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size, image.ReplicationType,
+			image.ReplicationProgress, image.SeedingProgress)
+
+		settings := []string{}
 		for _, setting := range image.Settings {
-			fmt.Printf("%s\t%s\n", setting.Name, setting.DefaultValue)
+			settings = append(settings, fmt.Sprintf("%s\t%s", setting.Name, setting.DefaultValue))
 		}
+		scriptSettings := strings.Join(settings, ",")
+
+		fmt.Println(len(image.Settings))
+		fmt.Printf("%s\n", scriptSettings)
 	} else {
 		fmt.Printf("Image ID: %s\n", image.ID)
-		fmt.Printf("  Name:                   %s\n", image.Name)
-		fmt.Printf("  State:                  %s\n", image.State)
-		fmt.Printf("  Size:                   %d Byte(s)\n", image.Size)
-		fmt.Printf("  Image Replication Type: %s\n", image.ReplicationType)
+		fmt.Printf("  Name:                       %s\n", image.Name)
+		fmt.Printf("  State:                      %s\n", image.State)
+		fmt.Printf("  Size:                       %d Byte(s)\n", image.Size)
+		fmt.Printf("  Image Replication Type:     %s\n", image.ReplicationType)
+		fmt.Printf("  Image Replication Progress: %s\n", image.ReplicationProgress)
+		fmt.Printf("  Image Seeding Progress:     %s\n", image.SeedingProgress)
 		fmt.Printf("  Settings: \n")
 		for _, setting := range image.Settings {
 			fmt.Printf("    %s : %s\n", setting.Name, setting.DefaultValue)
