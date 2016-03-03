@@ -95,6 +95,16 @@ func GetSystemCommand() cli.Command {
 				},
 			},
 			{
+				Name:  "expand",
+				Usage: "Add multiple hosts",
+				Action: func(c *cli.Context) {
+					err := expand(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
 				Name:  "destroy",
 				Usage: "destroy Photon deployment",
 				Action: func(c *cli.Context) {
@@ -215,6 +225,37 @@ func deploy(c *cli.Context) error {
 
 	// Deploy
 	err = doDeploy(deploymentID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Add most hosts in batch mode
+func expand(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "system expand <file>")
+	if err != nil {
+		return err
+	}
+	file := c.Args().First()
+	//deploymentID := c.Args()[1]
+	dcMap, err := getDcMap(file)
+	if err != nil {
+		return err
+	}
+
+	client.Esxclient, err = client.GetClient(false)
+	if err != nil {
+		return err
+	}
+
+
+	deployments, err := client.Esxclient.Deployments.GetAll()
+	deploymentID := deployments.Items[0].ID
+
+	// Create Hosts
+	err = createHostsInBatch(dcMap, deploymentID)
 	if err != nil {
 		return err
 	}
@@ -497,6 +538,90 @@ func createHostsFromDcMap(dcMap *DcMap, deploymentID string) error {
 
 	return nil
 }
+
+func createHostsInBatch(dcMap *DcMap, deploymentID string) error {
+	availabilityZoneNameToIdMap, err := createAvailabilityZonesFromDcMap(dcMap)
+	if err != nil {
+		return err
+	}
+
+	var hostSpecs []photon.HostCreateSpec
+	var managementNetworkIps []string
+	for _, host := range dcMap.Hosts {
+		if err != nil {
+			return err
+		}
+		hostIps, err := parseIpRanges(host.IpRanges)
+		if err != nil {
+			return err
+		}
+		if hostIps == nil || len(hostIps) == 0 {
+			return errors.New("Host IP Address missing in DC Map")
+		}
+
+		if host.Metadata != nil {
+			if managementVmIps, exists := host.Metadata["MANAGEMENT_VM_IPS"]; exists {
+				managementNetworkIps, err = parseIpRanges(managementVmIps)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		for i := 0; i < len(hostIps); i++ {
+			hostIp := hostIps[i]
+			metaData := host.Metadata
+			if host.Metadata != nil {
+				if _, exists := host.Metadata["MANAGEMENT_VM_IPS"]; exists {
+					metaData = make(map[string]string)
+					for key, value := range host.Metadata {
+						metaData[key] = value
+					}
+					delete(metaData, "MANAGEMENT_VM_IPS")
+					if i < len(managementNetworkIps) {
+						metaData["MANAGEMENT_NETWORK_IP"] = managementNetworkIps[i]
+					}
+				}
+			}
+			hostSpec := photon.HostCreateSpec{
+				Username:         host.Username,
+				Password:         host.Password,
+				Address:          hostIp,
+				AvailabilityZone: availabilityZoneNameToIdMap[host.AvailabilityZone],
+				Tags:             host.Tags,
+				Metadata:         metaData,
+			}
+			hostSpecs = append(hostSpecs, hostSpec)
+		}
+	}
+
+	createTaskMap := make(map[string]*photon.Task)
+	var creationErrors []error
+	var pollErrors []error
+	for _, spec := range hostSpecs {
+		createHostTask, err := client.Esxclient.Hosts.Create(&spec, deploymentID)
+		if err != nil {
+			creationErrors = append(creationErrors, err)
+			fmt.Printf("Creation of Host document with ip '%s' failed: with err '%s'\n",
+				spec.Address, err)
+		} else {
+			createTaskMap[spec.Address] = createHostTask
+		}
+	}
+
+	for address, createTask := range createTaskMap {
+		task, err := pollTask(createTask.ID)
+		if err != nil {
+			pollErrors = append(pollErrors, err)
+			fmt.Printf("Creation of Host with ip '%s' failed: ID = %s with err '%s'\n\n",
+				address, task.ID, err)
+		} else {
+			fmt.Printf("Host with ip '%s' created: ID = %s\n\n", address, task.Entity.ID)
+		}
+	}
+	return nil
+}
+
 
 func parseIpRanges(ipRanges string) ([]string, error) {
 	var ipList []string
