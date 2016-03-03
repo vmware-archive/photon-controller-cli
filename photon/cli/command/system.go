@@ -95,6 +95,16 @@ func GetSystemCommand() cli.Command {
 				},
 			},
 			{
+				Name:  "addHosts",
+				Usage: "Add multiple hosts",
+				Action: func(c *cli.Context) {
+					err := addHosts(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
 				Name:  "destroy",
 				Usage: "destroy Photon deployment",
 				Action: func(c *cli.Context) {
@@ -215,6 +225,37 @@ func deploy(c *cli.Context) error {
 
 	// Deploy
 	err = doDeploy(deploymentID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
+// Add most hosts in batch mode
+func addHosts(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "system addHosts <file>")
+	if err != nil {
+		return err
+	}
+	file := c.Args().First()
+	dcMap, err := getDcMap(file)
+	if err != nil {
+		return err
+	}
+
+	client.Esxclient, err = client.GetClient(false)
+	if err != nil {
+		return err
+	}
+
+
+	deployments, err := client.Esxclient.Deployments.GetAll()
+	deploymentID := deployments.Items[0].ID
+
+	// Create Hosts
+	err = createHostsInBatch(dcMap, deploymentID)
 	if err != nil {
 		return err
 	}
@@ -430,27 +471,81 @@ func createAvailabilityZonesFromDcMap(dcMap *DcMap) (map[string]string, error) {
 }
 
 func createHostsFromDcMap(dcMap *DcMap, deploymentID string) error {
-	availabilityZoneNameToIdMap, err := createAvailabilityZonesFromDcMap(dcMap)
+	hostSpecs, err := createHostSpecs(dcMap)
 	if err != nil {
 		return err
 	}
 
+	for _, spec := range hostSpecs {
+		createHostTask, err := client.Esxclient.Hosts.Create(&spec, deploymentID)
+		if err != nil {
+			return err
+		}
+
+		task, err := pollTask(createHostTask.ID)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Host with ip '%s' created: ID = %s\n", spec.Address, task.Entity.ID)
+	}
+
+	return nil
+}
+
+func createHostsInBatch(dcMap *DcMap, deploymentID string) error {
+	hostSpecs, err := createHostSpecs(dcMap)
+	if err != nil {
+		return err
+	}
+	
+	createTaskMap := make(map[string]*photon.Task)
+	var creationErrors []error
+	var pollErrors []error
+	for _, spec := range hostSpecs {
+		createHostTask, err := client.Esxclient.Hosts.Create(&spec, deploymentID)
+		if err != nil {
+			creationErrors = append(creationErrors, err)
+			fmt.Printf("Creation of Host document with ip '%s' failed: with err '%s'\n",
+				spec.Address, err)
+		} else {
+			createTaskMap[spec.Address] = createHostTask
+		}
+	}
+
+	for address, createTask := range createTaskMap {
+		task, err := pollTask(createTask.ID)
+		if err != nil {
+			pollErrors = append(pollErrors, err)
+			fmt.Printf("Creation of Host with ip '%s' failed: ID = %s with err '%s'\n\n",
+				address, task.ID, err)
+		} else {
+			fmt.Printf("Host with ip '%s' created: ID = %s\n\n", address, task.Entity.ID)
+		}
+	}
+	return nil
+}
+
+func createHostSpecs(dcMap *DcMap) ([]photon.HostCreateSpec, error) {
+	availabilityZoneNameToIdMap, err := createAvailabilityZonesFromDcMap(dcMap)
+	if err != nil {
+		return nil, err
+	}
 	var hostSpecs []photon.HostCreateSpec
 	var managementNetworkIps []string
 	for _, host := range dcMap.Hosts {
 		hostIps, err := parseIpRanges(host.IpRanges)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if hostIps == nil || len(hostIps) == 0 {
-			return errors.New("Host IP Address missing in DC Map")
+			return nil, errors.New("Host IP Address missing in DC Map")
 		}
 
 		if host.Metadata != nil {
 			if managementVmIps, exists := host.Metadata["MANAGEMENT_VM_IPS"]; exists {
 				managementNetworkIps, err = parseIpRanges(managementVmIps)
 				if err != nil {
-					return err
+					return nil, err
 				}
 			}
 		}
@@ -482,21 +577,9 @@ func createHostsFromDcMap(dcMap *DcMap, deploymentID string) error {
 		}
 	}
 
-	for _, spec := range hostSpecs {
-		createHostTask, err := client.Esxclient.Hosts.Create(&spec, deploymentID)
-		if err != nil {
-			return err
-		}
-
-		task, err := pollTask(createHostTask.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Host with ip '%s' created: ID = %s\n", spec.Address, task.Entity.ID)
-	}
-
-	return nil
+	return hostSpecs, nil
 }
+
 
 func parseIpRanges(ipRanges string) ([]string, error) {
 	var ipList []string
