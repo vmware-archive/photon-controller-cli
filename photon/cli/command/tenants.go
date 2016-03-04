@@ -357,9 +357,14 @@ func setSecurityGroups(c *cli.Context) error {
 		return err
 	}
 	id := c.Args().First()
-	securityGroups := &photon.SecurityGroups{
-		Items: regexp.MustCompile(`\s*,\s*`).Split(c.Args()[1], -1),
+	items := []string{}
+	if c.Args()[1] != ""{
+       items = regexp.MustCompile(`\s*,\s*`).Split(c.Args()[1], -1)
 	}
+	securityGroups := &photon.SecurityGroups{
+		Items: items,
+	}
+
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return err
