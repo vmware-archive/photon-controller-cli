@@ -128,6 +128,16 @@ func GetSystemCommand() cli.Command {
 								}
 						},
 					},
+					{
+						Name: "status",
+						Usage: "shows the status of the current migration",
+						Action: func(c *cli.Context) {
+							err := showMigrationStatus(c)
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
 				},
 			},
 		},
@@ -307,6 +317,31 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 		return nil
 	}
 
+	return nil
+}
+
+// displays the migration status
+func showMigrationStatus(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 0, "migration status"); if err != nil { return err }
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive")); if err != nil { return err }
+	deployments, err := client.Esxclient.Deployments.GetAll(); if err != nil { return err }
+
+	for _, deployment := range deployments.Items {
+		if deployment.Migration != nil {
+			migration := deployment.Migration
+			if c.GlobalIsSet("non-interactive") {
+				fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
+					migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+			} else {
+				fmt.Printf("  Migration status:\n")
+				fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
+				fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
+					migration.DataMigrationCycleSize)
+				fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+			}
+		}
+		return nil
+	}
 	return nil
 }
 

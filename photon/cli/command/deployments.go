@@ -526,7 +526,7 @@ func showDeployment(c *cli.Context) error {
 		migration := deployment.Migration
 		if c.GlobalIsSet("non-interactive") {
 			fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
-				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading)
+				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
 		} else {
 			fmt.Printf("  Migration status:\n")
 			fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
