@@ -26,9 +26,7 @@ var tokenUrl string = "/openidconnect/token"
 
 // Gets authentication info.
 func (api *AuthAPI) Get() (info *AuthInfo, err error) {
-	res, err := rest.Get(api.client.httpClient,
-		api.client.AuthEndpoint+authUrl,
-		api.client.options.TokenOptions.AccessToken)
+	res, err := rest.Get(api.client.httpClient, api.client.Endpoint+authUrl, "")
 	if err != nil {
 		return
 	}
