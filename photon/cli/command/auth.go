@@ -59,7 +59,7 @@ func show(c *cli.Context) error {
 		return err
 	}
 
-	err = printAuthInfo(auth)
+	err = printAuthInfo(auth, c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return err
 	}
@@ -68,14 +68,20 @@ func show(c *cli.Context) error {
 }
 
 // Print out auth info
-func printAuthInfo(auth *photon.AuthInfo) error {
-	w := new(tabwriter.Writer)
-	w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-	fmt.Fprintf(w, "Enabled\tEndpoint\tPort\n")
-	fmt.Fprintf(w, "%t\t%s\t%d\n", auth.Enabled, auth.Endpoint, auth.Port)
-	err := w.Flush()
-	if err != nil {
-		return err
+func printAuthInfo(auth *photon.AuthInfo, isScripting bool) error {
+	if isScripting {
+		fmt.Printf("%t\t%s\t%d\t%s\t%s\t%s\t%s\n", auth.Enabled, auth.Endpoint, auth.Port,
+			auth.Tenant, auth.Username, auth.Password, getCommaSeparatedStringFromStringArray(auth.SecurityGroups))
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+		fmt.Fprintf(w, "Enabled\tEndpoint\tPort\tTenant\tUsername\tPassword\tSecurityGroups\n")
+		fmt.Fprintf(w, "%t\t%s\t%d\t%s\t%s\t%s\t%v\n", auth.Enabled, auth.Endpoint, auth.Port, auth.Tenant,
+			auth.Username, auth.Password, auth.SecurityGroups)
+		err := w.Flush()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
