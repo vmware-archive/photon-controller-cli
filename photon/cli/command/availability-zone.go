@@ -170,10 +170,11 @@ func showAvailabilityZone(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\n", zone.ID, zone.Name, zone.State)
+		fmt.Printf("%s\t%s\t%s\t%s\n", zone.ID, zone.Name, zone.Kind, zone.State)
 	} else {
 		fmt.Printf("AvailabilityZone ID: %s\n", zone.ID)
 		fmt.Printf("  Name:        %s\n", zone.Name)
+		fmt.Printf("  Kind:        %s\n", zone.Kind)
 		fmt.Printf("  State:       %s\n", zone.State)
 	}
 
@@ -182,7 +183,7 @@ func showAvailabilityZone(c *cli.Context) error {
 
 // Retrieves a list of availability zones, returns an error if one occurred
 func listAvailabilityZones(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "availability zone list")
+	err := checkArgNum(c.Args(), 0, "availability-zone list")
 	if err != nil {
 		return err
 	}
@@ -221,7 +222,7 @@ func listAvailabilityZones(c *cli.Context) error {
 // Sends a delete availability zone task to client based on the cli.Context
 // Returns an error if one occurred
 func deleteAvailabilityZone(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "availability zone delete <id>")
+	err := checkArgNum(c.Args(), 1, "availability-zone delete <id>")
 	if err != nil {
 		return err
 	}
@@ -247,7 +248,7 @@ func deleteAvailabilityZone(c *cli.Context) error {
 
 // Retrieves tasks from specified availability zone
 func getAvailabilityZoneTasks(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "availability zone task <id> [<options>]")
+	err := checkArgNum(c.Args(), 1, "availability-zone task <id> [<options>]")
 	if err != nil {
 		return err
 	}
