@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	cf "github.com/vmware/photon-controller-cli/photon/cli/configuration"
+	"strings"
 )
 
 func TestGet(t *testing.T) {
@@ -33,6 +34,10 @@ func TestGet(t *testing.T) {
 
 	// test GetClient with valid endpoint in config file
 	endpoint := "http://localhost:9080"
+	testGetEndpoint(t, endpoint, false, true)
+
+	// test GetClient with valid endpoint in config file with trailing "/"
+	endpoint = "http://localhost:9080/"
 	testGetEndpoint(t, endpoint, false, true)
 
 	endpoint = "https://172.31.253.66:443"
@@ -81,7 +86,7 @@ func testGetEndpoint(t *testing.T, endpoint string, ephttps bool, skipVerify boo
 		t.Error("Not expecting error trying to get client when config file has valid endpoint")
 	}
 
-	if Esxclient.Endpoint != endpoint {
-		t.Error("Endpoint of client not match endpoint in config file")
+	if Esxclient.Endpoint != strings.TrimRight(endpoint, "/") {
+		t.Error("Endpoint of client does not match endpoint in config file for ", endpoint)
 	}
 }

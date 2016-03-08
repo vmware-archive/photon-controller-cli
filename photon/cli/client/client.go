@@ -17,6 +17,7 @@ import (
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
 
 	cf "github.com/vmware/photon-controller-cli/photon/cli/configuration"
+	"strings"
 )
 
 // Global variable pointing to photon client, can be assigned to mock client in tests
@@ -44,7 +45,8 @@ func get() (*photon.Client, error) {
 	// If target is https, check if we could ignore client side cert check
 	// If we can't ignore client side cert check, try setting the root certs
 	//
-	u, err := url.Parse(config.CloudTarget)
+	endPoint := strings.TrimRight(config.CloudTarget, "/")
+	u, err := url.Parse(endPoint)
 	if err == nil && u.Scheme == "https" {
 		if config.IgnoreCertificate == true {
 			options.IgnoreCertificate = true
@@ -58,7 +60,7 @@ func get() (*photon.Client, error) {
 		}
 	}
 
-	esxclient := photon.NewClient(config.CloudTarget, "", options)
+	esxclient := photon.NewClient(endPoint, "", options)
 
 	return esxclient, nil
 }
