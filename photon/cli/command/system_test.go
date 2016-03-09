@@ -88,7 +88,7 @@ func TestDeploy(t *testing.T) {
   oauth_password: "Password!"
   oauth_security_groups:
   -  "photon\\photonControllerAdmins"
-
+  use_photon_dhcp: false
 hosts:
   - address_ranges: 10.146.38.91
     username: root

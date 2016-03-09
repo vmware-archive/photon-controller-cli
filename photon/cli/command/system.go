@@ -50,6 +50,7 @@ type Deployment struct {
 	AuthTenant              string      `yaml:"oauth_tenant"`
 	AuthPort                int         `yaml:"oauth_port"`
 	AuthSecurityGroups      []string    `yaml:"oauth_security_groups"`
+	UsePhotonDHCP           bool        `yaml:"use_photon_dhcp"`
 }
 
 type Host struct {
@@ -430,6 +431,7 @@ func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
 		Stats:           statsInfo,
 		UseImageDatastoreForVms: dcMap.Deployment.UseImageDatastoreForVms,
 		LoadBalancerEnabled: lbEnabled,
+		UsePhotonDHCP:	dcMap.Deployment.UsePhotonDHCP,
 	}
 
 	createDeploymentTask, err := client.Esxclient.Deployments.Create(deploymentSpec)
@@ -497,7 +499,7 @@ func createHostsInBatch(dcMap *DcMap, deploymentID string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	createTaskMap := make(map[string]*photon.Task)
 	var creationErrors []error
 	var pollErrors []error
