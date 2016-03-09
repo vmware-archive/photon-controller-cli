@@ -187,6 +187,12 @@ func TestGetDeployment(t *testing.T) {
 		"GET",
 		server.URL+"/deployments/"+getStruct.ID,
 		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/deployments/1/vms",
+		mocks.CreateResponder(200, string(response[:])))
+
+
 	defer server.Close()
 
 	mocks.Activate(true)
