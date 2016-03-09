@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -22,6 +23,17 @@ import (
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
 	"github.com/vmware/photon-controller-cli/photon/cli/client"
 )
+
+type VM_NetworkIPs struct{
+	vm  photon.VM
+	ips string
+}
+
+type ipsSorter []VM_NetworkIPs
+
+func (ip ipsSorter) Len() int           { return len(ip) }
+func (ip ipsSorter) Swap(i, j int)      { ip[i], ip[j] = ip[j], ip[i] }
+func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 
 // Creates a cli.Command for deployments
 // Subcommands: create;     Usage: deployment create [<options>]
@@ -450,6 +462,31 @@ func showDeployment(c *cli.Context) error {
 		return err
 	}
 
+	vms, err := client.Esxclient.Deployments.GetVms(id)
+	if err != nil {
+		return err
+	}
+
+	var data []VM_NetworkIPs
+
+	for _, vm := range vms.Items {
+		networks, err := getVMNetworks(vm.ID, c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
+		}
+		ipAddr := ""
+		for _, nt := range networks {
+			network := nt.(map[string]interface{})
+			if len(network) != 0 && network["network"] != nil{
+				if val, ok := network["ipAddress"]; ok && val != nil {
+					ipAddr = val.(string)
+					break;
+				}
+			}
+
+		}
+		data = append(data, VM_NetworkIPs{vm, ipAddr})
+	}
 	if c.GlobalIsSet("non-interactive") {
 		imageDataStores := getCommaSeparatedStringFromStringArray(deployment.ImageDatastores)
 		securityGroups := getCommaSeparatedStringFromStringArray(deployment.Auth.SecurityGroups)
@@ -486,20 +523,22 @@ func showDeployment(c *cli.Context) error {
 		if len(deployment.Auth.Tenant) == 0 {
 			authTenant = "-"
 		}
+		fmt.Printf("\n")
 		fmt.Printf("Deployment ID: %s\n", deployment.ID)
 		fmt.Printf("  State:                       %s\n", deployment.State)
 		fmt.Printf("  Image Datastores:            %s\n", deployment.ImageDatastores)
 		fmt.Printf("  Use image datastore for vms: %t\n\n", deployment.UseImageDatastoreForVms)
 		fmt.Printf("  Syslog Endpoint:             %s\n", syslogEndpoint)
 		fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
+		fmt.Printf("  LoadBalancerEnabled :        %t\n", deployment.LoadBalancerEnabled)
 		fmt.Printf("  Auth:\n")
-		fmt.Printf("    Enabled:                %t\n", deployment.Auth.Enabled)
-		fmt.Printf("    UserName:               %s\n", authUsername)
-		fmt.Printf("    Password:               %s\n", authPassword)
-		fmt.Printf("    Endpoint:               %s\n", authEndpoint)
-		fmt.Printf("    Tenant:                 %s\n", authTenant)
-		fmt.Printf("    Port:                   %d\n", deployment.Auth.Port)
-		fmt.Printf("    Securitygroups:         %v\n", deployment.Auth.SecurityGroups)
+		fmt.Printf("    Enabled:                   %t\n", deployment.Auth.Enabled)
+		fmt.Printf("    UserName:                  %s\n", authUsername)
+		fmt.Printf("    Password:                  %s\n", authPassword)
+		fmt.Printf("    Endpoint:                  %s\n", authEndpoint)
+		fmt.Printf("    Tenant:                    %s\n", authTenant)
+		fmt.Printf("    Port:                      %d\n", deployment.Auth.Port)
+		fmt.Printf("    Securitygroups:            %v\n", deployment.Auth.SecurityGroups)
 	}
 
 	if deployment.Stats != nil {
@@ -540,14 +579,13 @@ func showDeployment(c *cli.Context) error {
 		}
 	}
 
-	if deployment.ClusterConfigurations != nil {
+	if deployment.ClusterConfigurations != nil && len(deployment.ClusterConfigurations) !=0 {
 		if c.GlobalIsSet("non-interactive") {
 			clusterConfigurations := []string{}
 			for _, c := range deployment.ClusterConfigurations {
 				clusterConfigurations = append(clusterConfigurations, fmt.Sprintf("%s\t%s", c.Type, c.ImageID))
 			}
 			scriptClusterConfigurations := strings.Join(clusterConfigurations, ",")
-			fmt.Println(len(deployment.ClusterConfigurations))
 			fmt.Printf("%s\n", scriptClusterConfigurations)
 		} else {
 			fmt.Println("  Cluster Configurations:")
@@ -561,7 +599,14 @@ func showDeployment(c *cli.Context) error {
 	} else {
 		if c.GlobalIsSet("non-interactive") {
 			fmt.Printf("\n")
+		} else {
+			fmt.Println("  Cluster Configurations:")
+			fmt.Printf("    No cluster is supported")
 		}
+	}
+	err = display_deployment_summary(data, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -720,5 +765,122 @@ func resumeSystem(c *cli.Context) error {
 		return err
 	}
 
+	return nil
+}
+
+func display_deployment_summary(data []VM_NetworkIPs, isScripting bool) error {
+	deployment_info  := make(map[string]map[string][]string)
+	for _, d := range data{
+		for k, v := range d.vm.Metadata {
+			if strings.HasPrefix(k, "CONTAINER_"){
+				if _, ok := deployment_info[v]; ok {
+					deployment_info[v]["port"] = append(deployment_info[v]["port"],getPort(k))
+					deployment_info[v]["ips"] = append(deployment_info[v]["ips"],d.ips)
+
+				} else {
+					deployment_info[v] = map[string][]string{ "port" : []string{}, "ips" : []string{}}
+				}
+			}
+		}
+	}
+	var keys []string
+	for k := range deployment_info {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	if isScripting {
+		for _, job := range keys {
+			ips := removeDuplicates(deployment_info[job]["ips"])
+			sort.Strings(ips)
+			ports := removeDuplicates(deployment_info[job]["port"])
+			sort.Strings(ports)
+			fmt.Printf("%s\t%s\t%s\n", job, getCommaSeparatedStringFromStringArray(ips), getCommaSeparatedStringFromStringArray(ports))
+		}
+		fmt.Printf("\n")
+		for _, vmIPs := range data {
+			fmt.Printf("%s\t%s\t%s\t%s\n", vmIPs.ips, vmIPs.vm.Host, vmIPs.vm.ID, vmIPs.vm.Name)
+		}
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+		fmt.Fprintf(w,"\n\n")
+		fmt.Fprintf(w, "  Job\tVM IP(s)\tPorts\n")
+		for _, job := range keys {
+			ips := removeDuplicates(deployment_info[job]["ips"])
+			sort.Strings(ips)
+			scriptIPs := strings.Replace((strings.Trim(fmt.Sprint(ips), "[]")), " ", ", ", -1)
+			ports := removeDuplicates(deployment_info[job]["port"])
+			sort.Strings(ports)
+			scriptPorts := strings.Replace(strings.Trim(fmt.Sprint(ports), "[]"), " ", ", ", -1)
+			fmt.Fprintf(w, "  %s\t%s\t%s\n", job, scriptIPs, scriptPorts)
+		}
+
+		fmt.Fprintf(w, "\n\n")
+		fmt.Fprintf(w, "  VM IP\tHost IP\tVM ID\tVM Name\n")
+
+		sort.Sort(ipsSorter(data))
+		for _, vmIPs := range data {
+			fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", vmIPs.ips, vmIPs.vm.Host, vmIPs.vm.ID, vmIPs.vm.Name)
+		}
+
+		err := w.Flush()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+
+func getPort(container_port string) string {
+	return strings.TrimPrefix(container_port,"CONTAINER_")
+}
+
+func removeDuplicates(a []string) []string {
+	result := []string{}
+	seen := map[string]string{}
+	for _, val := range a {
+		if _, ok := seen[val]; !ok {
+			result = append(result, val)
+			seen[val] = val
+		}
+	}
+	return result
+}
+
+func validate_deployment_arguments(imageDatastoreNames string, enableAuth bool, oauthEndpoint string, oauthPort int,
+oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups string,
+enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
+	if len(imageDatastoreNames) == 0 {
+		return fmt.Errorf("Image datastore names cannot be nil.")
+	}
+	if enableAuth {
+		if oauthEndpoint == "" {
+			return fmt.Errorf("OAuth endpoint cannot be nil when auth is enabled.")
+		}
+		if oauthPort == 0 {
+			return fmt.Errorf("OAuth port cannot be nil when auth is enabled.")
+		}
+		if oauthTenant == "" {
+			return fmt.Errorf("OAuth tenant cannot be nil when auth is enabled.")
+		}
+		if oauthUsername == "" {
+			return fmt.Errorf("OAuth username cannot be nil when auth is enabled.")
+		}
+		if oauthPassword == "" {
+			return fmt.Errorf("OAuth password cannot be nil when auth is enabled.")
+		}
+		if oauthSecurityGroups == "" {
+			return fmt.Errorf("OAuth security groups cannot be nil when auth is enabled.")
+		}
+	}
+	if enableStats {
+		if statsStoreEndpoint == "" {
+			return fmt.Errorf("Stats store endpoint cannot be nil when stats is enabled.")
+		}
+		if statsStorePort == 0 {
+			return fmt.Errorf("Stats store port cannot be nil when stats is enabled.")
+		}
+	}
 	return nil
 }
