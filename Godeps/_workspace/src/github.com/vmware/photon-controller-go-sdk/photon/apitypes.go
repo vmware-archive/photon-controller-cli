@@ -444,6 +444,7 @@ type DeploymentCreateSpec struct {
 	ImageDatastores         []string    `json:"imageDatastores"`
 	Auth                    *AuthInfo   `json:"auth"`
 	LoadBalancerEnabled     bool        `json:"loadBalancerEnabled"`
+	UsePhotonDHCP 			bool  		`json:"use_photon_dhcp"`
 }
 
 type MigrationStatus struct {
@@ -469,6 +470,7 @@ type Deployment struct {
 	Migration               *MigrationStatus       `json:"migrationStatus,omitempty"`
 	ClusterConfigurations   []ClusterConfiguration `json:"clusterConfigurations,omitempty"`
 	LoadBalancerEnabled     bool                   `json:"loadBalancerEnabled"`
+	UsePhotonDHCP 			bool                   `json:"use_photon_dhcp,omitempty"`
 }
 
 // Represents multiple deployments returned by the API.
