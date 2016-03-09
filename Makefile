@@ -29,7 +29,7 @@ linux/amd64:
 
 # go build arch is controlled by env var GOOS and GOARCH, when not set it use current machine native arch
 build:
-	$(GOBUILD) -o bin/$(GOOS)$(GOARCH)/$(COMMAND_NAME)$(fileext) ./photon/cli
+	$(GOBUILD) -o bin/$(GOOS)$(GOARCH)/$(COMMAND_NAME)$(fileext) ./photon
 
 #
 # get the tools
