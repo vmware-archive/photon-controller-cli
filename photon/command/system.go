@@ -427,7 +427,12 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		SyslogEndpoint:  dcMap.Deployment.SyslogEndpoint,
 		Stats:           statsInfo,
 		UseImageDatastoreForVms: dcMap.Deployment.UseImageDatastoreForVms,
+<<<<<<< HEAD:photon/command/system.go
 		LoadBalancerEnabled:     lbEnabled,
+=======
+		LoadBalancerEnabled: lbEnabled,
+		UsePhotonDHCP:	dcMap.Deployment.UsePhotonDHCP,
+>>>>>>> Deployment-YML: Add UsePhotonDHCP as a parameter to deployment:photon/cli/command/system.go
 	}
 
 	createDeploymentTask, err := client.Esxclient.Deployments.Create(deploymentSpec)
