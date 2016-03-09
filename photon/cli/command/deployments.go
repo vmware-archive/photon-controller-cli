@@ -492,6 +492,7 @@ func showDeployment(c *cli.Context) error {
 		fmt.Printf("  Use image datastore for vms: %t\n\n", deployment.UseImageDatastoreForVms)
 		fmt.Printf("  Syslog Endpoint:             %s\n", syslogEndpoint)
 		fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
+		fmt.Printf("  Use Photon DHCP:             %t\n\n", deployment.UsePhotonDHCP)
 		fmt.Printf("  Auth:\n")
 		fmt.Printf("    Enabled:                %t\n", deployment.Auth.Enabled)
 		fmt.Printf("    UserName:               %s\n", authUsername)
