@@ -13,6 +13,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -87,6 +88,7 @@ func NewClient(endpoint string, authEndpoint string, options *ClientOptions) (c 
 		IgnoreCertificate: false,
 		RootCAs:           nil,
 	}
+
 	if options != nil {
 		if options.TaskPollTimeout != 0 {
 			defaultOptions.TaskPollTimeout = options.TaskPollTimeout
@@ -105,11 +107,16 @@ func NewClient(endpoint string, authEndpoint string, options *ClientOptions) (c 
 		}
 		defaultOptions.IgnoreCertificate = options.IgnoreCertificate
 	}
+
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: defaultOptions.IgnoreCertificate,
 			RootCAs:            defaultOptions.RootCAs},
 	}
+
+	endpoint = strings.TrimRight(endpoint, "/")
+	authEndpoint = strings.TrimRight(authEndpoint, "/")
+
 	c = &Client{Endpoint: endpoint, AuthEndpoint: authEndpoint, httpClient: &http.Client{Transport: tr}}
 	// Ensure a copy of options is made, rather than using a pointer
 	// which may change out from underneath if misused by the caller.
