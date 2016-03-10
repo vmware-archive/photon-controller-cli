@@ -340,9 +340,6 @@ func listDisks(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		count := strings.Trim(strings.TrimLeft(fmt.Sprint(stateCount), "map"), "[]")
-		scriptCount := strings.Replace(count, " ", ",", -1)
-		fmt.Printf("%d\n%s\n", len(diskList.Items), scriptCount)
 		if !summaryView {
 			for _, disk := range diskList.Items {
 				fmt.Printf("%s\t%s\t%s\n", disk.ID, disk.Name, disk.State)

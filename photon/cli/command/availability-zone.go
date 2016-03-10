@@ -198,7 +198,6 @@ func listAvailabilityZones(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Println(len(zones.Items))
 		for _, zone := range zones.Items {
 			fmt.Printf("%s\t%s\n", zone.ID, zone.Name)
 		}

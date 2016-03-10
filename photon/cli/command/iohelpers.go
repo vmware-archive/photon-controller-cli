@@ -45,7 +45,6 @@ func askForInput(msg string, name string) (string, error) {
 
 func printHostList(hostList []photon.Host, isScripting bool) error {
 	if isScripting {
-		fmt.Println(len(hostList))
 		for _, host := range hostList {
 			tag := strings.Trim(fmt.Sprint(host.Tags), "[]")
 			scriptTag := strings.Replace(tag, " ", ",", -1)
@@ -129,7 +128,6 @@ func confirmed(isScripting bool) bool {
 // Prints out the output of tasks
 func printTaskList(taskList []photon.Task, isScripting bool) error {
 	if isScripting {
-		fmt.Println(len(taskList))
 		for _, task := range taskList {
 			fmt.Printf("%s\t%s\t%s\t%d\t%d\n", task.ID, task.State, task.Operation, task.StartedTime, task.EndTime-task.StartedTime)
 		}
@@ -275,10 +273,6 @@ func printVMList(vmList []photon.VM, isScripting bool, summaryView bool) error {
 	}
 
 	if isScripting {
-		count := strings.Trim(strings.TrimLeft(fmt.Sprint(stateCount), "map"), "[]")
-		scriptCount := strings.Replace(count, " ", ",", -1)
-		fmt.Println(len(vmList))
-		fmt.Println(scriptCount)
 		if !summaryView {
 			for _, vm := range vmList {
 				fmt.Printf("%s\t%s\t%s\n", vm.ID, vm.Name, vm.State)
@@ -312,10 +306,6 @@ func printClusterList(clusterList []photon.Cluster, isScripting bool, summaryVie
 	}
 
 	if isScripting {
-		count := strings.Trim(strings.TrimLeft(fmt.Sprint(stateCount), "map"), "[]")
-		scriptCount := strings.Replace(count, " ", ",", -1)
-		fmt.Println(len(clusterList))
-		fmt.Println(scriptCount)
 		if !summaryView {
 			for _, cluster := range clusterList {
 				fmt.Printf("%s\t%s\t%s\t%s\t%d\n", cluster.ID, cluster.Name, cluster.Type, cluster.State, cluster.SlaveCount)
@@ -413,9 +403,7 @@ func printVMNetworks(networks []interface{}, isScripting bool) error {
 	netMask := "-"
 	isConnected := "-"
 	w := new(tabwriter.Writer)
-	if isScripting {
-		fmt.Printf("%d\n", len(networks))
-	} else {
+	if !isScripting {
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
 		fmt.Fprintf(w, "Network\tMAC Address\tIP Address\tNetmask\tIsConnected\n")
 	}

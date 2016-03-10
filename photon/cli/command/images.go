@@ -248,7 +248,6 @@ func listImages(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Println(len(images.Items))
 		for _, image := range images.Items {
 			fmt.Printf("%s\t%s\t%s\t%d\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size,
 				image.ReplicationType, image.ReplicationProgress, image.SeedingProgress)
@@ -299,17 +298,14 @@ func showImage(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%d\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size, image.ReplicationType,
-			image.ReplicationProgress, image.SeedingProgress)
-
 		settings := []string{}
 		for _, setting := range image.Settings {
-			settings = append(settings, fmt.Sprintf("%s\t%s", setting.Name, setting.DefaultValue))
+			settings = append(settings, fmt.Sprintf("%s:%s", setting.Name, setting.DefaultValue))
 		}
 		scriptSettings := strings.Join(settings, ",")
+		fmt.Printf("%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size, image.ReplicationType,
+			image.ReplicationProgress, image.SeedingProgress, scriptSettings)
 
-		fmt.Println(len(image.Settings))
-		fmt.Printf("%s\n", scriptSettings)
 	} else {
 		fmt.Printf("Image ID: %s\n", image.ID)
 		fmt.Printf("  Name:                       %s\n", image.Name)
