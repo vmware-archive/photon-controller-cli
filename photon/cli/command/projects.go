@@ -372,7 +372,6 @@ func listProjects(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Println(len(tickets.Items))
 		for _, t := range tickets.Items {
 			limits := quotaLineItemListToString(t.ResourceTicket.Limits)
 			usage := quotaLineItemListToString(t.ResourceTicket.Usage)
