@@ -204,7 +204,6 @@ func listTenants(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Println(len(tenants.Items))
 		for _, tenant := range tenants.Items {
 			fmt.Printf("%s\t%s\n", tenant.ID, tenant.Name)
 		}

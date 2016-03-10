@@ -505,9 +505,7 @@ func showVM(c *cli.Context) error {
 		}
 		scriptIso := strings.Join(iso, ",")
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", vm.ID, vm.Name, vm.State, vm.Flavor, vm.SourceImageID, vm.Host, vm.Datastore, scriptMetadata, scriptTag)
-		fmt.Println(len(vm.AttachedDisks))
 		fmt.Printf("%s\n", scriptDisks)
-		fmt.Println(len(vm.AttachedISOs))
 		fmt.Printf("%s\n", scriptIso)
 
 		err = printVMNetworks(networks, c.GlobalIsSet("non-interactive"))

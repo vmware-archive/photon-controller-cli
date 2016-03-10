@@ -423,7 +423,6 @@ func listDeployments(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Println(len(deployments.Items))
 		for _, deployment := range deployments.Items {
 			fmt.Printf("%s\n", deployment.ID)
 		}

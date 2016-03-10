@@ -264,7 +264,6 @@ func listResourceTickets(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Println(len(tickets.Items))
 		for _, t := range tickets.Items {
 			limits := quotaLineItemListToString(t.Limits)
 			fmt.Printf("%s\t%s\t%s\n", t.ID, t.Name, limits)

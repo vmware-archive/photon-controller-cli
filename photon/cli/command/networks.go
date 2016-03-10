@@ -211,7 +211,6 @@ func listNetworks(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Println(len(networks.Items))
 		for _, network := range networks.Items {
 			fmt.Printf("%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State, network.PortGroups, network.Description)
 		}

@@ -251,7 +251,6 @@ func listFlavors(c *cli.Context) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Println(len(flavors.Items))
 		for _, flavor := range flavors.Items {
 			costs := quotaLineItemListToString(flavor.Cost)
 			fmt.Printf("%s\t%s\t%s\t%s\n", flavor.ID, flavor.Name, flavor.Kind, costs)
