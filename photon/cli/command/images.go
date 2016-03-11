@@ -179,18 +179,9 @@ func createImage(c *cli.Context) error {
 		return err
 	}
 
-	if c.GlobalIsSet("non-interactive") {
-		task, err := client.Esxclient.Tasks.Wait(uploadTask.ID)
-		if err != nil {
-			return nil
-		}
-		fmt.Printf("%s\n", task.Entity.ID)
-	} else {
-		task, err := pollTask(uploadTask.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Created image '%s' ID: %s\n", name, task.Entity.ID)
+	err = waitOnTaskOperation(uploadTask.ID, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
 	}
 
 	err = file.Close()

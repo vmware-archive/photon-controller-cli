@@ -416,18 +416,9 @@ func createVM(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		if c.GlobalIsSet("non-interactive") {
-			createTask, err = client.Esxclient.Tasks.Wait(createTask.ID)
-			if err != nil {
-				return err
-			}
-			fmt.Println(createTask.Entity.ID)
-		} else {
-			createTask, err = pollTask(createTask.ID)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("VM created: ID = %s\n", createTask.Entity.ID)
+		err = waitOnTaskOperation(createTask.ID, c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
 		}
 	} else {
 		fmt.Println("OK. Canceled")

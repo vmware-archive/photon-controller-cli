@@ -146,19 +146,11 @@ func createNetwork(c *cli.Context) error {
 		return err
 	}
 
-	if c.GlobalIsSet("non-interactive") {
-		task, err := client.Esxclient.Tasks.Wait(task.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%s\n", task.Entity.ID)
-	} else {
-		task, err := pollTask(task.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Created network ID: %s \n", task.Entity.ID)
+	err = waitOnTaskOperation(task.ID, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
 	}
+
 	return nil
 }
 

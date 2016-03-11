@@ -358,18 +358,10 @@ func createDeployment(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		if c.GlobalIsSet("non-interactive") {
-			task, err := client.Esxclient.Tasks.Wait(createTask.ID)
-			if err != nil {
-				return nil
-			}
-			fmt.Printf("%s\n", task.Entity.ID)
-		} else {
-			task, err := pollTask(createTask.ID)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("Created deployment %s\n", task.Entity.ID)
+
+		err = waitOnTaskOperation(createTask.ID, c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
 		}
 
 		return nil
