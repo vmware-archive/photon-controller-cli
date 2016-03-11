@@ -1,7 +1,7 @@
-ESXCloud Go Cli
-===============
+# Photon Controller CLI
 
-The repo for the ESXCloud go cli.
+The `photon` CLI tool is used to interface with [Photon
+Controller](https://www.github.com/vmware/photon-controller).
 
 ## Setup
 
@@ -394,7 +394,7 @@ to the project, based on the definitions in the flavor:
 
 ### Hosts
 
-Adding an ESX host:
+Adding an ESXi host:
 
 Usage: `photon host create -u <USER-NAME> -p <PASSWORD> -i <ADDRESS> --tag <CLOUD|MGMT> -d <DEPLOYMENT-ID>``
 
