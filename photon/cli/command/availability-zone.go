@@ -130,24 +130,15 @@ func createAvailabilityZone(c *cli.Context) error {
 	}
 
 	createTask, err := client.Esxclient.AvailabilityZones.Create(azSpec)
-
 	if err != nil {
 		return err
 	}
 
-	if c.GlobalIsSet("non-interactive") {
-		task, err := client.Esxclient.Tasks.Wait(createTask.ID)
-		if err != nil {
-			return nil
-		}
-		fmt.Printf("%s\t%s\n", name, task.Entity.ID)
-	} else {
-		task, err := pollTask(createTask.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Created availability zone '%s' ID: %s \n", name, task.Entity.ID)
+	err = waitOnTaskOperation(createTask.ID, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
 	}
+
 	return nil
 }
 

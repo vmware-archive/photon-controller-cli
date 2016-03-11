@@ -206,18 +206,9 @@ func createHost(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if c.GlobalIsSet("non-interactive") {
-		createTask, err = client.Esxclient.Tasks.Wait(createTask.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Println(createTask.Entity.ID)
-	} else {
-		createTask, err = pollTask(createTask.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Host with ip '%s' created: ID = %s\n", hostSpec.Address, createTask.Entity.ID)
+	err = waitOnTaskOperation(createTask.ID, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -241,18 +232,9 @@ func deleteHost(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if c.GlobalIsSet("non-interactive") {
-		deleteTask, err = client.Esxclient.Tasks.Wait(deleteTask.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Println(deleteTask.Entity.ID)
-	} else {
-		deleteTask, err = pollTask(deleteTask.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Host has been deleted: ID = %s\n", deleteTask.Entity.ID)
+	err = waitOnTaskOperation(deleteTask.ID, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
 	}
 
 	return nil
