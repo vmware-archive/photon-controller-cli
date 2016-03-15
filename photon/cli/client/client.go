@@ -58,7 +58,7 @@ func get() (*photon.Client, error) {
 		}
 	}
 
-	esxclient := photon.NewClient(config.CloudTarget, "", options)
+	esxclient := photon.NewClient(config.CloudTarget, options)
 
 	return esxclient, nil
 }

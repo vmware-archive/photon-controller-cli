@@ -98,7 +98,7 @@ func TestCreateDisk(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	globalSet := flag.NewFlagSet("test", 0)
 	globalSet.Bool("non-interactive", true, "doc")
