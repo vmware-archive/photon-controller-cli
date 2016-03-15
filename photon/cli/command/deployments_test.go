@@ -72,7 +72,7 @@ func TestCreateDeleteDeployment(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	globalSet := flag.NewFlagSet("test", 0)
 	globalSet.Bool("non-interactive", true, "doc")
@@ -191,7 +191,7 @@ func TestGetDeployment(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{getStruct.ID})
@@ -252,7 +252,7 @@ func TestListDeploymentHosts(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"1"})
@@ -323,7 +323,7 @@ func TestListDeploymentVms(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"1"})
@@ -359,7 +359,7 @@ func TestUpdateImageDatastores(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{deploymentId, "ds1,ds2"})
@@ -408,7 +408,7 @@ func TestPauseSystem(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{queuedTask.Entity.ID})
@@ -458,7 +458,7 @@ func TestPauseBackgroundTasks(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{queuedTask.Entity.ID})
@@ -508,7 +508,7 @@ func TestResumeSystem(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{queuedTask.Entity.ID})
