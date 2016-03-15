@@ -18,6 +18,15 @@ type Entity struct {
 	Kind string `json:"kind"`
 }
 
+// Implement a generic sdk error
+type SdkError struct {
+	Message string
+}
+
+func (e SdkError) Error() string {
+	return fmt.Sprintf("photon: %v", e.Message)
+}
+
 // Represents an error from the Photon API.
 type ApiError struct {
 	Code           string                 `json:"code"`
