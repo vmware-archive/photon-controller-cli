@@ -62,7 +62,7 @@ func TestCreateDeleteImage(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	set.String("name", "n", "testname")
@@ -179,7 +179,7 @@ func TestListImage(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	if err != nil {
@@ -236,7 +236,7 @@ func TestImageTasks(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"1"})

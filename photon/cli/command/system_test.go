@@ -60,7 +60,7 @@ func TestGetStatus(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	err = getStatus(cxt)
 	if err != nil {
@@ -254,7 +254,7 @@ hosts:
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	err = deploy(cxt)
 	if err != nil {
@@ -467,7 +467,7 @@ func TestDestroy(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	cxt := cli.NewContext(nil, set, nil)
@@ -525,7 +525,7 @@ func TestInitializeMigrateDeployment(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"0.0.0.0:9000"})
@@ -588,7 +588,7 @@ func TestFinalizeeMigrateDeployment(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"0.0.0.0:9000"})

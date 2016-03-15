@@ -61,7 +61,7 @@ func TestCreateDeleteAvailabilityZone(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	set.String("name", "n", "testname")
@@ -137,7 +137,7 @@ func TestShowAvailabilityZone(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{expectedStruct.ID})
@@ -195,7 +195,7 @@ func TestListAvailabilityZones(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	cxt := cli.NewContext(nil, set, nil)
@@ -248,7 +248,7 @@ func TestAvailabilityZoneTasks(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, "", nil, httpClient)
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"1"})
