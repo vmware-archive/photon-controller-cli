@@ -12,6 +12,7 @@ package command
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"log"
 	"net"
 	"regexp"
@@ -397,6 +398,16 @@ func getDcMap(file string) (res *DcMap, err error) {
 }
 
 func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
+    err = validate_deployment_arguments(dcMap.Deployment.ImageDatastores, dcMap.Deployment.AuthEnabled,
+    dcMap.Deployment.AuthEndpoint, dcMap.Deployment.AuthPort,
+        dcMap.Deployment.AuthTenant, dcMap.Deployment.AuthUsername, dcMap.Deployment.AuthPassword,
+        strings.Join(dcMap.Deployment.AuthSecurityGroups, ","),
+        dcMap.Deployment.StatsEnabled, dcMap.Deployment.StatsStoreEndpoint,
+        dcMap.Deployment.StatsPort)
+    if err != nil {
+        return "", err
+    }
+
 	lbEnabledString := dcMap.Deployment.LoadBalancerEnabled
 	lbEnabled := true
 	if len(lbEnabledString) > 0 {
