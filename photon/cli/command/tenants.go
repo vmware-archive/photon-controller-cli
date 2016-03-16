@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/cli/client"
@@ -26,9 +27,10 @@ import (
 // Creates a cli.Command for tenant
 // Subcommands: create; Usage: tenant create <name>
 //              delete; Usage: tenant delete <id>
+//              show;   Usage: tenant show <id>
 //              list;   Usage: tenant list
 //              set;    Usage: tenant set <name>
-//              show;   Usage: tenant show
+//              get;    Usage: tenant get
 //              tasks;  Usage: tenant tasks <id> [<options>]
 func GetTenantsCommand() cli.Command {
 	command := cli.Command{
@@ -62,6 +64,16 @@ func GetTenantsCommand() cli.Command {
 				},
 			},
 			{
+				Name:  "show",
+				Usage: "Show tenant info with specified id",
+				Action: func(c *cli.Context) {
+					err := showTenant(c)
+					if err != nil {
+						log.Fatal(err)
+					}
+				},
+			},
+			{
 				Name:  "list",
 				Usage: "List tenants",
 				Action: func(c *cli.Context) {
@@ -82,10 +94,10 @@ func GetTenantsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show current tenant",
+				Name:  "get",
+				Usage: "Get current tenant",
 				Action: func(c *cli.Context) {
-					err := showTenant(c)
+					err := getTenant(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -248,6 +260,43 @@ func deleteTenant(c *cli.Context) error {
 	return nil
 }
 
+func showTenant(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "tenant show <id>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	tenant, err := client.Esxclient.Tenants.Get(id)
+	if err != nil {
+		return err
+	}
+
+	if c.GlobalIsSet("non-interactive") {
+		securityGroups := []string{}
+		for _, s := range tenant.SecurityGroups {
+			securityGroups = append(securityGroups, fmt.Sprintf("%s:%t", s.Name, s.Inherited))
+		}
+		scriptSecurityGroups := strings.Join(securityGroups, ",")
+		fmt.Printf("%s\t%s\t%s\n", tenant.ID, tenant.Name, scriptSecurityGroups)
+	} else {
+		fmt.Println("Tenant ID: ", tenant.ID)
+		fmt.Println("  Name:              ", tenant.Name)
+		for i, s := range tenant.SecurityGroups {
+			fmt.Printf("    SecurityGroups %d:\n", i+1)
+			fmt.Println("      Name:          ", s.Name)
+			fmt.Println("      Inherited:     ", s.Inherited)
+		}
+	}
+
+	return nil
+}
+
 // Overwrites the tenant in the config file
 func setTenant(c *cli.Context) error {
 	err := checkArgNum(c.Args(), 1, "tenant set <name>")
@@ -288,8 +337,8 @@ func setTenant(c *cli.Context) error {
 }
 
 // Outputs the set tenant otherwise informs user it is not set
-func showTenant(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "tenant show")
+func getTenant(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 0, "tenant get")
 	if err != nil {
 		return err
 	}
@@ -305,7 +354,7 @@ func showTenant(c *cli.Context) error {
 		if c.GlobalIsSet("non-interactive") {
 			fmt.Printf("%s\t%s\n", tenant.ID, tenant.Name)
 		} else {
-			fmt.Printf("Current tenant is '%s' %s\n", tenant.Name, tenant.ID)
+			fmt.Printf("Current tenant is '%s' with ID %s\n", tenant.Name, tenant.ID)
 		}
 	}
 	return nil
