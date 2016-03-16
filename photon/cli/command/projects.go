@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/cli/client"
@@ -26,8 +27,9 @@ import (
 // Creates a cli.Command for project
 // Subcommands:  create; Usage: project create [<options>]
 //	             delete; Usage: project delete <id>
+//               show;   Usage: project show <id>
 //	             set;    Usage: project set <name>
-//	             show;   Usage: project show
+//	             get;    Usage: project get
 //	             list;   Usage: project list [<options>]
 //	             tasks;  Usage: project tasks <name> [<options>]
 func GetProjectsCommand() cli.Command {
@@ -83,9 +85,19 @@ func GetProjectsCommand() cli.Command {
 			},
 			{
 				Name:  "show",
-				Usage: "Show project in config file",
+				Usage: "Show project info with specified id",
 				Action: func(c *cli.Context) {
 					err := showProject(c)
+					if err != nil {
+						log.Fatal(err)
+					}
+				},
+			},
+			{
+				Name:  "get",
+				Usage: "Get project in config file",
+				Action: func(c *cli.Context) {
+					err := getProject(c)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -274,10 +286,69 @@ func deleteProject(c *cli.Context) error {
 	return nil
 }
 
-// Sends a show project task to client based on the config file
-// Returns an error if one occurred
+// Show project info with the specified project id, returns an error if one occurred
 func showProject(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "project show")
+	err := checkArgNum(c.Args(), 1, "project show <id>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	project, err := client.Esxclient.Projects.Get(id)
+	if err != nil {
+		return err
+	}
+
+	if c.GlobalIsSet("non-interactive") {
+		securityGroups := []string{}
+		for _, s := range project.SecurityGroups {
+			securityGroups = append(securityGroups, fmt.Sprintf("%s:%t", s.Name, s.Inherited))
+		}
+		scriptSecurityGroups := strings.Join(securityGroups, ",")
+		limits := quotaLineItemListToString(project.ResourceTicket.Limits)
+		usages := quotaLineItemListToString(project.ResourceTicket.Usage)
+
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n", project.ID, project.Name, project.ResourceTicket.TenantTicketID,
+			project.ResourceTicket.TenantTicketName, limits, usages, scriptSecurityGroups)
+
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+		fmt.Fprintf(w, "Project ID: %s\n", project.ID)
+		fmt.Fprintf(w, "  Name: %s\n", project.Name)
+		fmt.Fprintf(w, "  TenantTicketID: %s\n", project.ResourceTicket.TenantTicketID)
+		fmt.Fprintf(w, "    TenantTicketName: %s\n", project.ResourceTicket.TenantTicketName)
+		fmt.Fprintf(w, "    Limits:\n")
+		for _, l := range project.ResourceTicket.Limits {
+			fmt.Fprintf(w, "      %s\t%g\t%s\n", l.Key, l.Value, l.Unit)
+		}
+		fmt.Fprintf(w, "    Usage:\n")
+		for _, u := range project.ResourceTicket.Usage {
+			fmt.Fprintf(w, "      %s\t%g\t%s\n", u.Key, u.Value, u.Unit)
+		}
+		if len(project.SecurityGroups) != 0 {
+			fmt.Fprintf(w, "  SecurityGroups:\n")
+			for _, s := range project.SecurityGroups {
+				fmt.Fprintf(w, "    %s\t%t\n", s.Name, s.Inherited)
+			}
+		}
+		err = w.Flush()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Sends a get project task to client based on the config file
+// Returns an error if one occurred
+func getProject(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 0, "project get")
 	if err != nil {
 		return err
 	}

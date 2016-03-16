@@ -119,6 +119,37 @@ func TestCreateDeleteTenant(t *testing.T) {
 	}
 }
 
+func TestShowTenant(t *testing.T) {
+	tenantStruct := &photon.Tenant{
+		Name: "fake_tenant_name",
+		ID:   "fake_tenant_ID",
+	}
+	response, err := json.Marshal(tenantStruct)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected tenant")
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants"+"/"+"fake_tenant_ID",
+		mocks.CreateResponder(200, string(response[:])))
+
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake_tenant_ID"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = showTenant(cxt)
+	if err != nil {
+		t.Error("Not expecting error showing tenant: " + err.Error())
+	}
+}
+
 func TestListTenant(t *testing.T) {
 	expectedTenants := MockTenantsPage{
 		Items: []photon.Tenant{
