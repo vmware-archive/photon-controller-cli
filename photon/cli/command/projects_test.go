@@ -105,6 +105,40 @@ func TestCreateProject(t *testing.T) {
 	}
 }
 
+func TestShowProject(t *testing.T) {
+	projectStruct := photon.ProjectCompact{
+		Name: "fake_project_name",
+		ID:   "fake_project_ID",
+		ResourceTicket: photon.ProjectTicket{
+			TenantTicketID: "fake_ticket_id",
+			TenantTicketName: "fake_ticket_name",
+			Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
+			Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
+		},
+	}
+	response, err := json.Marshal(projectStruct)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected project")
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/projects/"+"fake_project_ID",
+		mocks.CreateResponder(200, string(response[:])))
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake_project_ID"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = showProject(cxt)
+	if err != nil {
+		t.Error("Not expecting error showing project: " + err.Error())
+	}
+}
+
 func TestSetShowProject(t *testing.T) {
 	configOri, err := cf.LoadConfig()
 	if err != nil {
@@ -160,7 +194,7 @@ func TestSetShowProject(t *testing.T) {
 	set = flag.NewFlagSet("test", 0)
 	cxt = cli.NewContext(nil, set, nil)
 
-	err = showProject(cxt)
+	err = getProject(cxt)
 	if err != nil {
 		t.Error("Not expecting error showing project: " + err.Error())
 	}
