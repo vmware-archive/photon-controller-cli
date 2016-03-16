@@ -406,6 +406,10 @@ func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
 		}
 	}
 
+  if len(dcMap.Deployment.ImageDatastores) == 0 {
+    return "", fmt.Errorf("Image datastore names cannot be nil.")
+  }
+
 	authInfo := &photon.AuthInfo{
 		Enabled:        dcMap.Deployment.AuthEnabled,
 		Endpoint:       dcMap.Deployment.AuthEndpoint,
