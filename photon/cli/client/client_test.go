@@ -10,10 +10,13 @@
 package client
 
 import (
+	"os"
 	"testing"
 
 	cf "github.com/vmware/photon-controller-cli/photon/cli/configuration"
 )
+
+const test_log_file string = "testing.log"
 
 func TestGet(t *testing.T) {
 	configOri, err := cf.LoadConfig()
@@ -46,6 +49,32 @@ func TestGet(t *testing.T) {
 	err = cf.SaveConfig(configOri)
 	if err != nil {
 		t.Error("Not expecting error when saving config file")
+	}
+}
+
+func TestLoggingFunctions(t *testing.T) {
+	defer loggingTestCleanup(test_log_file, t)
+	err := InitializeLogging(test_log_file)
+	if err != nil {
+		t.Error(err)
+	}
+	if logger == nil {
+		t.Error("logger was expected to be set.")
+	}
+	if logFile == nil {
+		t.Error("logFile was expected to be set.")
+	}
+
+	err = CleanupLogging()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if logger != nil {
+		t.Error("logger was not expected to be set.")
+	}
+	if logFile != nil {
+		t.Error("logFile was not expected to be set.")
 	}
 }
 
@@ -83,5 +112,17 @@ func testGetEndpoint(t *testing.T, endpoint string, ephttps bool, skipVerify boo
 
 	if Esxclient.Endpoint != endpoint {
 		t.Error("Endpoint of client not match endpoint in config file")
+	}
+}
+
+func loggingTestCleanup(logFile string, t *testing.T) {
+	err := CleanupLogging()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = os.Remove(logFile)
+	if err != nil && !os.IsNotExist(err) {
+		t.Error(err)
 	}
 }
