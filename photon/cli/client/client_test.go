@@ -13,7 +13,10 @@ import (
 	"testing"
 
 	cf "github.com/vmware/photon-controller-cli/photon/cli/configuration"
+	"os"
 )
+
+const test_log_file string = "testing.log"
 
 func TestGet(t *testing.T) {
 	configOri, err := cf.LoadConfig()
@@ -46,6 +49,58 @@ func TestGet(t *testing.T) {
 	err = cf.SaveConfig(configOri)
 	if err != nil {
 		t.Error("Not expecting error when saving config file")
+	}
+}
+
+func TestInitializeLoggingWhenEnabled(t *testing.T) {
+	verboseLogging := true
+	defer loggingTestCleanup(verboseLogging, t)
+	err := InitializeLogging(verboseLogging, "testLogFile.log")
+	if err != nil {
+		t.Error(err)
+	}
+	if logger == nil {
+		t.Error("logger was expected to be set.")
+	}
+	if logFile == nil {
+		t.Error("logFile was expected to be set.")
+	}
+}
+
+func TestInitializeLoggingWhenDisabled(t *testing.T) {
+	verboseLogging := false
+	defer loggingTestCleanup(verboseLogging, t)
+	err := InitializeLogging(verboseLogging, test_log_file)
+
+	if err != nil {
+		t.Error(err)
+	}
+	if logger != nil {
+		t.Error("logger was not expected to be set.")
+	}
+	if logFile != nil {
+		t.Error("logFile was not expected to be set.")
+	}
+}
+
+func TestCleanupLogging(t *testing.T) {
+	verboseLogging := true
+	defer loggingTestCleanup(verboseLogging, t)
+	err := InitializeLogging(verboseLogging, test_log_file)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = CleanupLogging(verboseLogging)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if logger != nil {
+		t.Error("logger was not expected to be set.")
+	}
+	if logFile != nil {
+		t.Error("logFile was not expected to be set.")
 	}
 }
 
@@ -83,5 +138,12 @@ func testGetEndpoint(t *testing.T, endpoint string, ephttps bool, skipVerify boo
 
 	if Esxclient.Endpoint != endpoint {
 		t.Error("Endpoint of client not match endpoint in config file")
+	}
+}
+
+func loggingTestCleanup(verboseLogging bool, t *testing.T) {
+	err := CleanupLogging(verboseLogging)
+	if err != nil {
+		t.Error(err)
 	}
 }

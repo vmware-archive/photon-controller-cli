@@ -10,14 +10,15 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
-	"fmt"
-
-	"github.com/vmware/photon-controller-cli/photon/cli/command"
-
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
+	"github.com/vmware/photon-controller-cli/photon/cli/client"
+	"github.com/vmware/photon-controller-cli/photon/cli/command"
 )
+
+const verbose_log_filename string = "photon-cli.log"
 
 var commandName = ""
 var githash = ""
@@ -41,6 +42,10 @@ func BuildApp() *cli.App {
 			Name:  "non-interactive, n",
 			Usage: "trigger for non-interactive mode (scripting)",
 		},
+		cli.BoolFlag{
+			Name:  "verbose, l",
+			Usage: "enable verbose logging in the cli",
+		},
 	}
 	app.Commands = []cli.Command{
 		command.GetAuthCommand(),
@@ -59,6 +64,12 @@ func BuildApp() *cli.App {
 		command.GetNetworksCommand(),
 		command.GetClusterCommand(),
 		command.GetAvailabilityZonesCommand(),
+	}
+	app.Before = func(c *cli.Context) error {
+		return client.InitializeLogging(c.GlobalIsSet("verbose"), verbose_log_filename)
+	}
+	app.After = func(c *cli.Context) error {
+		return client.CleanupLogging(c.GlobalIsSet("verbose"))
 	}
 	return app
 }
