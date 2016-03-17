@@ -10,13 +10,12 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
-	"fmt"
-
-	"github.com/vmware/photon-controller-cli/photon/cli/command"
-
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
+	"github.com/vmware/photon-controller-cli/photon/cli/client"
+	"github.com/vmware/photon-controller-cli/photon/cli/command"
 )
 
 var commandName = ""
@@ -41,6 +40,10 @@ func BuildApp() *cli.App {
 			Name:  "non-interactive, n",
 			Usage: "trigger for non-interactive mode (scripting)",
 		},
+		cli.StringFlag{
+			Name:  "log-file, l",
+			Usage: "writes logging information into a logfile at the specified path",
+		},
 	}
 	app.Commands = []cli.Command{
 		command.GetAuthCommand(),
@@ -59,6 +62,20 @@ func BuildApp() *cli.App {
 		command.GetNetworksCommand(),
 		command.GetClusterCommand(),
 		command.GetAvailabilityZonesCommand(),
+	}
+	app.Before = func(c *cli.Context) error {
+		logFile := c.GlobalString("log-file")
+		if logFile != "" {
+			return client.InitializeLogging(logFile)
+		}
+		return nil
+	}
+	app.After = func(c *cli.Context) error {
+		logFile := c.GlobalString("log-file")
+		if logFile != "" {
+			return client.CleanupLogging()
+		}
+		return nil
 	}
 	return app
 }

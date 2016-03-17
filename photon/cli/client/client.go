@@ -12,7 +12,10 @@ package client
 import (
 	"errors"
 	"fmt"
+	"io"
+	"log"
 	"net/url"
+	"os"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
 
@@ -21,6 +24,9 @@ import (
 
 // Global variable pointing to photon client, can be assigned to mock client in tests
 var Esxclient *photon.Client
+
+var logger *log.Logger = nil
+var logFile *os.File = nil
 
 // Read from local config file and create a new photon client using target
 func get() (*photon.Client, error) {
@@ -58,8 +64,7 @@ func get() (*photon.Client, error) {
 		}
 	}
 
-	esxclient := photon.NewClient(config.CloudTarget, options)
-
+	esxclient := photon.NewClient(config.CloudTarget, options, logger)
 	return esxclient, nil
 }
 
@@ -78,4 +83,37 @@ func GetClient(isScripting bool) (*photon.Client, error) {
 	}
 
 	return Esxclient, nil
+}
+
+func InitializeLogging(logFileName string) error {
+	var output io.Writer
+	var err error
+	if logFileName != "" {
+		logFile, err = os.OpenFile(
+			logFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			panic(err)
+		}
+		output = logFile
+		logger = log.New(
+			output,
+			"[photon-cli] ", // prefix for each log statement
+			log.LstdFlags)   // standard flags. prints date and time for each log statement
+	}
+
+	return nil
+}
+
+func CleanupLogging() error {
+	// Close the logging file if it was created
+	// for Verbose logging
+	if logFile != nil {
+		err := logFile.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+		logFile = nil
+		logger = nil
+	}
+	return nil
 }
