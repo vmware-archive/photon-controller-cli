@@ -17,8 +17,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon/internal/rest"
 )
 
 // Reads an error out of the HTTP response, or does nothing if
@@ -98,7 +96,7 @@ func setSecurityGroups(client *Client, entityUrl string, securityGroups *Securit
 		return
 	}
 	url := entityUrl + "/set_security_groups"
-	res, err := rest.Post(client.httpClient,
+	res, err := client.restClient.Post(
 		url,
 		"application/json",
 		bytes.NewReader(body),

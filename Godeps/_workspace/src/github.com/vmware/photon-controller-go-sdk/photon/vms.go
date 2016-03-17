@@ -12,8 +12,6 @@ package photon
 import (
 	"bytes"
 	"encoding/json"
-
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon/internal/rest"
 )
 
 // Contains functionality for VMs API.
@@ -24,7 +22,7 @@ type VmAPI struct {
 var vmUrl string = "/vms/"
 
 func (api *VmAPI) Get(id string) (vm *VM, err error) {
-	res, err := rest.Get(api.client.httpClient, api.client.Endpoint+vmUrl+id, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Get(api.client.Endpoint+vmUrl+id, api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
 	}
@@ -39,7 +37,7 @@ func (api *VmAPI) Get(id string) (vm *VM, err error) {
 }
 
 func (api *VmAPI) Delete(id string) (task *Task, err error) {
-	res, err := rest.Delete(api.client.httpClient, api.client.Endpoint+vmUrl+id, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Delete(api.client.Endpoint+vmUrl+id, api.client.options.TokenOptions.AccessToken)
 
 	if err != nil {
 		return
@@ -54,7 +52,7 @@ func (api *VmAPI) AttachDisk(id string, op *VmDiskOperation) (task *Task, err er
 	if err != nil {
 		return
 	}
-	res, err := rest.Post(api.client.httpClient,
+	res, err := api.client.restClient.Post(
 		api.client.Endpoint+vmUrl+id+"/attach_disk",
 		"application/json",
 		bytes.NewReader(body),
@@ -72,7 +70,7 @@ func (api *VmAPI) DetachDisk(id string, op *VmDiskOperation) (task *Task, err er
 	if err != nil {
 		return
 	}
-	res, err := rest.Post(api.client.httpClient,
+	res, err := api.client.restClient.Post(
 		api.client.Endpoint+vmUrl+id+"/detach_disk",
 		"application/json",
 		bytes.NewReader(body),
@@ -86,7 +84,7 @@ func (api *VmAPI) DetachDisk(id string, op *VmDiskOperation) (task *Task, err er
 }
 
 func (api *VmAPI) AttachISO(id, isoPath string) (task *Task, err error) {
-	res, err := rest.MultipartUploadFile(api.client.httpClient,
+	res, err := api.client.restClient.MultipartUploadFile(
 		api.client.Endpoint+vmUrl+id+"/attach_iso",
 		isoPath,
 		nil,
@@ -104,7 +102,7 @@ func (api *VmAPI) DetachISO(id string) (task *Task, err error) {
 	if err != nil {
 		return
 	}
-	res, err := rest.Post(api.client.httpClient,
+	res, err := api.client.restClient.Post(
 		api.client.Endpoint+vmUrl+id+"/detach_iso",
 		"application/json",
 		bytes.NewReader(body),
@@ -122,7 +120,7 @@ func (api *VmAPI) Start(id string) (task *Task, err error) {
 	if err != nil {
 		return
 	}
-	res, err := rest.Post(api.client.httpClient,
+	res, err := api.client.restClient.Post(
 		api.client.Endpoint+vmUrl+id+"/start",
 		"application/json",
 		bytes.NewReader(body),
@@ -140,7 +138,7 @@ func (api *VmAPI) Stop(id string) (task *Task, err error) {
 	if err != nil {
 		return
 	}
-	res, err := rest.Post(api.client.httpClient,
+	res, err := api.client.restClient.Post(
 		api.client.Endpoint+vmUrl+id+"/stop",
 		"application/json",
 		bytes.NewReader(body),
@@ -158,7 +156,7 @@ func (api *VmAPI) Restart(id string) (task *Task, err error) {
 	if err != nil {
 		return
 	}
-	res, err := rest.Post(api.client.httpClient,
+	res, err := api.client.restClient.Post(
 		api.client.Endpoint+vmUrl+id+"/restart",
 		"application/json",
 		bytes.NewReader(body),
@@ -176,7 +174,7 @@ func (api *VmAPI) Resume(id string) (task *Task, err error) {
 	if err != nil {
 		return
 	}
-	res, err := rest.Post(api.client.httpClient,
+	res, err := api.client.restClient.Post(
 		api.client.Endpoint+vmUrl+id+"/resume",
 		"application/json",
 		bytes.NewReader(body),
@@ -194,7 +192,7 @@ func (api *VmAPI) Suspend(id string) (task *Task, err error) {
 	if err != nil {
 		return
 	}
-	res, err := rest.Post(api.client.httpClient,
+	res, err := api.client.restClient.Post(
 		api.client.Endpoint+vmUrl+id+"/suspend",
 		"application/json",
 		bytes.NewReader(body),
@@ -212,7 +210,7 @@ func (api *VmAPI) SetMetadata(id string, metadata *VmMetadata) (task *Task, err 
 	if err != nil {
 		return
 	}
-	res, err := rest.Post(api.client.httpClient,
+	res, err := api.client.restClient.Post(
 		api.client.Endpoint+vmUrl+id+"/set_metadata",
 		"application/json",
 		bytes.NewReader(body),
@@ -232,7 +230,7 @@ func (api *VmAPI) GetTasks(id string, options *TaskGetOptions) (result *TaskList
 	if options != nil {
 		uri += getQueryString(options)
 	}
-	res, err := rest.GetList(api.client.httpClient, api.client.Endpoint, uri, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
 	}
@@ -243,7 +241,7 @@ func (api *VmAPI) GetTasks(id string, options *TaskGetOptions) (result *TaskList
 }
 
 func (api *VmAPI) GetNetworks(id string) (task *Task, err error) {
-	res, err := rest.Get(api.client.httpClient, api.client.Endpoint+vmUrl+id+"/networks", api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Get(api.client.Endpoint+vmUrl+id+"/networks", api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
 	}
@@ -253,7 +251,7 @@ func (api *VmAPI) GetNetworks(id string) (task *Task, err error) {
 }
 
 func (api *VmAPI) GetMKSTicket(id string) (task *Task, err error) {
-	res, err := rest.Get(api.client.httpClient, api.client.Endpoint+vmUrl+id+"/mks_ticket", api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Get(api.client.Endpoint+vmUrl+id+"/mks_ticket", api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
 	}
@@ -267,7 +265,7 @@ func (api *VmAPI) SetTag(id string, tag *VmTag) (task *Task, err error) {
 	if err != nil {
 		return
 	}
-	res, err := rest.Post(api.client.httpClient,
+	res, err := api.client.restClient.Post(
 		api.client.Endpoint+vmUrl+id+"/tags",
 		"application/json",
 		bytes.NewReader(body),
