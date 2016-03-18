@@ -47,6 +47,8 @@ func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 //              pause_system;                   Usage: deployment pause_system <id>
 //              pause_background_tasks;         Usage: deployment pause_background_tasks <id>
 //              resume_system;                  Usage: deployment resume_system <id>
+//              enable-cluster-type;            Usage: deployment enable_cluster_type <id> [<options>]
+//              disable-cluster-type;           Usage: deployment disable_cluster_type <id> [<options>]
 func GetDeploymentsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "deployment",
@@ -129,6 +131,42 @@ func GetDeploymentsCommand() cli.Command {
 				Usage: "Delete a deployment by id",
 				Action: func(c *cli.Context) {
 					err := deleteDeployment(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "enable-cluster-type",
+				Usage: "Enable cluster type for deployment",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "type, k",
+						Usage: "Cluster type (accepted values are KUBERNETES, MESOS, or SWARM)",
+					},
+					cli.StringFlag{
+						Name:  "image-id, i",
+						Usage: "ID of the cluster image",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := enableClusterType(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "disable-cluster-type",
+				Usage: "Disable cluster type for deployment",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "type, k",
+						Usage: "Cluster type (accepted values are KUBERNETES, MESOS, or SWARM)",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := disableClusterType(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -767,6 +805,117 @@ func resumeSystem(c *cli.Context) error {
 		return err
 	}
 
+	return nil
+}
+
+//Enable cluster type for the specified deployment id
+func enableClusterType(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "deployment enable_cluster_type <id> [<options>]")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	clusterType := c.String("type")
+	imageID := c.String("image-id")
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		clusterType, err = askForInput("Cluster Type: ", clusterType)
+		if err != nil {
+			return err
+		}
+		imageID, err = askForInput("Image ID: ", imageID)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(id) == 0 {
+		return fmt.Errorf("Please provide deployment id")
+	}
+	if len(clusterType) == 0 {
+		return fmt.Errorf("Please provide cluster type using --type flag")
+	}
+
+	if len(imageID) == 0{
+		return fmt.Errorf("Please provide image ID using --image-id flag")
+	}
+
+	if confirmed(c.GlobalIsSet("non-interactive")) {
+		client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
+		}
+		clusterConfigSpec := &photon.ClusterConfigurationSpec{
+			Type:    clusterType,
+			ImageID: imageID,
+		}
+
+		clusterConfiguration, err := client.Esxclient.Deployments.EnableClusterType(id, clusterConfigSpec)
+		if err != nil {
+			return err
+		}
+		if c.GlobalIsSet("non-interactive") {
+			fmt.Printf("%s\t%s\n", clusterConfiguration.Type, clusterConfiguration.ImageID)
+		} else {
+			fmt.Printf("Cluster Type: %s\n", clusterConfiguration.Type)
+			fmt.Printf("Image ID:     %s\n", clusterConfiguration.ImageID)
+		}
+	}else {
+		fmt.Println("Cancelled")
+	}
+	return nil
+}
+
+//Disable cluster type for the specified deployment id
+func disableClusterType(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "deployment disable_cluster_type <id> [<options>]")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	clusterType := c.String("type")
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		clusterType, err = askForInput("Cluster Type: ", clusterType)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(id) == 0 {
+		return fmt.Errorf("Please provide deployment id")
+	}
+	if len(clusterType) == 0 {
+		return fmt.Errorf("Please provide cluster type using --type flag")
+	}
+
+	if confirmed(c.GlobalIsSet("non-interactive")) {
+		client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
+		}
+
+		clusterConfigSpec := &photon.ClusterConfigurationSpec{
+			Type:    clusterType,
+		}
+
+		task, err := client.Esxclient.Deployments.DisableClusterType(id, clusterConfigSpec)
+		if err != nil {
+			return err
+		}
+
+		err = waitOnTaskOperation(task.ID, c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
+		}
+
+	}else {
+		fmt.Println("Cancelled")
+	}
 	return nil
 }
 

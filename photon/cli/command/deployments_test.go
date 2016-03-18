@@ -529,3 +529,107 @@ func TestResumeSystem(t *testing.T) {
 		t.Error("Not expecting resumeSystem to fail")
 	}
 }
+
+func TestEnableClusterType(t *testing.T) {
+	deploymentId := "deployment1"
+	clusterConfig := photon.ClusterConfiguration{
+		Type   : "SWARM",
+		ImageID : "abcd",
+	}
+	response, err := json.Marshal(clusterConfig)
+	if err != nil {
+		t.Error("Not expecting error serializing cluster configuration")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/deployments/"+deploymentId+"/enable_cluster_type",
+		mocks.CreateResponder(200, string(response[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", true, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{deploymentId})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	set.String("type", "SWARM", "Cluster type")
+	set.String("image-id", "abcd", "image id")
+
+	cxt := cli.NewContext(nil, set, globalCtx)
+	err = enableClusterType(cxt)
+	if err != nil {
+		t.Error(err)
+		t.Error("Not expecting deployment list hosts to fail")
+	}
+}
+
+func TestDisableClusterType(t *testing.T) {
+	deploymentId := "deployment1"
+	queuedTask := &photon.Task{
+		Operation: "DELETE_CLUSTER_CONFIGURATION",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: deploymentId},
+	}
+	completedTask := &photon.Task{
+		Operation: "DELETE_CLUSTER_CONFIGURATION",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: deploymentId},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/deployments/"+queuedTask.Entity.ID+"/disable_cluster_type",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", false, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{queuedTask.Entity.ID})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	set.String("type", "SWARM", "Cluster type")
+	cxt := cli.NewContext(nil, set, globalCtx)
+
+	err = disableClusterType(cxt)
+	if err != nil {
+		t.Error(err)
+		t.Error("Not expecting pauseBackgroundTasks to fail")
+	}
+}
