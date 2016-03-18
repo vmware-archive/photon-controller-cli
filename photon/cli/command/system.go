@@ -398,8 +398,8 @@ func getDcMap(file string) (res *DcMap, err error) {
 }
 
 func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
-    err = validate_deployment_arguments(dcMap.Deployment.ImageDatastores, dcMap.Deployment.AuthEnabled,
-    dcMap.Deployment.AuthEndpoint, dcMap.Deployment.AuthPort,
+    err = validate_deployment_arguments(
+		dcMap.Deployment.ImageDatastores, dcMap.Deployment.AuthEnabled,
         dcMap.Deployment.AuthTenant, dcMap.Deployment.AuthUsername, dcMap.Deployment.AuthPassword,
         strings.Join(dcMap.Deployment.AuthSecurityGroups, ","),
         dcMap.Deployment.StatsEnabled, dcMap.Deployment.StatsStoreEndpoint,
@@ -508,7 +508,7 @@ func createHostsInBatch(dcMap *DcMap, deploymentID string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	createTaskMap := make(map[string]*photon.Task)
 	var creationErrors []error
 	var pollErrors []error
