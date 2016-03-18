@@ -300,8 +300,10 @@ func createDeployment(c *cli.Context) error {
 			return err
 		}
 	}
-	err = validate_deployment_arguments(imageDatastoreNames, enableAuth, oauthEndpoint, oauthPort,
-		oauthTenant, oauthUsername, oauthPassword, oauthSecurityGroups, enableStats, statsStoreEndpoint, statsStorePort)
+	err = validate_deployment_arguments(
+		imageDatastoreNames,
+		enableAuth, oauthTenant, oauthUsername, oauthPassword, oauthSecurityGroups,
+		enableStats, statsStoreEndpoint, statsStorePort)
 	if err != nil {
 		return err
 	}
@@ -848,19 +850,13 @@ func removeDuplicates(a []string) []string {
 	return result
 }
 
-func validate_deployment_arguments(imageDatastoreNames string, enableAuth bool, oauthEndpoint string, oauthPort int,
-oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups string,
+func validate_deployment_arguments(imageDatastoreNames string,
+enableAuth bool, oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups string,
 enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
 	if len(imageDatastoreNames) == 0 {
 		return fmt.Errorf("Image datastore names cannot be nil.")
 	}
 	if enableAuth {
-		if oauthEndpoint == "" {
-			return fmt.Errorf("OAuth endpoint cannot be nil when auth is enabled.")
-		}
-		if oauthPort == 0 {
-			return fmt.Errorf("OAuth port cannot be nil when auth is enabled.")
-		}
 		if oauthTenant == "" {
 			return fmt.Errorf("OAuth tenant cannot be nil when auth is enabled.")
 		}
