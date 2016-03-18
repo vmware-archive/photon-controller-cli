@@ -128,6 +128,7 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	}
 
 	c = &Client{Endpoint: endpoint, restClient: restClient, logger: logger}
+
 	// Ensure a copy of options is made, rather than using a pointer
 	// which may change out from underneath if misused by the caller.
 	c.options = *defaultOptions

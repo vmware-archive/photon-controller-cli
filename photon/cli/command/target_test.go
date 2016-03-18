@@ -38,6 +38,7 @@ func TestSetEndpoint(t *testing.T) {
 	if err != nil {
 		t.Error("Not expecting arguments parsing to fail")
 	}
+	set.Bool("nocertcheck", true, "")
 	cxt := cli.NewContext(nil, set, nil)
 	err = setEndpoint(cxt)
 	if err != nil {
@@ -57,6 +58,7 @@ func TestSetEndpoint(t *testing.T) {
 	configExpected := &cf.Configuration{
 		CloudTarget: "test-setendpoint",
 		Token:       "test-setendpoint",
+		IgnoreCertificate: true,
 	}
 	err = cf.SaveConfig(configExpected)
 	if err != nil {
@@ -69,6 +71,7 @@ func TestSetEndpoint(t *testing.T) {
 	if err != nil {
 		t.Error("Not expecting arguments parsign to fail")
 	}
+	set.Bool("nocertcheck", true, "")
 	cxt = cli.NewContext(nil, set, nil)
 	err = setEndpoint(cxt)
 	if err != nil {
@@ -138,8 +141,10 @@ func TestLogin(t *testing.T) {
 	}
 
 	token = "token"
-	args := []string{token}
-	err = login(args)
+	set := flag.NewFlagSet("test", 0)
+	set.String("access_token", token, "")
+	cxt := cli.NewContext(nil, set, nil)
+	err = login(cxt)
 	if err != nil {
 		t.Error("Not expecting error when logging in")
 	}
@@ -164,7 +169,10 @@ func TestLogin(t *testing.T) {
 	}
 
 	token = "token-overwrite"
-	err = login([]string{token})
+	set = flag.NewFlagSet("test", 0)
+	set.String("access_token", token, "")
+	cxt = cli.NewContext(nil, set, nil)
+	err = login(cxt)
 	if err != nil {
 		t.Error("Not expecting error when overwritting token in file")
 	}
