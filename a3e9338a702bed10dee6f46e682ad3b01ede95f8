@@ -1,0 +1,9 @@
+Code-Review+2: Matt Olenik <molenik@vmware.com>
+Code-Review+2: Alain Roy <alainr@vmware.com>
+Verified+1: Gerrit-Jenkins
+Code-Review+2: Mihnea Olteanu <molteanu@vmware.com>
+Submitted-by: Sufian Dar <dars@vmware.com>
+Submitted-at: Thu, 17 Mar 2016 20:03:06 -0700
+Reviewed-on: https://review.ec.eng.vmware.com/12489
+Project: photon-controller-cli
+Branch: refs/heads/v0.8.0
