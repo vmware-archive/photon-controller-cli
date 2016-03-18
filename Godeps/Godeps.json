@@ -13,8 +13,13 @@
 		},
 		{
 			"ImportPath": "github.com/vmware/photon-controller-go-sdk/photon",
-			"Comment": "PROMOTED-85-4-g556910d",
-			"Rev": "556910d40a648c88c032b1f7c8fe4627e3bbd472"
+			"Comment": "PROMOTED-85-9-gdffad69",
+			"Rev": "dffad69f15a91fae8285e325423796bb93d7fd93"
+		},
+		{
+			"ImportPath": "github.com/vmware/photon-controller-go-sdk/photon/lightwave",
+			"Comment": "PROMOTED-85-9-gdffad69",
+			"Rev": "dffad69f15a91fae8285e325423796bb93d7fd93"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",

@@ -238,3 +238,46 @@ func (api *DeploymentsAPI) ResumeSystem(id string) (task *Task, err error) {
 	task, err = getTask(getError(res))
 	return
 }
+
+//  Enable cluster type with specified deployment ID.
+func (api *DeploymentsAPI) EnableClusterType(id string, clusterConfigSpec *ClusterConfigurationSpec) (result *ClusterConfiguration, err error) {
+	body, err := json.Marshal(clusterConfigSpec)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+deploymentUrl+"/"+id+"/enable_cluster_type",
+		"application/json",
+		bytes.NewBuffer(body),
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	res, err = getError(res)
+	if err != nil {
+		return
+	}
+	result = &ClusterConfiguration{}
+	err = json.NewDecoder(res.Body).Decode(result)
+	return
+}
+
+//  Disable cluster type with specified deployment ID.
+func (api *DeploymentsAPI) DisableClusterType(id string, clusterConfigSpec *ClusterConfigurationSpec) (task *Task, err error) {
+	body, err := json.Marshal(clusterConfigSpec)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+deploymentUrl+"/"+id+"/disable_cluster_type",
+		"application/json",
+		bytes.NewBuffer(body),
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+
+	task, err = getTask(getError(res))
+	return
+}

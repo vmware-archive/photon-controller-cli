@@ -18,6 +18,9 @@ import (
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 
+	"crypto/x509"
+	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon/lightwave"
+	"github.com/vmware/photon-controller-cli/photon/cli/client"
 	cf "github.com/vmware/photon-controller-cli/photon/cli/configuration"
 )
 
@@ -59,9 +62,23 @@ func GetTargetCommand() cli.Command {
 			},
 			{
 				Name:  "login",
-				Usage: "Allow user to login with a token",
+				Usage: "Allow user to login with a access token, refresh token or username/password",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "access_token, t",
+						Usage: "oauth access token that grants access",
+					},
+					cli.StringFlag{
+						Name:  "username, u",
+						Usage: "username, if this is provided a password needs to be provided as well",
+					},
+					cli.StringFlag{
+						Name:  "password, p",
+						Usage: "password, if this is provided a username needs to be provided as well",
+					},
+				},
 				Action: func(c *cli.Context) {
-					err := login(c.Args())
+					err := login(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -105,53 +122,18 @@ func setEndpoint(c *cli.Context) error {
 		return err
 	}
 
+	err = configureServerCerts(endpoint, noCertCheck, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
 	fmt.Printf("API target set to '%s'\n", endpoint)
 
 	err = clearConfigTenant("")
 	if err != nil {
 		return err
 	}
-	//If https endpoint, establish trust with the server
-	//
-	u, err := url.Parse(endpoint)
-	if err != nil {
-		return err
-	}
-	//
-	//u.Scheme == https -> Server endpoint needs https
-	//noCertCheck == false -> User wants server cert validation
-	//bTrusted = true -> Server cert is trusted
 
-	if u.Scheme == "https" && noCertCheck == false {
-		//check if we already trust the server
-		bTrusted, _ := isServerTrusted(u.Host)
-		if !bTrusted {
-			if c.GlobalIsSet("non-interactive") {
-				fmt.Printf("Could not establish trust with server : %s.\nYou could either skip server certificate validation or accept the server certificate in interactive mode\n", u.Host)
-				return nil
-			}
-			cert, err := getServerCert(u.Host)
-			if err != nil {
-				fmt.Printf("Could not establish trust with server : %s\n", u.Host)
-				return err
-			}
-			trustSrvCrt := ""
-			if cert != nil {
-				fmt.Printf("Certificate (with below fingerprint) presented by server (%s) isn't trusted.\nMD5 = %X\nSHA1  = %X\n",
-					u.Host,
-					md5.Sum(cert.Raw),
-					sha1.Sum(cert.Raw))
-				//Get the user input on whether to trust the certificate
-				trustSrvCrt, err = askForInput("Do you trust this certificate for future communication? (yes/no): ", trustSrvCrt)
-			}
-			if err == nil && cert != nil && trustSrvCrt == "yes" {
-				err = cf.AddCertToLocalStore(cert)
-				if err == nil {
-					fmt.Printf("\nSaved your preference for future communicaition with %s\n", u.Host)
-				}
-			}
-		}
-	}
 	return err
 }
 
@@ -175,19 +157,40 @@ func showEndpoint(c *cli.Context) error {
 }
 
 // Store token in the config file
-func login(args []string) error {
-	err := checkArgNum(args, 1, "target login <token>")
+func login(c *cli.Context) error {
+	token, err := getAccessToken(c)
 	if err != nil {
 		return err
 	}
-	token := args[0]
+
+	username := c.String("username")
+	password := c.String("password")
+
+	if len(token) == 0 && (len(username) == 0 || len(password) == 0) {
+		return fmt.Errorf("Please provide either a token or username/password")
+	}
 
 	config, err := cf.LoadConfig()
 	if err != nil {
 		return err
 	}
 
-	config.Token = token
+	if len(token) > 0 {
+		config.Token = token
+
+	} else {
+		client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
+		}
+
+		options, err := client.Esxclient.Auth.GetTokensByPassword(username, password)
+		if err != nil {
+			return err
+		}
+
+		config.Token = options.AccessToken
+	}
 
 	err = cf.SaveConfig(config)
 	if err != nil {
@@ -220,4 +223,151 @@ func logout(c *cli.Context) error {
 	fmt.Println("Token removed from config file")
 
 	return nil
+}
+
+func getAccessToken(c *cli.Context) (token string, err error) {
+	if len(c.Args()) == 1 {
+		token = c.Args()[0]
+	} else if len(c.Args()) > 1 {
+		return "", fmt.Errorf("Unknown arguments: %v.", c.Args()[1:])
+	} else {
+		token = c.String("access_token")
+	}
+
+	return
+}
+
+func configureServerCerts(endpoint string, noChertCheck bool, isNonInterractive bool) (err error) {
+	if noChertCheck {
+		return
+	}
+
+	//
+	// If https endpoint, establish trust with the server
+	//
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return
+	}
+
+	// u.Scheme == https -> Server endpoint needs https
+	// noCertCheck == false -> User wants server cert validation
+	// bTrusted = true -> Server cert is trusted
+	if u.Scheme == "https" {
+		err = setupApiServerCert(u.Host, isNonInterractive)
+		if err != nil {
+			return
+		}
+	}
+
+	client.Esxclient, err = client.GetClient(isNonInterractive)
+	if err != nil {
+		return
+	}
+
+	authInfo, err := client.Esxclient.Auth.Get()
+	if err != nil {
+		return
+	}
+
+	fmt.Print(authInfo)
+	if authInfo.Enabled == false {
+		return nil
+	}
+
+	port := authInfo.Port
+	if port == 0 {
+		port = 443
+	}
+
+	host := fmt.Sprintf("%s:%v", authInfo.Endpoint, authInfo.Port)
+	err = setupLightWaveCerts(host, isNonInterractive)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func setupApiServerCert(host string, isNonInterractive bool) (err error) {
+	err = verifyServerTrust("API", host, isNonInterractive)
+	if err != nil {
+		return
+	}
+
+	cert, err := getServerCert(host)
+	if err != nil {
+		fmt.Printf("Could not establish trust with API server : %s\n", host)
+		return
+	}
+
+	err = processCert(cert, "API", host)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func setupLightWaveCerts(host string, isNonInterractive bool) (err error) {
+	err = verifyServerTrust("Authentication", host, isNonInterractive)
+	if err != nil {
+		return
+	}
+
+	oidcClient := lightwave.NewOIDCClient(fmt.Sprintf("https://%s", host), nil, nil)
+	certs, err := oidcClient.GetRootCerts()
+	if err != nil {
+		return
+	}
+
+	for _, cert := range certs {
+		err = processCert(cert, "Authentication", host)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func verifyServerTrust(serverName string, host string, isNonInterractive bool) (err error) {
+	//check if we already trust the server
+	bTrusted, _ := isServerTrusted(host)
+	if bTrusted {
+		return
+	}
+
+	if isNonInterractive {
+		err = fmt.Errorf(
+			"Could not establish trust with API server : %s.\nEither skip certificate validation or accept the server certificate in interactive mode\n",
+			host)
+		return
+	}
+
+	return
+}
+
+func processCert(cert *x509.Certificate, serverName string, host string) (err error) {
+	trustSrvCrt := ""
+	if cert != nil {
+		fmt.Printf(
+			"Certificate (with below fingerprint) presented by %s server (%s) isn't trusted.\nMD5 = %X\nSHA1  = %X\n",
+			serverName,
+			host,
+			md5.Sum(cert.Raw),
+			sha1.Sum(cert.Raw))
+		//Get the user input on whether to trust the certificate
+		trustSrvCrt, err = askForInput("Do you trust this certificate for future communication? (yes/no): ", trustSrvCrt)
+	}
+
+	if err == nil && cert != nil && trustSrvCrt == "yes" {
+		err = cf.AddCertToLocalStore(cert)
+		if err == nil {
+			fmt.Printf(
+				"Saved your preference for future communicaition with %s server %s\n", serverName, host)
+		}
+	}
+
+	return
 }
