@@ -13,13 +13,23 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
 
 	"github.com/vmware/photon-controller-cli/photon/cli/client"
+	"encoding/json"
+	"time"
 )
+
+type stepSorter []photon.Step
+
+func (step stepSorter) Len() int           { return len(step) }
+func (step stepSorter) Swap(i, j int)      { step[i], step[j] = step[j], step[i] }
+func (step stepSorter) Less(i, j int) bool { return step[i].Sequence < step[j].Sequence }
 
 // Creates a cli.Command for tasks
 // Subcommands: list; Usage: task list [<options>]
@@ -124,32 +134,41 @@ func showTask(c *cli.Context) error {
 		return err
 	}
 
-	var apiErrorList []photon.ApiError
-	task, err := client.Esxclient.Tasks.Get(id)
-	if err != nil {
-		if task == nil {
-			return err
-		} else {
-			apiErrorList = getTaskAPIErrorList(task)
-		}
+	task, taskError := client.Esxclient.Tasks.Get(id)
+	if taskError != nil && task == nil {
+		return taskError
 	}
-
+    var resourceProperties string
+	if task.ResourceProperties != nil {
+		a, err := json.Marshal(task.ResourceProperties)
+		if err != nil {
+			fmt.Println("Error here ")
+		}
+		resourceProperties = string(a)
+	}
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", task.ID, task.State, task.Entity.ID, task.Entity.Kind, apiErrorList)
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%d\t%d\t%v\n", task.ID, task.State, task.Entity.ID, task.Entity.Kind,
+			task.Operation, task.StartedTime, task.EndTime, resourceProperties)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
 		fmt.Fprintf(w, "Task:\t%s\n", task.ID)
 		fmt.Fprintf(w, "Entity:\t%s %s\n", task.Entity.Kind, task.Entity.ID)
-		fmt.Fprintf(w, "State:\t%s\n\n", task.State)
+		fmt.Fprintf(w, "State:\t%s\n", task.State)
+		fmt.Fprintf(w, "Operation:\t%s\n", task.Operation)
+		fmt.Fprintf(w, "StartedTime:\t%s\n", time.Unix(task.StartedTime/1000, 0).Format("2006-01-02 03:04:05.00"))
+		fmt.Fprintf(w, "EndTime:\t%s\n", time.Unix(task.EndTime/1000, 0).Format("2006-01-02 03:04:05.00"))
+		if task.ResourceProperties != nil {
+			fmt.Fprintf(w, "ResourceProperties:\t%v\n", resourceProperties)
+		}
 		err := w.Flush()
 		if err != nil {
 			return err
 		}
-		if len(apiErrorList) != 0 {
-			fmt.Printf("The following error was encountered while running the task:\n\n")
-			fmt.Printf("%s\n\n", apiErrorList)
-		}
+	}
+	err = printTaskSteps(task, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -190,4 +209,39 @@ func monitorTask(c *cli.Context) error {
 		}
 	}
 	return nil
+}
+
+func printTaskSteps(task *photon.Task, isScripting bool) error {
+	if isScripting {
+		for _, step := range task.Steps {
+			fmt.Printf("%s\t%s\t%d\t%d\t%s\t%s\n", step.Operation, step.State, step.StartedTime,
+				step.EndTime, getApiErrorCode(step.Errors, ","), getApiErrorCode(step.Warnings, ","))
+		}
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+		fmt.Fprintf(w, "Steps:\n")
+		fmt.Fprintf(w, "\tOperation\tState\tStartedTime\tEndTime\tErrorCode\tWarningCode\n")
+		steps := task.Steps
+		sort.Sort(stepSorter(steps))
+		for _, step := range steps {
+			fmt.Fprintf(w, "\t%s\t%s\t%s\t%s\t%s\t%s\n", step.Operation, step.State,
+				time.Unix(step.StartedTime/1000, 0).Format("2006-01-02 03:04:05.00"),
+				time.Unix(step.EndTime/1000, 0).Format("2006-01-02 03:04:05.00"),
+				getApiErrorCode(step.Errors, ", "), getApiErrorCode(step.Warnings, ", "))
+		}
+		err := w.Flush()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func getApiErrorCode(apiErrors []photon.ApiError, delim string) string {
+	errors := []string{}
+	for _, error := range apiErrors {
+		errors = append(errors, fmt.Sprintf("%s", error.Code))
+	}
+	return strings.Join(errors, delim)
 }
