@@ -101,6 +101,10 @@ func (client *restClient) GetList(endpoint string, url string, token string) (re
 		if err != nil {
 			return
 		}
+		if res.StatusCode != 200 {
+			errMsg := fmt.Sprintf("photon: HTTP %d: %v", res.StatusCode, res.Body)
+			return nil, errors.New(errMsg)
+		}
 
 		decoder = json.NewDecoder(res.Body)
 		decoder.UseNumber()
