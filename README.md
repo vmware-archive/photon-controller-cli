@@ -271,6 +271,7 @@ Creating a VM flavor with with 1 VM, 1 CPU and 2 GB RAM:
 Usage: `photon flavor create --name <FLAVOR-NAME> --kind <KIND> --cost <COST>`
 
 Example:
+
     % photon -n flavor create --name "cloud-vm-small" --kind "vm" --cost "vm 1.0 COUNT, vm.cpu 1.0 COUNT, vm.memory 2.0 GB"
     ddfb5be0-3355-46d3-9f2f-e28750eb201b
 
