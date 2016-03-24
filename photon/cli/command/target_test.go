@@ -56,8 +56,8 @@ func TestSetEndpoint(t *testing.T) {
 
 	// test SetEndpoint when overwriting existing endpoint
 	configExpected := &cf.Configuration{
-		CloudTarget: "test-setendpoint",
-		Token:       "test-setendpoint",
+		CloudTarget:       "test-setendpoint",
+		Token:             "test-setendpoint",
 		IgnoreCertificate: true,
 	}
 	err = cf.SaveConfig(configExpected)

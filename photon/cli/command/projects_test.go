@@ -110,10 +110,10 @@ func TestShowProject(t *testing.T) {
 		Name: "fake_project_name",
 		ID:   "fake_project_ID",
 		ResourceTicket: photon.ProjectTicket{
-			TenantTicketID: "fake_ticket_id",
+			TenantTicketID:   "fake_ticket_id",
 			TenantTicketName: "fake_ticket_name",
-			Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-			Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
+			Limits:           []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
+			Usage:            []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
 		},
 	}
 	response, err := json.Marshal(projectStruct)

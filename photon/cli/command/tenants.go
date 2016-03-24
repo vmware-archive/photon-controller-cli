@@ -398,8 +398,8 @@ func setSecurityGroups(c *cli.Context) error {
 	}
 	id := c.Args().First()
 	items := []string{}
-	if c.Args()[1] != ""{
-       items = regexp.MustCompile(`\s*,\s*`).Split(c.Args()[1], -1)
+	if c.Args()[1] != "" {
+		items = regexp.MustCompile(`\s*,\s*`).Split(c.Args()[1], -1)
 	}
 	securityGroups := &photon.SecurityGroups{
 		Items: items,

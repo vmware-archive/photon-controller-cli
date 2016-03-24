@@ -78,31 +78,31 @@ func GetSystemCommand() cli.Command {
 				},
 			},
 			{
-				Name: "migration",
+				Name:  "migration",
 				Usage: "migrates state and hosts between photon controller deployments",
 				Subcommands: []cli.Command{
 					{
-					  Name: "prepare",
+						Name:  "prepare",
 						Usage: "initializes the migration",
 						Action: func(c *cli.Context) {
-								err := deploymentMigrationPrepare(c)
-								if err != nil {
-									log.Fatal("Error: ", err)
-								}
+							err := deploymentMigrationPrepare(c)
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
 						},
 					},
 					{
-					  Name: "finalize",
+						Name:  "finalize",
 						Usage: "finalizes the migration",
 						Action: func(c *cli.Context) {
-								err := deploymentMigrationFinalize(c)
-								if err != nil {
-									log.Fatal("Error: ", err)
-								}
+							err := deploymentMigrationFinalize(c)
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
 						},
 					},
 					{
-						Name: "status",
+						Name:  "status",
 						Usage: "shows the status of the current migration",
 						Action: func(c *cli.Context) {
 							err := showMigrationStatus(c)
@@ -195,7 +195,6 @@ func deploy(c *cli.Context) error {
 	return nil
 }
 
-
 // Add most hosts in batch mode
 func addHosts(c *cli.Context) error {
 	err := checkArgNum(c.Args(), 1, "system addHosts <file>")
@@ -212,7 +211,6 @@ func addHosts(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
 
 	deployments, err := client.Esxclient.Deployments.GetAll()
 	deploymentID := deployments.Items[0].ID
@@ -288,15 +286,30 @@ func destroy(c *cli.Context) error {
 
 // Starts the recurring copy state of source system into destination
 func deploymentMigrationPrepare(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "system migration prepare <old_management_endpoint>"); if err != nil { return err }
+	err := checkArgNum(c.Args(), 1, "system migration prepare <old_management_endpoint>")
+	if err != nil {
+		return err
+	}
 	sourceAddress := c.Args().First()
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive")); if err != nil { return err }
-	deployments, err := client.Esxclient.Deployments.GetAll(); if err != nil { return err }
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+	deployments, err := client.Esxclient.Deployments.GetAll()
+	if err != nil {
+		return err
+	}
 
 	// Initialize deployment migration
 	for _, deployment := range deployments.Items {
-		initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(sourceAddress, deployment.ID); if err != nil { return err }
-		_, err = pollTask(initializeMigrate.ID); if err != nil { return err }
+		initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(sourceAddress, deployment.ID)
+		if err != nil {
+			return err
+		}
+		_, err = pollTask(initializeMigrate.ID)
+		if err != nil {
+			return err
+		}
 		fmt.Printf("Deployment '%s' migration started [source management endpoint: '%s'].\n", deployment.ID, sourceAddress)
 
 		return nil
@@ -307,16 +320,31 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 
 // Finishes the copy state of source system into destination and makes this system the active one
 func deploymentMigrationFinalize(c *cli.Context) error {
-	fmt.Printf("'%d'",len(c.Args()))
-	err := checkArgNum(c.Args(), 1, "system migration finalize <old_management_endpoint>"); if err != nil { return err }
+	fmt.Printf("'%d'", len(c.Args()))
+	err := checkArgNum(c.Args(), 1, "system migration finalize <old_management_endpoint>")
+	if err != nil {
+		return err
+	}
 	sourceAddress := c.Args().First()
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive")); if err != nil { return err }
-	deployments, err := client.Esxclient.Deployments.GetAll(); if err != nil { return err }
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+	deployments, err := client.Esxclient.Deployments.GetAll()
+	if err != nil {
+		return err
+	}
 
 	// Finalize deployment migration
 	for _, deployment := range deployments.Items {
-		finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(sourceAddress, deployment.ID); if err != nil { return err }
-		_, err = pollTask(finalizeMigrate.ID); if err != nil { return err }
+		finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(sourceAddress, deployment.ID)
+		if err != nil {
+			return err
+		}
+		_, err = pollTask(finalizeMigrate.ID)
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}
@@ -326,22 +354,31 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 
 // displays the migration status
 func showMigrationStatus(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "migration status"); if err != nil { return err }
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive")); if err != nil { return err }
-	deployments, err := client.Esxclient.Deployments.GetAll(); if err != nil { return err }
+	err := checkArgNum(c.Args(), 0, "migration status")
+	if err != nil {
+		return err
+	}
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+	deployments, err := client.Esxclient.Deployments.GetAll()
+	if err != nil {
+		return err
+	}
 
 	for _, deployment := range deployments.Items {
 		if deployment.Migration != nil {
 			migration := deployment.Migration
 			if c.GlobalIsSet("non-interactive") {
 				fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
-					migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+					migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
 			} else {
 				fmt.Printf("  Migration status:\n")
 				fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
 				fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
 					migration.DataMigrationCycleSize)
-				fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+				fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
 			}
 		}
 		return nil
@@ -350,15 +387,15 @@ func showMigrationStatus(c *cli.Context) error {
 }
 
 func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID string, err error) {
-    err = validate_deployment_arguments(
+	err = validate_deployment_arguments(
 		dcMap.Deployment.ImageDatastores, dcMap.Deployment.AuthEnabled,
-        dcMap.Deployment.AuthTenant, dcMap.Deployment.AuthUsername, dcMap.Deployment.AuthPassword,
-        dcMap.Deployment.AuthSecurityGroups,
-        dcMap.Deployment.StatsEnabled, dcMap.Deployment.StatsStoreEndpoint,
-        dcMap.Deployment.StatsPort)
-    if err != nil {
-        return "", err
-    }
+		dcMap.Deployment.AuthTenant, dcMap.Deployment.AuthUsername, dcMap.Deployment.AuthPassword,
+		dcMap.Deployment.AuthSecurityGroups,
+		dcMap.Deployment.StatsEnabled, dcMap.Deployment.StatsStoreEndpoint,
+		dcMap.Deployment.StatsPort)
+	if err != nil {
+		return "", err
+	}
 
 	lbEnabledString := dcMap.Deployment.LoadBalancerEnabled
 	lbEnabled := true
@@ -390,7 +427,7 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		SyslogEndpoint:  dcMap.Deployment.SyslogEndpoint,
 		Stats:           statsInfo,
 		UseImageDatastoreForVms: dcMap.Deployment.UseImageDatastoreForVms,
-		LoadBalancerEnabled: lbEnabled,
+		LoadBalancerEnabled:     lbEnabled,
 	}
 
 	createDeploymentTask, err := client.Esxclient.Deployments.Create(deploymentSpec)
@@ -540,7 +577,6 @@ func createHostSpecs(dcMap *manifest.Installation) ([]photon.HostCreateSpec, err
 
 	return hostSpecs, nil
 }
-
 
 func parseIpRanges(ipRanges string) ([]string, error) {
 	var ipList []string

@@ -24,7 +24,7 @@ import (
 	"github.com/vmware/photon-controller-cli/photon/cli/client"
 )
 
-type VM_NetworkIPs struct{
+type VM_NetworkIPs struct {
 	vm  photon.VM
 	ips string
 }
@@ -339,7 +339,6 @@ func createDeployment(c *cli.Context) error {
 		}
 	}
 
-
 	var imageDatastoreList []string
 	if len(imageDatastoreNames) > 0 {
 		imageDatastoreList = regexp.MustCompile(`\s*,\s*`).Split(imageDatastoreNames, -1)
@@ -351,8 +350,8 @@ func createDeployment(c *cli.Context) error {
 	}
 
 	err = validate_deployment_arguments(imageDatastoreList,
-		    enableAuth, oauthTenant, oauthUsername, oauthPassword, oauthSecurityGroupList,
-			enableStats, statsStoreEndpoint, statsStorePort)
+		enableAuth, oauthTenant, oauthUsername, oauthPassword, oauthSecurityGroupList,
+		enableStats, statsStoreEndpoint, statsStorePort)
 	if err != nil {
 		return err
 	}
@@ -511,10 +510,10 @@ func showDeployment(c *cli.Context) error {
 		ipAddr := ""
 		for _, nt := range networks {
 			network := nt.(map[string]interface{})
-			if len(network) != 0 && network["network"] != nil{
+			if len(network) != 0 && network["network"] != nil {
 				if val, ok := network["ipAddress"]; ok && val != nil {
 					ipAddr = val.(string)
-					break;
+					break
 				}
 			}
 
@@ -599,13 +598,13 @@ func showDeployment(c *cli.Context) error {
 		migration := deployment.Migration
 		if c.GlobalIsSet("non-interactive") {
 			fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
-				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
 		} else {
 			fmt.Printf("  Migration status:\n")
 			fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
 			fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
 				migration.DataMigrationCycleSize)
-			fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+			fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
 		}
 	} else {
 		if c.GlobalIsSet("non-interactive") {
@@ -613,7 +612,7 @@ func showDeployment(c *cli.Context) error {
 		}
 	}
 
-	if deployment.ClusterConfigurations != nil && len(deployment.ClusterConfigurations) !=0 {
+	if deployment.ClusterConfigurations != nil && len(deployment.ClusterConfigurations) != 0 {
 		if c.GlobalIsSet("non-interactive") {
 			clusterConfigurations := []string{}
 			for _, c := range deployment.ClusterConfigurations {
@@ -832,7 +831,7 @@ func enableClusterType(c *cli.Context) error {
 		return fmt.Errorf("Please provide cluster type using --type flag")
 	}
 
-	if len(imageID) == 0{
+	if len(imageID) == 0 {
 		return fmt.Errorf("Please provide image ID using --image-id flag")
 	}
 
@@ -856,7 +855,7 @@ func enableClusterType(c *cli.Context) error {
 			fmt.Printf("Cluster Type: %s\n", clusterConfiguration.Type)
 			fmt.Printf("Image ID:     %s\n", clusterConfiguration.ImageID)
 		}
-	}else {
+	} else {
 		fmt.Println("Cancelled")
 	}
 	return nil
@@ -894,7 +893,7 @@ func disableClusterType(c *cli.Context) error {
 		}
 
 		clusterConfigSpec := &photon.ClusterConfigurationSpec{
-			Type:    clusterType,
+			Type: clusterType,
 		}
 
 		task, err := client.Esxclient.Deployments.DisableClusterType(id, clusterConfigSpec)
@@ -907,23 +906,23 @@ func disableClusterType(c *cli.Context) error {
 			return err
 		}
 
-	}else {
+	} else {
 		fmt.Println("Cancelled")
 	}
 	return nil
 }
 
 func display_deployment_summary(data []VM_NetworkIPs, isScripting bool) error {
-	deployment_info  := make(map[string]map[string][]string)
-	for _, d := range data{
+	deployment_info := make(map[string]map[string][]string)
+	for _, d := range data {
 		for k, v := range d.vm.Metadata {
-			if strings.HasPrefix(k, "CONTAINER_"){
+			if strings.HasPrefix(k, "CONTAINER_") {
 				if _, ok := deployment_info[v]; ok {
-					deployment_info[v]["port"] = append(deployment_info[v]["port"],getPort(k))
-					deployment_info[v]["ips"] = append(deployment_info[v]["ips"],d.ips)
+					deployment_info[v]["port"] = append(deployment_info[v]["port"], getPort(k))
+					deployment_info[v]["ips"] = append(deployment_info[v]["ips"], d.ips)
 
 				} else {
-					deployment_info[v] = map[string][]string{ "port" : []string{}, "ips" : []string{}}
+					deployment_info[v] = map[string][]string{"port": []string{}, "ips": []string{}}
 				}
 			}
 		}
@@ -948,7 +947,7 @@ func display_deployment_summary(data []VM_NetworkIPs, isScripting bool) error {
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w,"\n\n")
+		fmt.Fprintf(w, "\n\n")
 		fmt.Fprintf(w, "  Job\tVM IP(s)\tPorts\n")
 		for _, job := range keys {
 			ips := removeDuplicates(deployment_info[job]["ips"])
@@ -976,9 +975,8 @@ func display_deployment_summary(data []VM_NetworkIPs, isScripting bool) error {
 	return nil
 }
 
-
 func getPort(container_port string) string {
-	return strings.TrimPrefix(container_port,"CONTAINER_")
+	return strings.TrimPrefix(container_port, "CONTAINER_")
 }
 
 func removeDuplicates(a []string) []string {
@@ -994,7 +992,7 @@ func removeDuplicates(a []string) []string {
 }
 
 func validate_deployment_arguments(imageDatastoreNames []string, enableAuth bool, oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups []string,
-enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
+	enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
 	if len(imageDatastoreNames) == 0 {
 		return fmt.Errorf("Image datastore names cannot be nil.")
 	}

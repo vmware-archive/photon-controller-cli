@@ -192,7 +192,6 @@ func TestGetDeployment(t *testing.T) {
 		server.URL+"/deployments/1/vms",
 		mocks.CreateResponder(200, string(response[:])))
 
-
 	defer server.Close()
 
 	mocks.Activate(true)
@@ -533,8 +532,8 @@ func TestResumeSystem(t *testing.T) {
 func TestEnableClusterType(t *testing.T) {
 	deploymentId := "deployment1"
 	clusterConfig := photon.ClusterConfiguration{
-		Type   : "SWARM",
-		ImageID : "abcd",
+		Type:    "SWARM",
+		ImageID: "abcd",
 	}
 	response, err := json.Marshal(clusterConfig)
 	if err != nil {

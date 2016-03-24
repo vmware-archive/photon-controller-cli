@@ -20,8 +20,8 @@ import (
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
 
-	"github.com/vmware/photon-controller-cli/photon/cli/client"
 	"encoding/json"
+	"github.com/vmware/photon-controller-cli/photon/cli/client"
 	"time"
 )
 
@@ -138,7 +138,7 @@ func showTask(c *cli.Context) error {
 	if taskError != nil && task == nil {
 		return taskError
 	}
-    var resourceProperties string
+	var resourceProperties string
 	if task.ResourceProperties != nil {
 		a, err := json.Marshal(task.ResourceProperties)
 		if err != nil {
