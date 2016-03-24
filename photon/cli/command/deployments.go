@@ -338,20 +338,23 @@ func createDeployment(c *cli.Context) error {
 			return err
 		}
 	}
-	err = validate_deployment_arguments(
-		imageDatastoreNames,
-		enableAuth, oauthTenant, oauthUsername, oauthPassword, oauthSecurityGroups,
-		enableStats, statsStoreEndpoint, statsStorePort)
-	if err != nil {
-		return err
+
+
+	var imageDatastoreList []string
+	if len(imageDatastoreNames) > 0 {
+		imageDatastoreList = regexp.MustCompile(`\s*,\s*`).Split(imageDatastoreNames, -1)
 	}
 
-	imageDatastoreList := []string{}
-	imageDatastoreList = regexp.MustCompile(`\s*,\s*`).Split(imageDatastoreNames, -1)
-
-	oauthSecurityGroupList := []string{}
+	var oauthSecurityGroupList []string
 	if oauthSecurityGroups != "" {
 		oauthSecurityGroupList = regexp.MustCompile(`\s*,\s*`).Split(oauthSecurityGroups, -1)
+	}
+
+	err = validate_deployment_arguments(imageDatastoreList,
+		    enableAuth, oauthTenant, oauthUsername, oauthPassword, oauthSecurityGroupList,
+			enableStats, statsStoreEndpoint, statsStorePort)
+	if err != nil {
+		return err
 	}
 
 	authInfo := &photon.AuthInfo{
@@ -990,8 +993,7 @@ func removeDuplicates(a []string) []string {
 	return result
 }
 
-func validate_deployment_arguments(imageDatastoreNames string,
-enableAuth bool, oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups string,
+func validate_deployment_arguments(imageDatastoreNames []string, enableAuth bool, oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups []string,
 enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
 	if len(imageDatastoreNames) == 0 {
 		return fmt.Errorf("Image datastore names cannot be nil.")
@@ -1006,7 +1008,7 @@ enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
 		if oauthPassword == "" {
 			return fmt.Errorf("OAuth password cannot be nil when auth is enabled.")
 		}
-		if oauthSecurityGroups == "" {
+		if len(oauthSecurityGroups) == 0 {
 			return fmt.Errorf("OAuth security groups cannot be nil when auth is enabled.")
 		}
 	}
