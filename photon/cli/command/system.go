@@ -12,7 +12,6 @@ package command
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"log"
 	"net"
 	"regexp"
@@ -24,48 +23,11 @@ import (
 	"github.com/vmware/photon-controller-cli/photon/cli/client"
 
 	"errors"
-	"io/ioutil"
 	"os"
 	"text/tabwriter"
 
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/gopkg.in/yaml.v2"
+	"github.com/vmware/photon-controller-cli/photon/cli/manifest"
 )
-
-type SecurityGroups struct {
-	Items []string `yaml:"items"`
-}
-
-type Deployment struct {
-	NTPEndpoint             interface{} `yaml:"ntp_endpoint"`
-	UseImageDatastoreForVms bool        `yaml:"use_image_datastore_for_vms"`
-	SyslogEndpoint          interface{} `yaml:"syslog_endpoint"`
-	StatsStoreEndpoint      string      `yaml:"stats_store_endpoint"`
-	StatsPort               int         `yaml:"stats_port"`
-	StatsEnabled            bool        `yaml:"stats_enabled"`
-	LoadBalancerEnabled     string      `yaml:"enable_loadbalancer"`
-	ImageDatastores         string      `yaml:"image_datastores"`
-	AuthEnabled             bool        `yaml:"auth_enabled"`
-	AuthEndpoint            string      `yaml:"oauth_endpoint"`
-	AuthUsername            string      `yaml:"oauth_username"`
-	AuthPassword            string      `yaml:"oauth_password"`
-	AuthTenant              string      `yaml:"oauth_tenant"`
-	AuthPort                int         `yaml:"oauth_port"`
-	AuthSecurityGroups      []string    `yaml:"oauth_security_groups"`
-}
-
-type Host struct {
-	Username         string            `yaml:"username"`
-	Password         string            `yaml:"password"`
-	IpRanges         string            `yaml:"address_ranges"`
-	AvailabilityZone string            `yaml:"availability_zone"`
-	Tags             []string          `yaml:"usage_tags"`
-	Metadata         map[string]string `yaml:"metadata"`
-}
-
-type DcMap struct {
-	Deployment Deployment `yaml:"deployment"`
-	Hosts      []Host     `yaml:"hosts"`
-}
 
 // Create a cli.command object for command "system"
 // Subcommand: status; Usage: system status
@@ -203,7 +165,7 @@ func deploy(c *cli.Context) error {
 		return err
 	}
 	file := c.Args().First()
-	dcMap, err := getDcMap(file)
+	dcMap, err := manifest.LoadInstallation(file)
 	if err != nil {
 		return err
 	}
@@ -241,7 +203,7 @@ func addHosts(c *cli.Context) error {
 		return err
 	}
 	file := c.Args().First()
-	dcMap, err := getDcMap(file)
+	dcMap, err := manifest.LoadInstallation(file)
 	if err != nil {
 		return err
 	}
@@ -387,21 +349,11 @@ func showMigrationStatus(c *cli.Context) error {
 	return nil
 }
 
-func getDcMap(file string) (res *DcMap, err error) {
-	buf, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-	res = &DcMap{}
-	err = yaml.Unmarshal(buf, res)
-	return
-}
-
-func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
+func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID string, err error) {
     err = validate_deployment_arguments(
 		dcMap.Deployment.ImageDatastores, dcMap.Deployment.AuthEnabled,
         dcMap.Deployment.AuthTenant, dcMap.Deployment.AuthUsername, dcMap.Deployment.AuthPassword,
-        strings.Join(dcMap.Deployment.AuthSecurityGroups, ","),
+        dcMap.Deployment.AuthSecurityGroups,
         dcMap.Deployment.StatsEnabled, dcMap.Deployment.StatsStoreEndpoint,
         dcMap.Deployment.StatsPort)
     if err != nil {
@@ -419,8 +371,6 @@ func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
 
 	authInfo := &photon.AuthInfo{
 		Enabled:        dcMap.Deployment.AuthEnabled,
-		Endpoint:       dcMap.Deployment.AuthEndpoint,
-		Port:           dcMap.Deployment.AuthPort,
 		Tenant:         dcMap.Deployment.AuthTenant,
 		Username:       dcMap.Deployment.AuthUsername,
 		Password:       dcMap.Deployment.AuthPassword,
@@ -435,7 +385,7 @@ func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
 
 	deploymentSpec := &photon.DeploymentCreateSpec{
 		Auth:            authInfo,
-		ImageDatastores: regexp.MustCompile(`\s*,\s*`).Split(dcMap.Deployment.ImageDatastores, -1),
+		ImageDatastores: dcMap.Deployment.ImageDatastores,
 		NTPEndpoint:     dcMap.Deployment.NTPEndpoint,
 		SyslogEndpoint:  dcMap.Deployment.SyslogEndpoint,
 		Stats:           statsInfo,
@@ -456,7 +406,7 @@ func createDeploymentFromDcMap(dcMap *DcMap) (deploymentID string, err error) {
 	return task.Entity.ID, nil
 }
 
-func createAvailabilityZonesFromDcMap(dcMap *DcMap) (map[string]string, error) {
+func createAvailabilityZonesFromDcMap(dcMap *manifest.Installation) (map[string]string, error) {
 	availabilityZoneNameToIdMap := make(map[string]string)
 	for _, host := range dcMap.Hosts {
 		if len(host.AvailabilityZone) > 0 {
@@ -481,7 +431,7 @@ func createAvailabilityZonesFromDcMap(dcMap *DcMap) (map[string]string, error) {
 	return availabilityZoneNameToIdMap, nil
 }
 
-func createHostsFromDcMap(dcMap *DcMap, deploymentID string) error {
+func createHostsFromDcMap(dcMap *manifest.Installation, deploymentID string) error {
 	hostSpecs, err := createHostSpecs(dcMap)
 	if err != nil {
 		return err
@@ -503,7 +453,7 @@ func createHostsFromDcMap(dcMap *DcMap, deploymentID string) error {
 	return nil
 }
 
-func createHostsInBatch(dcMap *DcMap, deploymentID string) error {
+func createHostsInBatch(dcMap *manifest.Installation, deploymentID string) error {
 	hostSpecs, err := createHostSpecs(dcMap)
 	if err != nil {
 		return err
@@ -536,7 +486,7 @@ func createHostsInBatch(dcMap *DcMap, deploymentID string) error {
 	return nil
 }
 
-func createHostSpecs(dcMap *DcMap) ([]photon.HostCreateSpec, error) {
+func createHostSpecs(dcMap *manifest.Installation) ([]photon.HostCreateSpec, error) {
 	availabilityZoneNameToIdMap, err := createAvailabilityZonesFromDcMap(dcMap)
 	if err != nil {
 		return nil, err
