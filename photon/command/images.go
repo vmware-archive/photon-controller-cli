@@ -316,7 +316,7 @@ func showImage(c *cli.Context) error {
 
 // Retrieves tasks from specified image
 func getImageTasks(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "image task <id> [<options>]")
+	err := checkArgNum(c.Args(), 1, "image tasks <id> [<options>]")
 	if err != nil {
 		return err
 	}

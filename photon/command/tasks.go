@@ -214,7 +214,7 @@ func monitorTask(c *cli.Context) error {
 func printTaskSteps(task *photon.Task, isScripting bool) error {
 	if isScripting {
 		for _, step := range task.Steps {
-			fmt.Printf("%s\t%s\t%d\t%d\t%s\t%s\n", step.Operation, step.State, step.StartedTime,
+			fmt.Printf("%d\t%s\t%s\t%d\t%d\t%s\t%s\n", step.Sequence, step.Operation, step.State, step.StartedTime,
 				step.EndTime, getApiErrorCode(step.Errors, ","), getApiErrorCode(step.Warnings, ","))
 		}
 	} else {
