@@ -31,7 +31,7 @@ import (
 //	             set;    Usage: project set <name>
 //	             get;    Usage: project get
 //	             list;   Usage: project list [<options>]
-//	             tasks;  Usage: project tasks <name> [<options>]
+//	             tasks;  Usage: project tasks <id> [<options>]
 func GetProjectsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "project",
@@ -140,10 +140,6 @@ func GetProjectsCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "kind, k",
 						Usage: "specify task kind for filtering",
-					},
-					cli.StringFlag{
-						Name:  "tenant, t",
-						Usage: "Tenant name for project",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -472,26 +468,15 @@ func listProjects(c *cli.Context) error {
 
 // Retrieves tasks for project
 func getProjectTasks(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "project tasks <project name> [<options>]")
+	err := checkArgNum(c.Args(), 1, "project tasks <id> [<options>]")
 	if err != nil {
 		return err
 	}
-	name := c.Args().First()
-	tenantName := c.String("tenant")
+	id := c.Args().First()
 	state := c.String("state")
 	kind := c.String("kind")
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
-	if err != nil {
-		return err
-	}
-
-	tenant, err := verifyTenant(tenantName)
-	if err != nil {
-		return err
-	}
-
-	project, err := findProject(tenant.ID, name)
 	if err != nil {
 		return err
 	}
@@ -501,7 +486,7 @@ func getProjectTasks(c *cli.Context) error {
 		Kind:  kind,
 	}
 
-	taskList, err := client.Esxclient.Projects.GetTasks(project.ID, options)
+	taskList, err := client.Esxclient.Projects.GetTasks(id, options)
 	if err != nil {
 		return err
 	}

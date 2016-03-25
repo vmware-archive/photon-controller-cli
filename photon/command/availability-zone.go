@@ -238,7 +238,7 @@ func deleteAvailabilityZone(c *cli.Context) error {
 
 // Retrieves tasks from specified availability zone
 func getAvailabilityZoneTasks(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "availability-zone task <id> [<options>]")
+	err := checkArgNum(c.Args(), 1, "availability-zone tasks <id> [<options>]")
 	if err != nil {
 		return err
 	}
