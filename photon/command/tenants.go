@@ -362,7 +362,7 @@ func getTenant(c *cli.Context) error {
 
 // Retrieves tasks from specified tenant
 func getTenantTasks(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "tenant task <id> [<options>]")
+	err := checkArgNum(c.Args(), 1, "tenant tasks <id> [<options>]")
 	if err != nil {
 		return err
 	}
