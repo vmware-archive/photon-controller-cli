@@ -12,7 +12,6 @@ package photon
 import (
 	"crypto/rand"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -78,9 +77,9 @@ func (client *restClient) GetList(endpoint string, url string, token string) (re
 	if err != nil {
 		return
 	}
-	if res.StatusCode != 200 {
-		errMsg := fmt.Sprintf("photon: HTTP %d: %v", res.StatusCode, res.Body)
-		return nil, errors.New(errMsg)
+	res, err = getError(res)
+	if err != nil {
+		return
 	}
 
 	decoder := json.NewDecoder(res.Body)
@@ -101,9 +100,9 @@ func (client *restClient) GetList(endpoint string, url string, token string) (re
 		if err != nil {
 			return
 		}
-		if res.StatusCode != 200 {
-			errMsg := fmt.Sprintf("photon: HTTP %d: %v", res.StatusCode, res.Body)
-			return nil, errors.New(errMsg)
+		res, err = getError(res)
+		if err != nil {
+			return
 		}
 
 		decoder = json.NewDecoder(res.Body)
