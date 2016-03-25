@@ -125,9 +125,6 @@ mode will prompt you for parameters you do not provide on the command-line
 and will print human-readable output. Non-interactive mode will not prompt
 you and will print machine-readable output.
 
-Non-interactive mode will print a line indicating how many lines of output
-follow.
-
 ### IDs
 Objects in Photon Controller are given unique IDs, and most commands
 refer to them using those IDs.
@@ -162,7 +159,6 @@ Example:
 You can list all tenants:
 
     % photon -n tenant list
-    1
     502f9a79-96b6-451d-bfb9-6292ca5b6cfd	cloud-dev
 
 ### Set tenant for other commands
@@ -182,7 +178,7 @@ within a subdirectory named _.photon-config_.
 
 You can see what the current tenant is:
 
-    % photon tenant show
+    % photon tenant get
     Current tenant is 'cloud-dev' 502f9a79-96b6-451d-bfb9-6292ca5b6cfd
 
 ### Resource tickets
@@ -244,7 +240,6 @@ Usage: `photon project create --resource-ticket <RESOURCE-TICKET-NAME> --name <P
 Viewing projects:
 
     % photon -n project list
-    1
     fabb9236-d0a4-4d30-8935-ee65d6729f78 cloud-dev-staging vm.memory:1000:GB,vm:500:COUNT vm.memory:0:GB,vm:0:COUNT
 
 Setting the project (applies to commands that require a project, like creating a VM).
@@ -288,7 +283,6 @@ Creating a disk flavor:
 Viewing flavors:
 
     % photon -n flavor list
-    2
     78efc53a-88ce-4f09-9b5d-49662d21e56c	cloud-disk	ephemeral-disk	ephemeral-disk:1:COUNT
     ddfb5be0-3355-46d3-9f2f-e28750eb201b	cloud-vm-small	vm	vm:1:COUNT,vm.cpu:1:COUNT,vm.memory:2:GB
 
