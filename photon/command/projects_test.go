@@ -301,8 +301,7 @@ func TestListProjectTasks(t *testing.T) {
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
-	set.String("tenant", "fake_tenant_name", "tenant name")
-	err = set.Parse([]string{"fake_project_name"})
+	err = set.Parse([]string{"fake_project_ID"})
 	if err != nil {
 		t.Error("Not expecting arguments parsing to fail")
 	}

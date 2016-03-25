@@ -11,10 +11,10 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/command"
+	"os"
 )
 
 var commandName = ""
