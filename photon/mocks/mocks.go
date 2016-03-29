@@ -17,8 +17,11 @@ import (
 
 // Start a new Server with status OK, caller should call Close when finished
 func NewTestServer() (server *httptest.Server) {
+	return NewTestServerWithBody("")
+}
+
+func NewTestServerWithBody(body string) (server *httptest.Server) {
 	statusCode := 200
-	body := ""
 	server = httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(statusCode)
