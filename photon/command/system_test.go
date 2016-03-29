@@ -74,7 +74,9 @@ func TestDeploy(t *testing.T) {
 		t.Error("Fail to create temperory Dc_Map")
 	}
 
-	dcmap := `deployment:
+	dcmap := `---
+deployment:
+  unpause_system: true
   image_datastores: datastore1
   syslog_endpoint: 10.146.64.230
   stats_store_endpoint: 10.146.64.111

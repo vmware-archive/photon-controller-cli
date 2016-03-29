@@ -48,55 +48,126 @@ var _ = Describe("Installation", func() {
 		})
 
 		Describe("deployment", func() {
-			Context("when image_datastores is a comma separated list", func() {
-				BeforeEach(func() {
-					fileContent = `---
+			Describe("iamge_datastores", func() {
+				Context("when image_datastores is a comma separated list", func() {
+					BeforeEach(func() {
+						fileContent = `---
 deployment:
   image_datastores: ds1, ds2
 `
+					})
+
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.ImageDatastores).To(BeEquivalentTo([]string{"ds1", "ds2"}))
+					})
 				})
 
-				It("loads successfully", func() {
-					inst, err := LoadInstallation(file.Name())
-					Expect(err).To(BeNil())
-
-					Expect(inst).ToNot(BeNil())
-					Expect(inst.Deployment.ImageDatastores).To(BeEquivalentTo([]string{"ds1", "ds2"}))
-				})
-			})
-
-			Context("when image_datastores is a string array", func() {
-				BeforeEach(func() {
-					fileContent = `---
+				Context("when image_datastores is a string array", func() {
+					BeforeEach(func() {
+						fileContent = `---
 deployment:
   image_datastores:
   - ds1
   - ds2
 `
+					})
+
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.ImageDatastores).To(BeEquivalentTo([]string{"ds1", "ds2"}))
+					})
 				})
 
-				It("loads successfully", func() {
-					inst, err := LoadInstallation(file.Name())
-					Expect(err).To(BeNil())
+				Context("when image_datastores is missing", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+`
+					})
 
-					Expect(inst).ToNot(BeNil())
-					Expect(inst.Deployment.ImageDatastores).To(BeEquivalentTo([]string{"ds1", "ds2"}))
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.ImageDatastores).To(BeNil())
+					})
 				})
 			})
 
-			Context("when image_datastores is missing", func() {
-				BeforeEach(func() {
-					fileContent = `---
+			Describe("unpause_system", func() {
+				Context("when unpause_system is 'true'", func() {
+					BeforeEach(func() {
+						fileContent = `---
 deployment:
+  unpause_system: true
 `
+					})
+
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.UnpauseSystem).To(BeTrue())
+					})
 				})
 
-				It("loads successfully", func() {
-					inst, err := LoadInstallation(file.Name())
-					Expect(err).To(BeNil())
+				Context("when unpause_system is 'false'", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+  unpause_system: false
+`
+					})
 
-					Expect(inst).ToNot(BeNil())
-					Expect(inst.Deployment.ImageDatastores).To(BeNil())
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.UnpauseSystem).To(BeFalse())
+					})
+				})
+
+				Context("when unpause_system is a value other than 'true' or 'false'", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+  unpause_system: other_value
+`
+					})
+
+					It("fails to load file", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(MatchError(
+							"yaml: unmarshal errors:\n  line 3: cannot unmarshal !!str `other_v...` into bool"))
+
+						Expect(inst).To(BeNil())
+					})
+				})
+
+				Context("when unpause_system is not provided", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+`
+					})
+
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.UnpauseSystem).To(BeFalse())
+					})
 				})
 			})
 		})
