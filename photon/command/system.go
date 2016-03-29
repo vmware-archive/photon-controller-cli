@@ -187,7 +187,7 @@ func deploy(c *cli.Context) error {
 	}
 
 	// Deploy
-	err = doDeploy(deploymentID)
+	err = doDeploy(deploymentID, dcMap.Deployment.ResumeSystem)
 	if err != nil {
 		return err
 	}
@@ -614,7 +614,7 @@ func inc(ip net.IP) {
 	}
 }
 
-func doDeploy(deploymentID string) error {
+func doDeploy(deploymentID string, unpause bool) error {
 	deployTask, err := client.Esxclient.Deployments.Deploy(deploymentID)
 	if err != nil {
 		return err
@@ -624,7 +624,22 @@ func doDeploy(deploymentID string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Deployment '%s' is deployed.\n", deploymentID)
+
+	if !unpause {
+		fmt.Printf("Deployment '%s' is complete.\n", deploymentID)
+		return nil
+	}
+
+	resumeTask, err := client.Esxclient.Deployments.ResumeSystem(deploymentID)
+	if err != nil {
+		return err
+	}
+
+	_, err = pollTask(resumeTask.ID)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Deployment '%s' is complete.\n", deploymentID)
 
 	return nil
 }
