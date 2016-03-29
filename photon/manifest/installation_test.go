@@ -48,55 +48,126 @@ var _ = Describe("Installation", func() {
 		})
 
 		Describe("deployment", func() {
-			Context("when image_datastores is a comma separated list", func() {
-				BeforeEach(func() {
-					fileContent = `---
+			Describe("iamge_datastores", func() {
+				Context("when value is a comma separated list", func() {
+					BeforeEach(func() {
+						fileContent = `---
 deployment:
   image_datastores: ds1, ds2
 `
+					})
+
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.ImageDatastores).To(BeEquivalentTo([]string{"ds1", "ds2"}))
+					})
 				})
 
-				It("loads successfully", func() {
-					inst, err := LoadInstallation(file.Name())
-					Expect(err).To(BeNil())
-
-					Expect(inst).ToNot(BeNil())
-					Expect(inst.Deployment.ImageDatastores).To(BeEquivalentTo([]string{"ds1", "ds2"}))
-				})
-			})
-
-			Context("when image_datastores is a string array", func() {
-				BeforeEach(func() {
-					fileContent = `---
+				Context("when value is a string array", func() {
+					BeforeEach(func() {
+						fileContent = `---
 deployment:
   image_datastores:
   - ds1
   - ds2
 `
+					})
+
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.ImageDatastores).To(BeEquivalentTo([]string{"ds1", "ds2"}))
+					})
 				})
 
-				It("loads successfully", func() {
-					inst, err := LoadInstallation(file.Name())
-					Expect(err).To(BeNil())
+				Context("when value is missing", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+`
+					})
 
-					Expect(inst).ToNot(BeNil())
-					Expect(inst.Deployment.ImageDatastores).To(BeEquivalentTo([]string{"ds1", "ds2"}))
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.ImageDatastores).To(BeNil())
+					})
 				})
 			})
 
-			Context("when image_datastores is missing", func() {
-				BeforeEach(func() {
-					fileContent = `---
+			Describe("resume_system", func() {
+				Context("when value is 'true'", func() {
+					BeforeEach(func() {
+						fileContent = `---
 deployment:
+  resume_system: true
 `
+					})
+
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.ResumeSystem).To(BeTrue())
+					})
 				})
 
-				It("loads successfully", func() {
-					inst, err := LoadInstallation(file.Name())
-					Expect(err).To(BeNil())
+				Context("when value is 'false'", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+  resume_system: false
+`
+					})
 
-					Expect(inst).ToNot(BeNil())
-					Expect(inst.Deployment.ImageDatastores).To(BeNil())
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.ResumeSystem).To(BeFalse())
+					})
+				})
+
+				Context("when value is a value other than 'true' or 'false'", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+  resume_system: other_value
+`
+					})
+
+					It("fails to load file", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(MatchError(
+							"yaml: unmarshal errors:\n  line 3: cannot unmarshal !!str `other_v...` into bool"))
+
+						Expect(inst).To(BeNil())
+					})
+				})
+
+				Context("when value is not provided", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+`
+					})
+
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.ResumeSystem).To(BeFalse())
+					})
 				})
 			})
 		})

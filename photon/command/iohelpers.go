@@ -634,16 +634,17 @@ func displayTaskProgress(start time.Time) {
 
 // Wait for task to finish and display task progress
 func pollTask(id string) (task *photon.Task, err error) {
-	return pollTaskWithTimeout(id, 30*time.Minute)
+	return pollTaskWithTimeout(client.Esxclient, id, 30*time.Minute)
 }
 
-func pollTaskWithTimeout(id string, taskPollTimeout time.Duration) (task *photon.Task, err error) {
+func pollTaskWithTimeout(api *photon.Client, id string, pollTimeout time.Duration) (task *photon.Task, err error) {
 	start := time.Now()
 	numErr := 0
 
 	taskPollDelay := 500 * time.Millisecond
 	taskRetryCount := 3
 
+	endAnimation = false
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -651,8 +652,8 @@ func pollTaskWithTimeout(id string, taskPollTimeout time.Duration) (task *photon
 		displayTaskProgress(start)
 	}()
 
-	for time.Since(start) < taskPollTimeout {
-		task, err = client.Esxclient.Tasks.Get(id)
+	for time.Since(start) < pollTimeout {
+		task, err = api.Tasks.Get(id)
 
 		if err != nil {
 			switch err.(type) {

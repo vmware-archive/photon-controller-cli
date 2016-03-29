@@ -11,22 +11,22 @@ package command
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"regexp"
 	"strconv"
+	"text/tabwriter"
 	"time"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
 	"github.com/vmware/photon-controller-cli/photon/client"
-
-	"errors"
-	"os"
-	"text/tabwriter"
-
+	"github.com/vmware/photon-controller-cli/photon/configuration"
 	"github.com/vmware/photon-controller-cli/photon/manifest"
+	"strings"
 )
 
 // Create a cli.command object for command "system"
@@ -187,7 +187,7 @@ func deploy(c *cli.Context) error {
 	}
 
 	// Deploy
-	err = doDeploy(deploymentID)
+	err = doDeploy(dcMap, deploymentID)
 	if err != nil {
 		return err
 	}
@@ -240,24 +240,10 @@ func destroy(c *cli.Context) error {
 
 	// Destroy deployment
 	for _, deployment := range deployments.Items {
-		err = doDetroy(deployment.ID)
+		err = doDestroy(deployment.ID)
 		if err != nil {
 			return err
 		}
-	}
-
-	// Delete deployment doc
-	for _, deployment := range deployments.Items {
-		deleteTask, err := client.Esxclient.Deployments.Delete(deployment.ID)
-		if err != nil {
-			return err
-		}
-
-		task, err := pollTask(deleteTask.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Deleted deployment %s\n", task.Entity.ID)
 	}
 
 	// Delete hosts
@@ -279,6 +265,20 @@ func destroy(c *cli.Context) error {
 			}
 			fmt.Printf("Host has been deleted: ID = %s\n", deleteTask.Entity.ID)
 		}
+	}
+
+	// Delete deployment doc
+	for _, deployment := range deployments.Items {
+		deleteTask, err := client.Esxclient.Deployments.Delete(deployment.ID)
+		if err != nil {
+			return err
+		}
+
+		task, err := pollTask(deleteTask.ID)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Deleted deployment %s\n", task.Entity.ID)
 	}
 
 	return nil
@@ -406,12 +406,19 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		}
 	}
 
+	sgList := dcMap.Deployment.AuthSecurityGroups
+	if dcMap.Deployment.AuthEnabled && dcMap.Deployment.ResumeSystem {
+		adminGrp := fmt.Sprintf("%s\\Administrators", dcMap.Deployment.AuthTenant)
+		if !contains(sgList, adminGrp) {
+			sgList = append(sgList, adminGrp)
+		}
+	}
 	authInfo := &photon.AuthInfo{
 		Enabled:        dcMap.Deployment.AuthEnabled,
 		Tenant:         dcMap.Deployment.AuthTenant,
 		Username:       dcMap.Deployment.AuthUsername,
 		Password:       dcMap.Deployment.AuthPassword,
-		SecurityGroups: dcMap.Deployment.AuthSecurityGroups,
+		SecurityGroups: sgList,
 	}
 
 	statsInfo := &photon.StatsInfo{
@@ -442,6 +449,15 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 	}
 	fmt.Printf("Created deployment %s\n", task.Entity.ID)
 	return task.Entity.ID, nil
+}
+
+func contains(list []string, value string) bool {
+	for _, item := range list {
+		if item == value {
+			return true
+		}
+	}
+	return false
 }
 
 func createAvailabilityZonesFromDcMap(dcMap *manifest.Installation) (map[string]string, error) {
@@ -614,22 +630,98 @@ func inc(ip net.IP) {
 	}
 }
 
-func doDeploy(deploymentID string) error {
+func doDeploy(installSpec *manifest.Installation, deploymentID string) error {
 	deployTask, err := client.Esxclient.Deployments.Deploy(deploymentID)
 	if err != nil {
 		return err
 	}
 
-	_, err = pollTaskWithTimeout(deployTask.ID, 120*time.Minute)
+	_, err = pollTaskWithTimeout(client.Esxclient, deployTask.ID, 120*time.Minute)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Deployment '%s' is deployed.\n", deploymentID)
 
+	if !installSpec.Deployment.ResumeSystem {
+		fmt.Printf("Deployment '%s' is complete.\n", deploymentID)
+		return nil
+	}
+
+	deploymentClient, err := getNewPlaneClient(installSpec, deploymentID)
+	if err != nil {
+		return err
+	}
+
+	resumeTask, err := deploymentClient.Deployments.ResumeSystem(deploymentID)
+	if err != nil {
+		return err
+	}
+
+	_, err = pollTaskWithTimeout(deploymentClient, resumeTask.ID, 30*time.Minute)
+	if err != nil {
+		return err
+	}
+
+	if !installSpec.Deployment.AuthEnabled {
+		fmt.Printf("Deployment '%s' is complete.\n", deploymentID)
+		return nil
+	}
+
+	groups := &photon.SecurityGroupsSpec{
+		Items: installSpec.Deployment.AuthSecurityGroups,
+	}
+	resetSecurityGroupsTasks, err := deploymentClient.Deployments.SetSecurityGroups(deploymentID, groups)
+	if err != nil {
+		return err
+	}
+
+	_, err = pollTaskWithTimeout(deploymentClient, resetSecurityGroupsTasks.ID, 30*time.Minute)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Deployment '%s' is complete.\n", deploymentID)
 	return nil
 }
 
-func doDetroy(deploymentID string) error {
+func getNewPlaneClient(installSpec *manifest.Installation, deploymentID string) (*photon.Client, error) {
+	deployment, err := client.Esxclient.Deployments.Get(deploymentID)
+	if err != nil {
+		return nil, err
+	}
+
+	var url string
+	if strings.Contains(deployment.LoadBalancerAddress, ":") {
+		url = fmt.Sprintf("http://%s", deployment.LoadBalancerAddress)
+	} else {
+		url = fmt.Sprintf("http://%s:9000", deployment.LoadBalancerAddress)
+	}
+
+	config := &configuration.Configuration{
+		CloudTarget:       url,
+		IgnoreCertificate: true,
+	}
+
+	myClient, err := client.NewClient(config)
+	if err != nil {
+		return nil, err
+	}
+
+	if !installSpec.Deployment.AuthEnabled {
+		return myClient, err
+	}
+
+	// if auth is enabled we need to get a token and recreate the client
+	authUser := fmt.Sprintf("administrator@%s", installSpec.Deployment.AuthTenant)
+	tokenOptions, err := myClient.Auth.GetTokensByPassword(authUser, installSpec.Deployment.AuthPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	config.Token = tokenOptions.AccessToken
+	return client.NewClient(config)
+}
+
+func doDestroy(deploymentID string) error {
 	destroyTask, err := client.Esxclient.Deployments.Destroy(deploymentID)
 	if err != nil {
 		return err
