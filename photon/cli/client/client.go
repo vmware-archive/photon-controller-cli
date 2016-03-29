@@ -28,19 +28,13 @@ var Esxclient *photon.Client
 var logger *log.Logger = nil
 var logFile *os.File = nil
 
-// Read from local config file and create a new photon client using target
-func get() (*photon.Client, error) {
-	var options *photon.ClientOptions
-	config, err := cf.LoadConfig()
-	if err != nil {
-		return nil, err
-	}
-
+func NewClient(config *cf.Configuration) (*photon.Client, error) {
 	if len(config.CloudTarget) == 0 {
 		return nil, errors.New("Specify a Photon Controller endpoint by running 'target set' command")
 	}
 
-	options = &photon.ClientOptions{
+	options := &photon.ClientOptions{
+		IgnoreCertificate: config.IgnoreCertificate,
 		TokenOptions: &photon.TokenOptions{
 			AccessToken: config.Token,
 		},
@@ -52,9 +46,7 @@ func get() (*photon.Client, error) {
 	//
 	u, err := url.Parse(config.CloudTarget)
 	if err == nil && u.Scheme == "https" {
-		if config.IgnoreCertificate == true {
-			options.IgnoreCertificate = true
-		} else {
+		if !config.IgnoreCertificate == true {
 			roots, err := cf.GetCertsFromLocalStore()
 			if err == nil {
 				options.RootCAs = roots
@@ -83,6 +75,16 @@ func GetClient(isScripting bool) (*photon.Client, error) {
 	}
 
 	return Esxclient, nil
+}
+
+// Read from local config file and create a new photon client using target
+func get() (*photon.Client, error) {
+	config, err := cf.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return NewClient(config)
 }
 
 func InitializeLogging(logFileName string) error {
