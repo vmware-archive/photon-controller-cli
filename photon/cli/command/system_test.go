@@ -23,6 +23,9 @@ import (
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
+	"fmt"
+	"time"
+	"net/url"
 )
 
 func TestGetStatus(t *testing.T) {
@@ -74,20 +77,15 @@ func TestDeploy(t *testing.T) {
 		t.Error("Fail to create temperory Dc_Map")
 	}
 
-	dcmap := `deployment:
+	dcmap := `---
+deployment:
+  resume_system: true
   image_datastores: datastore1
   syslog_endpoint: 10.146.64.230
   stats_store_endpoint: 10.146.64.111
   ntp_endpoint: 10.20.144.1
   use_image_datastore_for_vms: true
-  auth_enabled: true
-  oauth_endpoint: 0.0.0.0
-  oauth_port: 443
-  oauth_tenant: "photon"
-  oauth_username: "Administrator"
-  oauth_password: "Password!"
-  oauth_security_groups:
-  -  "photon\\photonControllerAdmins"
+  auth_enabled: false
 
 hosts:
   - address_ranges: 10.146.38.91
@@ -141,116 +139,93 @@ hosts:
 		t.Error("Not expecting arguments parsing to fail")
 	}
 
-	queuedTask := &photon.Task{
-		Operation: "CREATE_DEPLOYMENT",
-		State:     "QUEUED",
-		Entity:    photon.Entity{ID: "deployment-ID"},
-	}
-	completedTask := &photon.Task{
-		Operation: "CREATE_DEPLOYMENT",
-		State:     "COMPLETED",
-		Entity:    photon.Entity{ID: "deployment-ID"},
-	}
-	response, err := json.Marshal(queuedTask)
+	queuedTaskId, response, taskresponse, err := createTaskResponses("CREATE_DEPLOYMENT", "deployment-ID")
 	if err != nil {
 		t.Error("Not expecting error serializing expected queuedTask")
-	}
-	taskresponse, err := json.Marshal(completedTask)
-	if err != nil {
-		t.Error("Not expecting error serializing expected completedTask")
-	}
-	availabilityZoneQueuedTask := &photon.Task{
-		ID:        "availabilityZoneTask-ID",
-		Operation: "CREATE_AVAILABILITY_ZONE",
-		State:     "QUEUED",
-		Entity:    photon.Entity{ID: "availabilityZone-ID"},
-	}
-	availabilityZoneCompletedTask := &photon.Task{
-		Operation: "CREATE_AVAILABILITY_ZONE",
-		State:     "COMPLETED",
-		Entity:    photon.Entity{ID: "availabilityZone-ID"},
-	}
-	availabilityZoneResponse, err := json.Marshal(availabilityZoneQueuedTask)
-	if err != nil {
-		t.Error("Not expecting error serializing expected queuedTask")
-	}
-	availabilityZoneTaskResponse, err := json.Marshal(availabilityZoneCompletedTask)
-	if err != nil {
-		t.Error("Not expecting error serializing expected completedTask")
 	}
 
-	hostQueuedTask := &photon.Task{
-		Operation: "CREATE_HOST",
-		State:     "QUEUED",
-		Entity:    photon.Entity{ID: "deployment-ID"},
-	}
-	hostCompletedTask := &photon.Task{
-		Operation: "CREATE_HOST",
-		State:     "COMPLETED",
-		Entity:    photon.Entity{ID: "deployment-ID"},
-	}
-	hostResponse, err := json.Marshal(hostQueuedTask)
+	availZoneQueuedTaskId, availZoneResponse, availZoneTaskResponse, err := createTaskResponses(
+		"CREATE_AVAILABILITY_ZONE", "availability-zone-ID")
 	if err != nil {
 		t.Error("Not expecting error serializing expected queuedTask")
-	}
-	hostTaskresponse, err := json.Marshal(hostCompletedTask)
-	if err != nil {
-		t.Error("Not expecting error serializing expected completedTask")
 	}
 
-	deployQueuedTask := &photon.Task{
-		Operation: "PERFORM_DEPLOYMENT",
-		State:     "QUEUED",
-		Entity:    photon.Entity{ID: "deployment-ID"},
-	}
-	deployCompletedTask := &photon.Task{
-		Operation: "PERFORM_DEPLOYMENT",
-		State:     "COMPLETED",
-		Entity:    photon.Entity{ID: "deployment-ID"},
-	}
-	deployResponse, err := json.Marshal(deployQueuedTask)
+	hostQueuedTaskId, hostResponse, hostTaskResponse, err := createTaskResponses("CREATE_HOST", "deployment-ID")
 	if err != nil {
 		t.Error("Not expecting error serializing expected queuedTask")
 	}
-	deployTaskresponse, err := json.Marshal(deployCompletedTask)
+
+	deployQueuedTaskId, deployResponse, deployTaskResponse, err := createTaskResponses(
+		"PEFORM_DEPLOYMENT", "deployment-ID")
 	if err != nil {
-		t.Error("Not expecting error serializing expected completedTask")
+		t.Error("Not expecting error serializing expected queuedTask")
+	}
+
+	_, _, resumeTaskResponse, err := createTaskResponses("RESUME_SYSTEM", "deployment-ID")
+	if err != nil {
+		t.Error("Not expecting error serializing expected queuedTask")
 	}
 
 	server := mocks.NewTestServer()
+	defer server.Close()
+
+	newServer := mocks.NewTestServerWithBody(resumeTaskResponse)
+	defer newServer.Close()
+
+	testServerUrl, err := url.Parse(newServer.URL);
+	if err != nil {
+		t.Error("Not expecting error when parsing server url")
+	}
+
+	deployment := &photon.Deployment{
+		ID: "deployment-ID",
+		Auth: &photon.AuthInfo{
+			Enabled: false,
+		},
+		LoadBalancerAddress: testServerUrl.Host,
+	}
+
+	deploymentResponse, err := json.Marshal(deployment)
+	if err != nil {
+		t.Error("Not expecting error serializing expected deployment")
+	}
+
 	mocks.RegisterResponder(
 		"POST",
 		server.URL+"/deployments",
-		mocks.CreateResponder(200, string(response[:])))
+		mocks.CreateResponder(200, response))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
-		mocks.CreateResponder(200, string(taskresponse[:])))
+		server.URL+"/tasks/"+queuedTaskId,
+		mocks.CreateResponder(200, taskresponse))
 	mocks.RegisterResponder(
 		"POST",
 		server.URL+"/availabilityzones",
-		mocks.CreateResponder(200, string(availabilityZoneResponse[:])))
+		mocks.CreateResponder(200, availZoneResponse))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+availabilityZoneQueuedTask.ID,
-		mocks.CreateResponder(200, string(availabilityZoneTaskResponse[:])))
+		server.URL+"/tasks/"+availZoneQueuedTaskId,
+		mocks.CreateResponder(200, availZoneTaskResponse))
 	mocks.RegisterResponder(
 		"POST",
 		server.URL+"/deployments/deployment-ID/hosts",
-		mocks.CreateResponder(200, string(hostResponse[:])))
+		mocks.CreateResponder(200, hostResponse))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+hostQueuedTask.ID,
-		mocks.CreateResponder(200, string(hostTaskresponse[:])))
+		server.URL+"/tasks/"+hostQueuedTaskId,
+		mocks.CreateResponder(200, hostTaskResponse))
 	mocks.RegisterResponder(
 		"POST",
 		server.URL+"/deployments/deployment-ID/deploy",
-		mocks.CreateResponder(200, string(deployResponse[:])))
+		mocks.CreateResponder(200, deployResponse))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+deployQueuedTask.ID,
-		mocks.CreateResponder(200, string(deployTaskresponse[:])))
-	defer server.Close()
+		server.URL+"/tasks/"+deployQueuedTaskId,
+		mocks.CreateResponder(200, deployTaskResponse))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/deployments/deployment-ID",
+		mocks.CreateResponder(200, string(deploymentResponse[:])))
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
@@ -601,4 +576,27 @@ func TestFinalizeeMigrateDeployment(t *testing.T) {
 		t.Error(err)
 		t.Error("Not expecting initialize Deployment to fail")
 	}
+}
+
+func createTaskResponses(op string, entityId string) (string, string, string, error) {
+
+	task := &photon.Task{
+		ID:	       fmt.Sprintf("ID-%v", time.Now().Unix()),
+		Operation: op,
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: entityId},
+	}
+
+	queued, err := json.Marshal(task)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	task.State  = "COMPLETED"
+	completed, err := json.Marshal(task)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	return task.ID, string(queued[:]), string(completed[:]), nil
 }
