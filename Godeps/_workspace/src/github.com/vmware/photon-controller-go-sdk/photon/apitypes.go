@@ -469,6 +469,7 @@ type Deployment struct {
 	Migration               *MigrationStatus       `json:"migrationStatus,omitempty"`
 	ClusterConfigurations   []ClusterConfiguration `json:"clusterConfigurations,omitempty"`
 	LoadBalancerEnabled     bool                   `json:"loadBalancerEnabled"`
+	LoadBalancerAddress     string                 `json:"loadBalancerAddress"`
 }
 
 // Represents multiple deployments returned by the API.
@@ -573,7 +574,7 @@ type SecurityGroup struct {
 }
 
 // Represents set_security_groups spec
-type SecurityGroups struct {
+type SecurityGroupsSpec struct {
 	Items []string `json:"items"`
 }
 

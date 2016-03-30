@@ -180,10 +180,10 @@ func (api *ProjectsAPI) Get(id string) (project *ProjectCompact, err error) {
 }
 
 // Set security groups for this project, overwriting any existing ones.
-func (api *ProjectsAPI) SetSecurityGroups(projectID string, securityGroups *SecurityGroups) (task *Task, err error) {
+func (api *ProjectsAPI) SetSecurityGroups(projectID string, securityGroups *SecurityGroupsSpec) (*Task, error) {
 	return setSecurityGroups(api.client, api.getEntityUrl(projectID), securityGroups)
 }
 
-func (api *ProjectsAPI) getEntityUrl(id string) (url string) {
+func (api *ProjectsAPI) getEntityUrl(id string) string {
 	return api.client.Endpoint + projectUrl + id
 }

@@ -121,7 +121,6 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	}
 
 	endpoint = strings.TrimRight(endpoint, "/")
-
 	restClient := &restClient{
 		httpClient: &http.Client{Transport: tr},
 		logger:     logger,

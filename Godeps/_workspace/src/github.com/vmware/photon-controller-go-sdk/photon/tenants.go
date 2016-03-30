@@ -180,7 +180,7 @@ func (api *TenantsAPI) Get(id string) (tenant *Tenant, err error) {
 }
 
 // Set security groups for this tenant, overwriting any existing ones.
-func (api *TenantsAPI) SetSecurityGroups(id string, securityGroups *SecurityGroups) (task *Task, err error) {
+func (api *TenantsAPI) SetSecurityGroups(id string, securityGroups *SecurityGroupsSpec) (*Task, error) {
 	return setSecurityGroups(api.client, api.getEntityUrl(id), securityGroups)
 }
 
