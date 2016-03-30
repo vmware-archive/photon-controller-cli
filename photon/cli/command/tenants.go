@@ -410,7 +410,7 @@ func setSecurityGroups(c *cli.Context) error {
 	if c.Args()[1] != ""{
        items = regexp.MustCompile(`\s*,\s*`).Split(c.Args()[1], -1)
 	}
-	securityGroups := &photon.SecurityGroups{
+	securityGroups := &photon.SecurityGroupsSpec{
 		Items: items,
 	}
 

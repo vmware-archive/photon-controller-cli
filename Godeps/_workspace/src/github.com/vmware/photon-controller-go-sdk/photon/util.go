@@ -90,7 +90,7 @@ func getQueryString(options interface{}) string {
 }
 
 // Sets security groups for a given entity (deployment/tenant/project)
-func setSecurityGroups(client *Client, entityUrl string, securityGroups *SecurityGroups) (task *Task, err error) {
+func setSecurityGroups(client *Client, entityUrl string, securityGroups *SecurityGroupsSpec) (task *Task, err error) {
 	body, err := json.Marshal(securityGroups)
 	if err != nil {
 		return
