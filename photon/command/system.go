@@ -427,8 +427,8 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		SyslogEndpoint:  dcMap.Deployment.SyslogEndpoint,
 		Stats:           statsInfo,
 		UseImageDatastoreForVms: dcMap.Deployment.UseImageDatastoreForVms,
-		LoadBalancerEnabled: lbEnabled,
-		UsePhotonDHCP:	dcMap.Deployment.UsePhotonDHCP,
+		LoadBalancerEnabled:     lbEnabled,
+		UsePhotonDHCP:           dcMap.Deployment.UsePhotonDHCP,
 	}
 
 	createDeploymentTask, err := client.Esxclient.Deployments.Create(deploymentSpec)
