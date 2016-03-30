@@ -467,7 +467,7 @@ func TestInitializeMigrateDeployment(t *testing.T) {
 		ID: "1",
 	}
 	deployments := &photon.Deployments{
-		[]photon.Deployment{deployment},
+		Items: []photon.Deployment{deployment},
 	}
 	response, err := json.Marshal(queuedTask)
 	if err != nil {
@@ -530,7 +530,7 @@ func TestFinalizeeMigrateDeployment(t *testing.T) {
 		ID: "1",
 	}
 	deployments := &photon.Deployments{
-		[]photon.Deployment{deployment},
+		Items: []photon.Deployment{deployment},
 	}
 	response, err := json.Marshal(queuedTask)
 	if err != nil {

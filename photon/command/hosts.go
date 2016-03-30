@@ -87,6 +87,16 @@ func GetHostsCommand() cli.Command {
 				},
 			},
 			{
+				Name:  "list",
+				Usage: "List all the hosts",
+				Action: func(c *cli.Context) {
+					err := listHosts(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
 				Name:  "show",
 				Usage: "Show host info with specified id",
 				Action: func(c *cli.Context) {
@@ -237,6 +247,51 @@ func deleteHost(c *cli.Context) error {
 		return err
 	}
 
+	return nil
+}
+
+// List all the hosts in the current deployment
+// This uses the same back-end code as "deployments list-hosts", but we look up the
+// deployment ID so that users don't have to specify it. In most or all installations,
+// there will not be more than one deployment ID.
+func listHosts(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 0, "host list")
+	if err != nil {
+		return err
+	}
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	// Find the current deployment
+	deployments, err := client.Esxclient.Deployments.GetAll()
+	if err != nil {
+		return err
+	}
+	numDeployments := len(deployments.Items)
+	if numDeployments == 0 {
+		return fmt.Errorf("There are no deployments, so the hosts cannot be listed.")
+	} else if numDeployments > 1 {
+		return fmt.Errorf("There are multiple deployments, which normally should not happen. Use deployments list-hosts.")
+	}
+	id := deployments.Items[0].ID
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	hosts, err := client.Esxclient.Deployments.GetHosts(id)
+	if err != nil {
+		return err
+	}
+
+	err = printHostList(hosts.Items, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
