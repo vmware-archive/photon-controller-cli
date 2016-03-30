@@ -14,6 +14,9 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"net/http/httptest"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -132,6 +135,126 @@ func TestCreateDeleteHost(t *testing.T) {
 	if err != nil {
 		t.Error("Not expecting error deleting host: " + err.Error())
 	}
+}
+
+func TestListHosts(t *testing.T) {
+	server := mocks.NewTestServer()
+	defer server.Close()
+
+	// We first test that with exactly one deployment, we work as expected.
+	// This is the expected case in a real installation
+	err := mockHostsForList(t, server)
+	if err != nil {
+		t.Error("Failed to mock hosts: " + err.Error())
+	}
+	err = mockDeploymentsForList(t, server, 1)
+	if err != nil {
+		t.Error("Failed to mock one deployment: " + err.Error())
+	}
+	mocks.Activate(true)
+
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	cxt := cli.NewContext(nil, set, nil)
+	err = listHosts(cxt)
+	if err != nil {
+		t.Error("listHosts with one deployment failed unexpectedly: " + err.Error())
+	}
+
+	// Now we verify that with zero deployments, we fail as expected
+	err = mockDeploymentsForList(t, server, 0)
+	if err != nil {
+		t.Error("Failed to mock zero deployments: " + err.Error())
+	}
+	err = listHosts(cxt)
+	if err == nil {
+		t.Error("listHosts with zero deployments succeeded unexpectedly: " + err.Error())
+	} else if !strings.Contains(err.Error(), "There are no deployments") {
+		t.Error("listHosts failed, but not with expected error message: " + err.Error())
+	}
+
+	// Now we verify that with two deployments, we fail as expected
+	err = mockDeploymentsForList(t, server, 2)
+	if err != nil {
+		t.Error("Failed to mock two deployments: " + err.Error())
+	}
+	err = listHosts(cxt)
+	if err == nil {
+		t.Error("listHosts with two deployments succeeded unexpectedly: " + err.Error())
+	} else if !strings.Contains(err.Error(), "There are multiple deployments") {
+		t.Error("listHosts failed, but not with expected error message: " + err.Error())
+	}
+}
+
+func mockHostsForList(t *testing.T, server *httptest.Server) error {
+	hostList := MockHostsPage{
+		Items: []photon.Host{
+			{
+				Username: "u",
+				Password: "p",
+				Address:  "testIP",
+				Tags:     []string{"CLOUD"},
+				ID:       "host-test-id",
+				State:    "COMPLETED",
+			},
+		},
+		NextPageLink:     "/fake-next-page-link",
+		PreviousPageLink: "",
+	}
+
+	response, err := json.Marshal(hostList)
+	if err != nil {
+		return err
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/deployments/0/hosts",
+		mocks.CreateResponder(200, string(response[:])))
+
+	hostList = MockHostsPage{
+		Items:            []photon.Host{},
+		NextPageLink:     "",
+		PreviousPageLink: "",
+	}
+	response, err = json.Marshal(hostList)
+	if err != nil {
+		return err
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/fake-next-page-link",
+		mocks.CreateResponder(200, string(response[:])))
+	return nil
+}
+
+func mockDeploymentsForList(t *testing.T, server *httptest.Server, numDeployments int) error {
+	var deployments []photon.Deployment
+
+	for i := 0; i < numDeployments; i++ {
+		deployment := photon.Deployment{
+			ID: strconv.Itoa(i),
+		}
+		deployments = append(deployments, deployment)
+	}
+
+	expectedStruct := photon.Deployments{
+		Items: deployments,
+	}
+
+	response, err := json.Marshal(expectedStruct)
+	if err != nil {
+		return err
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/deployments",
+		mocks.CreateResponder(200, string(response[:])))
+	return nil
 }
 
 func TestShowHost(t *testing.T) {

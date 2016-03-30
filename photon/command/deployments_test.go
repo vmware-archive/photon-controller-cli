@@ -105,7 +105,7 @@ func TestCreateDeleteDeployment(t *testing.T) {
 
 	response, err = json.Marshal(expectedStruct)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected status")
+		t.Error("Not expecting error serializing expected status")
 	}
 
 	mocks.RegisterResponder(
