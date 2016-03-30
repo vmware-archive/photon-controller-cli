@@ -530,7 +530,7 @@ func showDeployment(c *cli.Context) error {
 		imageDataStores := getCommaSeparatedStringFromStringArray(deployment.ImageDatastores)
 		securityGroups := getCommaSeparatedStringFromStringArray(deployment.Auth.SecurityGroups)
 
-		fmt.Printf("%s\t%s\t%s\t%t\t%s\t%s\t%t\t%s\n", deployment.ID, deployment.State,
+		fmt.Printf("%s\t%s\t%s\t%t\t%s\t%s\t%t\t%t\n", deployment.ID, deployment.State,
 			imageDataStores, deployment.UseImageDatastoreForVms, deployment.SyslogEndpoint,
 			deployment.NTPEndpoint, deployment.LoadBalancerEnabled, deployment.UsePhotonDHCP)
 
