@@ -385,7 +385,7 @@ func createDeployment(c *cli.Context) error {
 		Stats:           statsInfo,
 		UseImageDatastoreForVms: useDatastoreVMs,
 		LoadBalancerEnabled:     enableLoadBalancer,
-		UsePhotonDHCP:   usePhotonDHCP,
+		UsePhotonDHCP:           usePhotonDHCP,
 	}
 
 	if len(ntpEndpoint) == 0 {

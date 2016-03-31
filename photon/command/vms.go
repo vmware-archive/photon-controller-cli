@@ -242,6 +242,10 @@ func GetVMCommand() cli.Command {
 						Name:  "path, p",
 						Usage: "ISO path",
 					},
+					cli.StringFlag{
+						Name:  "name, n",
+						Usage: "ISO name",
+					},
 				},
 				Action: func(c *cli.Context) {
 					err := attachIso(c)
@@ -805,8 +809,14 @@ func attachIso(c *cli.Context) error {
 
 	id := c.Args().First()
 	path := c.String("path")
+	name := c.String("name")
+
 	if !c.GlobalIsSet("non-interactive") {
 		path, err = askForInput("Iso path: ", path)
+		if err != nil {
+			return err
+		}
+		name, err = askForInput("ISO name (default: "+filepath.Base(path)+"): ", name)
 		if err != nil {
 			return err
 		}
@@ -815,14 +825,18 @@ func attachIso(c *cli.Context) error {
 	if len(path) == 0 {
 		return fmt.Errorf("Please provide iso path")
 	}
+	if len(name) == 0 {
+		name = filepath.Base(path)
+	}
 
 	path, err = filepath.Abs(path)
 	if err != nil {
 		return err
 	}
-	_, err = os.Stat(path)
+
+	file, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("No such iso file at that path")
+		return err
 	}
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
@@ -830,7 +844,7 @@ func attachIso(c *cli.Context) error {
 		return err
 	}
 
-	task, err := client.Esxclient.VMs.AttachISO(id, path)
+	task, err := client.Esxclient.VMs.AttachISO(id, file, name)
 	if err != nil {
 		return err
 	}
