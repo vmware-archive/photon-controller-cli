@@ -513,7 +513,7 @@ func showDeployment(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		ipAddr := ""
+		ipAddr := "N/A"
 		for _, nt := range networks {
 			network := nt.(map[string]interface{})
 			if len(network) != 0 && network["network"] != nil {
@@ -530,9 +530,10 @@ func showDeployment(c *cli.Context) error {
 		imageDataStores := getCommaSeparatedStringFromStringArray(deployment.ImageDatastores)
 		securityGroups := getCommaSeparatedStringFromStringArray(deployment.Auth.SecurityGroups)
 
-		fmt.Printf("%s\t%s\t%s\t%t\t%s\t%s\t%t\t%s\n", deployment.ID, deployment.State,
+		fmt.Printf("%s\t%s\t%s\t%t\t%s\t%s\t%t\t%t\t%s\n", deployment.ID, deployment.State,
 			imageDataStores, deployment.UseImageDatastoreForVms, deployment.SyslogEndpoint,
-			deployment.NTPEndpoint, deployment.LoadBalancerEnabled, deployment.UsePhotonDHCP)
+			deployment.NTPEndpoint, deployment.UsePhotonDHCP, deployment.LoadBalancerEnabled,
+			deployment.LoadBalancerAddress)
 
 		fmt.Printf("%t\t%s\t%s\t%s\t%s\t%d\t%s\n", deployment.Auth.Enabled, deployment.Auth.Username,
 			deployment.Auth.Password, deployment.Auth.Endpoint, deployment.Auth.Tenant, deployment.Auth.Port, securityGroups)
@@ -546,39 +547,32 @@ func showDeployment(c *cli.Context) error {
 		if len(deployment.NTPEndpoint) == 0 {
 			ntpEndpoint = "-"
 		}
-		authUsername := deployment.Auth.Username
-		if len(deployment.Auth.Username) == 0 {
-			authUsername = "-"
-		}
-		authPassword := deployment.Auth.Password
-		if len(deployment.Auth.Tenant) == 0 {
-			authPassword = "-"
-		}
-		authEndpoint := deployment.Auth.Endpoint
-		if len(deployment.Auth.Endpoint) == 0 {
-			authEndpoint = "-"
-		}
-		authTenant := deployment.Auth.Tenant
-		if len(deployment.Auth.Tenant) == 0 {
-			authTenant = "-"
-		}
+
 		fmt.Printf("\n")
 		fmt.Printf("Deployment ID: %s\n", deployment.ID)
 		fmt.Printf("  State:                       %s\n", deployment.State)
-		fmt.Printf("  Image Datastores:            %s\n", deployment.ImageDatastores)
-		fmt.Printf("  Use image datastore for vms: %t\n\n", deployment.UseImageDatastoreForVms)
-		fmt.Printf("  Syslog Endpoint:             %s\n", syslogEndpoint)
+		fmt.Printf("\n  Image Datastores:            %s\n", deployment.ImageDatastores)
+		fmt.Printf("  Use image datastore for vms: %t\n", deployment.UseImageDatastoreForVms)
+		fmt.Printf("\n  Syslog Endpoint:             %s\n", syslogEndpoint)
 		fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
-		fmt.Printf("  LoadBalancerEnabled :        %t\n", deployment.LoadBalancerEnabled)
-		fmt.Printf("  Use Photon DHCP:             %t\n\n", deployment.UsePhotonDHCP)
-		fmt.Printf("  Auth:\n")
+		fmt.Printf("  Use Photon DHCP:             %t\n", deployment.UsePhotonDHCP)
+
+		fmt.Printf("\n  LoadBalancer:\n")
+		fmt.Printf("    Enabled:                   %t\n", deployment.LoadBalancerEnabled)
+		if deployment.LoadBalancerEnabled {
+			fmt.Printf("    Address:                   %s\n", deployment.LoadBalancerAddress)
+		}
+
+		fmt.Printf("\n  Auth:\n")
 		fmt.Printf("    Enabled:                   %t\n", deployment.Auth.Enabled)
-		fmt.Printf("    UserName:                  %s\n", authUsername)
-		fmt.Printf("    Password:                  %s\n", authPassword)
-		fmt.Printf("    Endpoint:                  %s\n", authEndpoint)
-		fmt.Printf("    Tenant:                    %s\n", authTenant)
-		fmt.Printf("    Port:                      %d\n", deployment.Auth.Port)
-		fmt.Printf("    Securitygroups:            %v\n", deployment.Auth.SecurityGroups)
+		if deployment.Auth.Enabled {
+			fmt.Printf("    UserName:                  %s\n", deployment.Auth.Username)
+			fmt.Printf("    Password:                  %s\n", deployment.Auth.Password)
+			fmt.Printf("    Endpoint:                  %s\n", deployment.Auth.Endpoint)
+			fmt.Printf("    Tenant:                    %s\n", deployment.Auth.Tenant)
+			fmt.Printf("    Port:                      %d\n", deployment.Auth.Port)
+			fmt.Printf("    Securitygroups:            %v\n", deployment.Auth.SecurityGroups)
+		}
 	}
 
 	if deployment.Stats != nil {
@@ -586,14 +580,13 @@ func showDeployment(c *cli.Context) error {
 		if c.GlobalIsSet("non-interactive") {
 			fmt.Printf("%t\t%s\t%d\n", stats.Enabled, stats.StoreEndpoint, stats.StorePort)
 		} else {
-			statsStoreEndpoint := deployment.Stats.StoreEndpoint
-			if len(stats.StoreEndpoint) == 0 {
-				statsStoreEndpoint = "-"
-			}
-			fmt.Printf("  Stats:\n")
+
+			fmt.Printf("\n  Stats:\n")
 			fmt.Printf("    Enabled:               %t\n", stats.Enabled)
-			fmt.Printf("    Store Endpoint:        %s\n", statsStoreEndpoint)
-			fmt.Printf("    Store Port:            %d\n", stats.StorePort)
+			if stats.Enabled {
+				fmt.Printf("    Store Endpoint:        %s\n", stats.StoreEndpoint)
+				fmt.Printf("    Store Port:            %d\n", stats.StorePort)
+			}
 		}
 	} else {
 		if c.GlobalIsSet("non-interactive") {
@@ -607,7 +600,7 @@ func showDeployment(c *cli.Context) error {
 			fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
 				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
 		} else {
-			fmt.Printf("  Migration status:\n")
+			fmt.Printf("\n  Migration status:\n")
 			fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
 			fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
 				migration.DataMigrationCycleSize)
@@ -628,7 +621,7 @@ func showDeployment(c *cli.Context) error {
 			scriptClusterConfigurations := strings.Join(clusterConfigurations, ",")
 			fmt.Printf("%s\n", scriptClusterConfigurations)
 		} else {
-			fmt.Println("  Cluster Configurations:")
+			fmt.Println("\n  Cluster Configurations:")
 			for i, c := range deployment.ClusterConfigurations {
 				fmt.Printf("    ClusterConfiguration %d:\n", i+1)
 				fmt.Println("      Kind:     ", c.Kind)
@@ -640,7 +633,7 @@ func showDeployment(c *cli.Context) error {
 		if c.GlobalIsSet("non-interactive") {
 			fmt.Printf("\n")
 		} else {
-			fmt.Println("  Cluster Configurations:")
+			fmt.Println("\n  Cluster Configurations:")
 			fmt.Printf("    No cluster is supported")
 		}
 	}
@@ -929,7 +922,7 @@ func display_deployment_summary(data []VM_NetworkIPs, isScripting bool) error {
 					deployment_info[v]["ips"] = append(deployment_info[v]["ips"], d.ips)
 
 				} else {
-					deployment_info[v] = map[string][]string{"port": []string{}, "ips": []string{}}
+					deployment_info[v] = map[string][]string{"port": []string{getPort(k)}, "ips": []string{d.ips}}
 				}
 			}
 		}
