@@ -12,6 +12,7 @@ package photon
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 )
 
 // Contains functionality for VMs API.
@@ -83,12 +84,9 @@ func (api *VmAPI) DetachDisk(id string, op *VmDiskOperation) (task *Task, err er
 	return
 }
 
-func (api *VmAPI) AttachISO(id, isoPath string) (task *Task, err error) {
-	res, err := api.client.restClient.MultipartUploadFile(
-		api.client.Endpoint+vmUrl+id+"/attach_iso",
-		isoPath,
-		nil,
-		api.client.options.TokenOptions.AccessToken)
+func (api *VmAPI) AttachISO(id string, reader io.Reader, name string) (task *Task, err error) {
+	res, err := api.client.restClient.MultipartUpload(
+		api.client.Endpoint+vmUrl+id+"/attach_iso", reader, name, nil, api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
 	}

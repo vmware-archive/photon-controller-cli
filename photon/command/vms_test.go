@@ -562,6 +562,7 @@ func TestAttachDetachISO(t *testing.T) {
 	if err != nil {
 		t.Error("Not expecting arguments parsing to fail")
 	}
+	set.String("name", "ttylinux-pc_i486-16.1.iso", "attach iso")
 	set.String("path", "../../testdata/ttylinux-pc_i486-16.1.iso", "attach iso")
 	cxt := cli.NewContext(nil, set, nil)
 
