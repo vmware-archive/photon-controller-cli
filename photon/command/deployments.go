@@ -721,7 +721,7 @@ func updateImageDatastores(c *cli.Context) error {
 		return err
 	}
 
-	task, err := client.Esxclient.Deployments.UpdateImageDatastores(id, imageDataStores)
+	task, err := client.Esxclient.Deployments.SetImageDatastores(id, imageDataStores)
 	if err != nil {
 		return err
 	}

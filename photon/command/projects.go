@@ -506,7 +506,7 @@ func setSecurityGroupsForProject(c *cli.Context) error {
 		return err
 	}
 	id := c.Args().First()
-	securityGroups := &photon.SecurityGroups{
+	securityGroups := &photon.SecurityGroupsSpec{
 		Items: regexp.MustCompile(`\s*,\s*`).Split(c.Args()[1], -1),
 	}
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))

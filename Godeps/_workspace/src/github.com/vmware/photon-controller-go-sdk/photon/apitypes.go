@@ -444,7 +444,7 @@ type DeploymentCreateSpec struct {
 	ImageDatastores         []string    `json:"imageDatastores"`
 	Auth                    *AuthInfo   `json:"auth"`
 	LoadBalancerEnabled     bool        `json:"loadBalancerEnabled"`
-	UsePhotonDHCP 			bool  		`json:"use_photon_dhcp"`
+	UsePhotonDHCP           bool        `json:"use_photon_dhcp"`
 }
 
 type MigrationStatus struct {
@@ -470,7 +470,8 @@ type Deployment struct {
 	Migration               *MigrationStatus       `json:"migrationStatus,omitempty"`
 	ClusterConfigurations   []ClusterConfiguration `json:"clusterConfigurations,omitempty"`
 	LoadBalancerEnabled     bool                   `json:"loadBalancerEnabled"`
-	UsePhotonDHCP 			bool                   `json:"use_photon_dhcp,omitempty"`
+	LoadBalancerAddress     string                 `json:"loadBalancerAddress"`
+	UsePhotonDHCP           bool                   `json:"use_photon_dhcp",omitempty`
 }
 
 // Represents multiple deployments returned by the API.
@@ -575,7 +576,7 @@ type SecurityGroup struct {
 }
 
 // Represents set_security_groups spec
-type SecurityGroups struct {
+type SecurityGroupsSpec struct {
 	Items []string `json:"items"`
 }
 
