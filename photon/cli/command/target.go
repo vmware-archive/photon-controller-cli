@@ -270,7 +270,6 @@ func configureServerCerts(endpoint string, noChertCheck bool, isNonInterractive 
 		return
 	}
 
-	fmt.Print(authInfo)
 	if authInfo.Enabled == false {
 		return nil
 	}
