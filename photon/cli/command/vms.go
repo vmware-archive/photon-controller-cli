@@ -21,6 +21,7 @@ import (
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
+	"regexp"
 )
 
 // Creates a cli.Command for vm
@@ -75,6 +76,10 @@ func GetVMCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "affinities, a",
 						Usage: "VM Locality(kind id)",
+					},
+					cli.StringFlag{
+						Name:  "networks, w",
+						Usage: "VM Networks(id1, id2)",
 					},
 					cli.StringFlag{
 						Name:  "tenant, t",
@@ -333,6 +338,7 @@ func createVM(c *cli.Context) error {
 	affinities := c.String("affinities")
 	tenantName := c.String("tenant")
 	projectName := c.String("project")
+	networks := c.String("networks")
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
@@ -390,6 +396,11 @@ func createVM(c *cli.Context) error {
 		return err
 	}
 
+	var networkList []string
+	if (len(networks) > 0) {
+		networkList = regexp.MustCompile(`\s*,\s*`).Split(networks, -1)
+	}
+
 	vmSpec := photon.VmCreateSpec{}
 	vmSpec.Name = name
 	vmSpec.Flavor = flavor
@@ -397,6 +408,7 @@ func createVM(c *cli.Context) error {
 	vmSpec.AttachedDisks = disksList
 	vmSpec.Affinities = affinitiesList
 	vmSpec.Environment = environmentMap
+	vmSpec.Networks = networkList
 
 	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("\nCreating VM: %s(%s)\n", vmSpec.Name, vmSpec.Flavor)

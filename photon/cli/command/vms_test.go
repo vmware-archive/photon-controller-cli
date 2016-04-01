@@ -115,6 +115,7 @@ func TestCreateDeleteVM(t *testing.T) {
 	set.String("tenant", "fake_tenant_name", "tenant name")
 	set.String("project", "fake_project_name", "project name")
 	set.String("environment", "vm:fake_environment", "environment")
+	set.String("network", "networkid1", "VM Network")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
 	err = createVM(cxt)
