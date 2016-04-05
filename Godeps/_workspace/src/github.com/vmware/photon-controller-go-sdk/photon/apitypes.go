@@ -437,14 +437,15 @@ type Hosts struct {
 
 // Creation spec for deployments.
 type DeploymentCreateSpec struct {
-	NTPEndpoint             interface{} `json:"ntpEndpoint"`
-	UseImageDatastoreForVms bool        `json:"useImageDatastoreForVms"`
-	SyslogEndpoint          interface{} `json:"syslogEndpoint"`
-	Stats                   *StatsInfo  `json:"stats"`
-	ImageDatastores         []string    `json:"imageDatastores"`
-	Auth                    *AuthInfo   `json:"auth"`
-	LoadBalancerEnabled     bool        `json:"loadBalancerEnabled"`
-	UsePhotonDHCP           bool        `json:"use_photon_dhcp"`
+	NTPEndpoint             interface{}                     `json:"ntpEndpoint"`
+	UseImageDatastoreForVms bool                            `json:"useImageDatastoreForVms"`
+	SyslogEndpoint          interface{}                     `json:"syslogEndpoint"`
+	Stats                   *StatsInfo                      `json:"stats"`
+	ImageDatastores         []string                        `json:"imageDatastores"`
+	Auth                    *AuthInfo                       `json:"auth"`
+	NetworkConfiguration    *NetworkConfigurationCreateSpec `json:"networkConfiguration"`
+	LoadBalancerEnabled     bool                            `json:"loadBalancerEnabled"`
+	UsePhotonDHCP           bool                            `json:"use_photon_dhcp"`
 }
 
 type MigrationStatus struct {
@@ -460,6 +461,7 @@ type Deployment struct {
 	NTPEndpoint             string                 `json:"ntpEndpoint,omitempty"`
 	UseImageDatastoreForVms bool                   `json:"useImageDatastoreForVms,omitempty"`
 	Auth                    *AuthInfo              `json:"auth"`
+	NetworkConfiguration    *NetworkConfiguration  `json:"networkConfiguration"`
 	Kind                    string                 `json:"kind"`
 	SyslogEndpoint          string                 `json:"syslogEndpoint,omitempty"`
 	Stats                   *StatsInfo             `json:"stats,omitempty"`
@@ -495,6 +497,22 @@ type AuthInfo struct {
 	SecurityGroups []string `json:"securityGroups,omitempty"`
 	Enabled        bool     `json:"enabled,omitempty"`
 	Username       string   `json:"username,omitempty"`
+}
+
+// Represents creation spec for network configuration.
+type NetworkConfigurationCreateSpec struct {
+	Enabled  bool   `json:"virtualNetworkEnabled,omitempty"`
+	Address  string `json:"networkManagerAddress,omitempty"`
+	Username string `json:"networkManagerUsername,omitempty"`
+	Password string `json:"networkManagerPassword,omitempty"`
+}
+
+// Represents network configuration.
+type NetworkConfiguration struct {
+	Enabled  bool   `json:"virtualNetworkEnabled,omitempty"`
+	Address  string `json:"networkManagerAddress,omitempty"`
+	Username string `json:"networkManagerUsername,omitempty"`
+	Password string `json:"networkManagerPassword,omitempty"`
 }
 
 // Creation spec for networks.

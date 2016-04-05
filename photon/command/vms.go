@@ -401,7 +401,7 @@ func createVM(c *cli.Context) error {
 	}
 
 	var networkList []string
-	if (len(networks) > 0) {
+	if len(networks) > 0 {
 		networkList = regexp.MustCompile(`\s*,\s*`).Split(networks, -1)
 	}
 

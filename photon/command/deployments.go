@@ -87,6 +87,18 @@ func GetDeploymentsCommand() cli.Command {
 						Usage: "Oauth Security Groups",
 					},
 					cli.StringFlag{
+						Name:  "network_manager_address",
+						Usage: "Network Manager Address",
+					},
+					cli.StringFlag{
+						Name:  "network_manager_username",
+						Usage: "Network Manager Username",
+					},
+					cli.StringFlag{
+						Name:  "network_manager_password",
+						Usage: "Network Manager Password",
+					},
+					cli.StringFlag{
 						Name:  "syslog_endpoint, s",
 						Usage: "Syslog Endpoint",
 					},
@@ -113,6 +125,10 @@ func GetDeploymentsCommand() cli.Command {
 					cli.BoolFlag{
 						Name:  "enable_auth, a",
 						Usage: "Enable authentication/authorization for deployment",
+					},
+					cli.BoolFlag{
+						Name:  "enable_virtual_network",
+						Usage: "Enable virtual network for deployment",
 					},
 					cli.BoolFlag{
 						Name:  "enable_loadbalancer, l",
@@ -275,6 +291,9 @@ func createDeployment(c *cli.Context) error {
 	oauthPassword := c.String("oauth_password")
 	oauthPort := c.Int("oauth_port")
 	oauthSecurityGroups := c.String("oauth_security_groups")
+	networkManagerAddress := c.String("network_manager_address")
+	networkManagerUsername := c.String("network_manager_username")
+	networkManagerPassword := c.String("network_manager_password")
 	syslogEndpoint := c.String("syslog_endpoint")
 	statsStoreEndpoint := c.String("stats_store_endpoint")
 	enableStats := c.Bool("enable_stats")
@@ -283,6 +302,7 @@ func createDeployment(c *cli.Context) error {
 	useDatastoreVMs := c.Bool("use_image_datastore_for_vms")
 	usePhotonDHCP := c.Bool("use_photon_dhcp")
 	enableAuth := c.Bool("enable_auth")
+	enableVirtualNetwork := c.Bool("enable_virtual_network")
 	enableLoadBalancer := true
 	if c.IsSet("enable_loadbalancer") {
 		enableLoadBalancer = c.Bool("enable_loadbalancer")
@@ -356,6 +376,7 @@ func createDeployment(c *cli.Context) error {
 
 	err = validate_deployment_arguments(imageDatastoreList,
 		enableAuth, oauthTenant, oauthUsername, oauthPassword, oauthSecurityGroupList,
+		enableVirtualNetwork, networkManagerAddress, networkManagerUsername, networkManagerPassword,
 		enableStats, statsStoreEndpoint, statsStorePort)
 	if err != nil {
 		return err
@@ -371,6 +392,13 @@ func createDeployment(c *cli.Context) error {
 		SecurityGroups: oauthSecurityGroupList,
 	}
 
+	networkConfiguration := &photon.NetworkConfigurationCreateSpec{
+		Enabled:  enableVirtualNetwork,
+		Address:  networkManagerAddress,
+		Username: networkManagerUsername,
+		Password: networkManagerPassword,
+	}
+
 	statsInfo := &photon.StatsInfo{
 		Enabled:       enableStats,
 		StoreEndpoint: statsStoreEndpoint,
@@ -378,11 +406,12 @@ func createDeployment(c *cli.Context) error {
 	}
 
 	deploymentSpec := &photon.DeploymentCreateSpec{
-		Auth:            authInfo,
-		ImageDatastores: imageDatastoreList,
-		NTPEndpoint:     ntpEndpoint,
-		SyslogEndpoint:  syslogEndpoint,
-		Stats:           statsInfo,
+		Auth:                 authInfo,
+		NetworkConfiguration: networkConfiguration,
+		ImageDatastores:      imageDatastoreList,
+		NTPEndpoint:          ntpEndpoint,
+		SyslogEndpoint:       syslogEndpoint,
+		Stats:                statsInfo,
 		UseImageDatastoreForVms: useDatastoreVMs,
 		LoadBalancerEnabled:     enableLoadBalancer,
 		UsePhotonDHCP:           usePhotonDHCP,
@@ -992,6 +1021,7 @@ func removeDuplicates(a []string) []string {
 }
 
 func validate_deployment_arguments(imageDatastoreNames []string, enableAuth bool, oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups []string,
+	enableVirtualNetwork bool, networkManagerAddress string, networkManagerUsername string, networkManagerPassword string,
 	enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
 	if len(imageDatastoreNames) == 0 {
 		return fmt.Errorf("Image datastore names cannot be nil.")
@@ -1008,6 +1038,17 @@ func validate_deployment_arguments(imageDatastoreNames []string, enableAuth bool
 		}
 		if len(oauthSecurityGroups) == 0 {
 			return fmt.Errorf("OAuth security groups cannot be nil when auth is enabled.")
+		}
+	}
+	if enableVirtualNetwork {
+		if networkManagerAddress == "" {
+			return fmt.Errorf("Network manager address cannot be nil when virtual network is enabled.")
+		}
+		if networkManagerUsername == "" {
+			return fmt.Errorf("Network manager username cannot be nil when virtual network is enabled.")
+		}
+		if networkManagerPassword == "" {
+			return fmt.Errorf("Network manager password cannot be nil when virtual network is enabled.")
 		}
 	}
 	if enableStats {

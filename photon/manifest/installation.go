@@ -40,6 +40,11 @@ type deployment struct {
 	AuthPassword       string   `yaml:"oauth_password"`
 	AuthTenant         string   `yaml:"oauth_tenant"`
 	AuthSecurityGroups []string `yaml:"oauth_security_groups"`
+
+	VirtualNetworkEnabled  bool   `yaml:"virtual_network_enabled"`
+	NetworkManagerAddress  string `yaml:"network_manager_address"`
+	NetworkManagerUsername string `yaml:"network_manager_username"`
+	NetworkManagerPassword string `yaml:"network_manager_password"`
 }
 
 type host struct {
