@@ -70,10 +70,6 @@ func GetClient(isScripting bool) (*photon.Client, error) {
 		}
 	}
 
-	if !isScripting {
-		fmt.Printf("Using target '%s'\n", Esxclient.Endpoint)
-	}
-
 	return Esxclient, nil
 }
 

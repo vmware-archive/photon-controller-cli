@@ -312,7 +312,6 @@ Viewing images:
     Total: 1
 
     % photon image show 8d0b9383-ff64-4112-85db-e8111e2269fc
-    Using target 'http://10.118.96.41:9000'
     Image ID: 8d0b9383-ff64-4112-85db-e8111e2269fc
       Name:                   photon-os
       State:                  READY
@@ -344,7 +343,6 @@ Starting a VM:
 Viewing VMs. Note that the IP address will only be shown in the VM tools are installed on the VM:
 
     % photon vm list
-    Using target 'http://10.118.96.41:9000'
     ID                                    Name  State
     86911d88-a037-4576-9649-4df579abb88c  vm-1  STARTED
 
@@ -352,7 +350,6 @@ Viewing VMs. Note that the IP address will only be shown in the VM tools are ins
     STARTED: 1
 
     % photon vm show 86911d88-a037-4576-9649-4df579abb88c
-    Using target 'http://10.118.96.41:9000'
     VM ID:  86911d88-a037-4576-9649-4df579abb88c
       Name:         vm-1
       State:        STARTED
@@ -377,7 +374,6 @@ Note that when the VM is created, it consumes some of the resources allocated
 to the project, based on the definitions in the flavor:
 
     % photon project list
-    Using target 'http://10.118.96.41:9000'
     ID                                    Name               Limit              Usage
     fabb9236-d0a4-4d30-8935-ee65d6729f78  cloud-dev-staging  vm.memory 1000 GB  vm.cpu 1 COUNT
                                                              vm 500 COUNT       vm.memory 2 GB

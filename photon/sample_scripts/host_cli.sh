@@ -17,7 +17,6 @@ $cli -n target set "http://localhost:9080"
 
 # Store initial list of host id
 # host list scripting output:
-#   Using target ...
 #   num_hosts
 #   host1_id host1_ip host1_tag host1_state
 #   host2_id host2_ip host2_tag host2_state
@@ -27,7 +26,6 @@ initialHosts=$(echo "$output" | sed 1,2d | awk '{print $1}')
 
 # Test creating a MGMT host
 # host create scripting output:
-#   Using target ...
 #   host_id
 echo "Creating 1 MGMT host"
 output=$($cli -n host create -u "u" -p "p" -t "MGMT" -i "119.170.211.85" \
@@ -41,7 +39,6 @@ mgmtHostID=$(echo "$output" | sed 1d)
 
 # Test showing the MGMT host info
 # host show scripting output:
-#   Using target ...
 #   host_id host_ip host_tag host_state host_metadata
 echo "Checking the MGMT host info"
 output=$($cli -n host show $mgmtHostID)
@@ -65,7 +62,6 @@ fi
 
 # Test deleting the MGMT host
 # host delete scripting output:
-#   Using target ...
 #   host_id
 echo "Deleting the MGMT host"
 $cli -n host delete $mgmtHostID > /dev/null
