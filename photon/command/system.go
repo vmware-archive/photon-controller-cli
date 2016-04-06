@@ -85,7 +85,7 @@ func GetSystemCommand() cli.Command {
 						Name:  "prepare",
 						Usage: "initializes the migration",
 						Action: func(c *cli.Context) {
-							err := deploymentMigrationPrepare(c)
+							err := deploymentMigrationPrepareDeprecated(c)
 							if err != nil {
 								log.Fatal("Error: ", err)
 							}
@@ -95,7 +95,7 @@ func GetSystemCommand() cli.Command {
 						Name:  "finalize",
 						Usage: "finalizes the migration",
 						Action: func(c *cli.Context) {
-							err := deploymentMigrationFinalize(c)
+							err := deploymentMigrationFinalizeDeprecated(c)
 							if err != nil {
 								log.Fatal("Error: ", err)
 							}
@@ -105,7 +105,7 @@ func GetSystemCommand() cli.Command {
 						Name:  "status",
 						Usage: "shows the status of the current migration",
 						Action: func(c *cli.Context) {
-							err := showMigrationStatus(c)
+							err := showMigrationStatusDeprecated(c)
 							if err != nil {
 								log.Fatal("Error: ", err)
 							}
@@ -285,7 +285,7 @@ func destroy(c *cli.Context) error {
 }
 
 // Starts the recurring copy state of source system into destination
-func deploymentMigrationPrepare(c *cli.Context) error {
+func deploymentMigrationPrepareDeprecated(c *cli.Context) error {
 	err := checkArgNum(c.Args(), 1, "system migration prepare <old_management_endpoint>")
 	if err != nil {
 		return err
@@ -319,7 +319,7 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 }
 
 // Finishes the copy state of source system into destination and makes this system the active one
-func deploymentMigrationFinalize(c *cli.Context) error {
+func deploymentMigrationFinalizeDeprecated(c *cli.Context) error {
 	fmt.Printf("'%d'", len(c.Args()))
 	err := checkArgNum(c.Args(), 1, "system migration finalize <old_management_endpoint>")
 	if err != nil {
@@ -353,7 +353,7 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 }
 
 // displays the migration status
-func showMigrationStatus(c *cli.Context) error {
+func showMigrationStatusDeprecated(c *cli.Context) error {
 	err := checkArgNum(c.Args(), 0, "migration status")
 	if err != nil {
 		return err

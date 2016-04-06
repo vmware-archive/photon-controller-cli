@@ -157,42 +157,6 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "enable-cluster-type",
-				Usage: "Enable cluster type for deployment",
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "type, k",
-						Usage: "Cluster type (accepted values are KUBERNETES, MESOS, or SWARM)",
-					},
-					cli.StringFlag{
-						Name:  "image-id, i",
-						Usage: "ID of the cluster image",
-					},
-				},
-				Action: func(c *cli.Context) {
-					err := enableClusterType(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:  "disable-cluster-type",
-				Usage: "Disable cluster type for deployment",
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "type, k",
-						Usage: "Cluster type (accepted values are KUBERNETES, MESOS, or SWARM)",
-					},
-				},
-				Action: func(c *cli.Context) {
-					err := disableClusterType(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
 				Name:  "list",
 				Usage: "Lists all the deployments",
 				Action: func(c *cli.Context) {
@@ -233,6 +197,42 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
+				Name:  "enable-cluster-type",
+				Usage: "Enable cluster type for deployment",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "type, k",
+						Usage: "Cluster type (accepted values are KUBERNETES, MESOS, or SWARM)",
+					},
+					cli.StringFlag{
+						Name:  "image-id, i",
+						Usage: "ID of the cluster image",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := enableClusterType(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "disable-cluster-type",
+				Usage: "Disable cluster type for deployment",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "type, k",
+						Usage: "Cluster type (accepted values are KUBERNETES, MESOS, or SWARM)",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := disableClusterType(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
 				Name:  "update-image-datastores",
 				Usage: "Updates the list of image datastores",
 				Action: func(c *cli.Context) {
@@ -243,7 +243,7 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "pause_system",
+				Name:  "pause",
 				Usage: "Pause system under the deployment",
 				Action: func(c *cli.Context) {
 					err := pauseSystem(c)
@@ -253,7 +253,7 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "pause_background_tasks",
+				Name:  "pause-background-tasks",
 				Usage: "Pause system's background tasks under the deployment",
 				Action: func(c *cli.Context) {
 					err := pauseBackgroundTasks(c)
@@ -263,13 +263,71 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "resume_system",
+				Name:  "resume",
 				Usage: "Resume system under the deployment",
 				Action: func(c *cli.Context) {
 					err := resumeSystem(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
+				},
+			},
+			{
+				Name:  "destroy",
+				Usage: "destroy Photon deployment",
+				Action: func(c *cli.Context) {
+					err := destroy(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name: "migration",
+				Usage: "migrates state and hosts between photon controller deployments",
+				Subcommands: []cli.Command{
+					{
+						Name: "prepare",
+						Usage: "initializes the migration",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "endpoint, e",
+								Usage: "API endpoint of the old management plane",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := deploymentMigrationPrepare(c)
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name: "finalize",
+						Usage: "finalizes the migration",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "endpoint, e",
+								Usage: "API endpoint of the old management plane",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := deploymentMigrationFinalize(c)
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name: "status",
+						Usage: "shows the status of the current migration",
+						Action: func(c *cli.Context) {
+							err := showMigrationStatus(c)
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
 				},
 			},
 		},
@@ -938,6 +996,120 @@ func disableClusterType(c *cli.Context) error {
 	} else {
 		fmt.Println("Cancelled")
 	}
+	return nil
+}
+
+// Starts the recurring copy state of source system into destination
+func deploymentMigrationPrepare(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "deployment migration prepare <id> [<options>]")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	sourceAddress := c.String("endpoint")
+	if (len(sourceAddress) == 0) {
+		return fmt.Errorf("Please provide the API endpoint of the old control plane")
+	}
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	deployment, err := client.Esxclient.Deployments.Get(id)
+	if err != nil {
+		return err
+	}
+
+	// Initialize deployment migration
+	initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(sourceAddress, deployment.ID);
+	if err != nil {
+		return err
+	}
+
+	err = waitOnTaskOperation(initializeMigrate.ID, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Deployment '%s' migration started [source management endpoint: '%s'].\n", deployment.ID, sourceAddress)
+	return nil
+}
+
+// Finishes the copy state of source system into destination and makes this system the active one
+func deploymentMigrationFinalize(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "deployment migration finalize <id> [<options>]")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	sourceAddress := c.String("endpoint")
+	if (len(sourceAddress) == 0) {
+		return fmt.Errorf("Please provide the API endpoint of the old control plane")
+	}
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	deployment, err := client.Esxclient.Deployments.Get(id)
+	if err != nil {
+		return err
+	}
+
+	// Finalize deployment migration
+	finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(sourceAddress, deployment.ID);
+	if err != nil {
+		return err
+	}
+
+	err = waitOnTaskOperation(finalizeMigrate.ID, c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// displays the migration status
+func showMigrationStatus(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "deployment migration status <id> [<options>]")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	deployment, err := client.Esxclient.Deployments.Get(id)
+	if err != nil {
+		return err
+	}
+
+	if deployment.Migration == nil {
+		fmt.Print("No migration information available")
+		return nil
+	}
+
+	migration := deployment.Migration
+	if c.GlobalIsSet("non-interactive") {
+		fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
+			migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+	} else {
+		fmt.Printf("  Migration status:\n")
+		fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
+		fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
+			migration.DataMigrationCycleSize)
+		fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+	}
+
 	return nil
 }
 

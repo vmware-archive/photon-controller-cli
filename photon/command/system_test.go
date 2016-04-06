@@ -511,7 +511,7 @@ func TestInitializeMigrateDeployment(t *testing.T) {
 		t.Error("Not expecting argument parsing to fail")
 	}
 	cxt := cli.NewContext(nil, set, nil)
-	err = deploymentMigrationPrepare(cxt)
+	err = deploymentMigrationPrepareDeprecated(cxt)
 	if err != nil {
 		t.Error(err)
 		t.Error("Not expecting initialize Deployment to fail")
@@ -574,7 +574,7 @@ func TestFinalizeeMigrateDeployment(t *testing.T) {
 		t.Error("Not expecting argument parsing to fail")
 	}
 	cxt := cli.NewContext(nil, set, nil)
-	err = deploymentMigrationFinalize(cxt)
+	err = deploymentMigrationFinalizeDeprecated(cxt)
 	if err != nil {
 		t.Error(err)
 		t.Error("Not expecting initialize Deployment to fail")
