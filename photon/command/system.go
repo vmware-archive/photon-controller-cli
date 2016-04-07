@@ -267,6 +267,24 @@ func destroy(c *cli.Context) error {
 		}
 	}
 
+	// Delete availability-zones
+	zones, err := client.Esxclient.AvailabilityZones.GetAll()
+	if err != nil {
+		return err
+	}
+	for _, zone := range zones.Items {
+		deleteTask, err := client.Esxclient.AvailabilityZones.Delete(zone.ID)
+		if err != nil {
+			return err
+		}
+
+		deleteTask, err = pollTask(deleteTask.ID)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("AvailabilityZone has been deleted: ID = %s\n", deleteTask.Entity.ID)
+	}
+
 	// Delete deployment doc
 	for _, deployment := range deployments.Items {
 		deleteTask, err := client.Esxclient.Deployments.Delete(deployment.ID)

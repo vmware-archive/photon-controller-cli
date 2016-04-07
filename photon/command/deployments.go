@@ -283,11 +283,11 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name: "migration",
+				Name:  "migration",
 				Usage: "migrates state and hosts between photon controller deployments",
 				Subcommands: []cli.Command{
 					{
-						Name: "prepare",
+						Name:  "prepare",
 						Usage: "initializes the migration",
 						Flags: []cli.Flag{
 							cli.StringFlag{
@@ -303,7 +303,7 @@ func GetDeploymentsCommand() cli.Command {
 						},
 					},
 					{
-						Name: "finalize",
+						Name:  "finalize",
 						Usage: "finalizes the migration",
 						Flags: []cli.Flag{
 							cli.StringFlag{
@@ -319,7 +319,7 @@ func GetDeploymentsCommand() cli.Command {
 						},
 					},
 					{
-						Name: "status",
+						Name:  "status",
 						Usage: "shows the status of the current migration",
 						Action: func(c *cli.Context) {
 							err := showMigrationStatus(c)
@@ -1008,7 +1008,7 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 	id := c.Args().First()
 
 	sourceAddress := c.String("endpoint")
-	if (len(sourceAddress) == 0) {
+	if len(sourceAddress) == 0 {
 		return fmt.Errorf("Please provide the API endpoint of the old control plane")
 	}
 
@@ -1023,7 +1023,7 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 	}
 
 	// Initialize deployment migration
-	initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(sourceAddress, deployment.ID);
+	initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(sourceAddress, deployment.ID)
 	if err != nil {
 		return err
 	}
@@ -1046,7 +1046,7 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 	id := c.Args().First()
 
 	sourceAddress := c.String("endpoint")
-	if (len(sourceAddress) == 0) {
+	if len(sourceAddress) == 0 {
 		return fmt.Errorf("Please provide the API endpoint of the old control plane")
 	}
 
@@ -1061,7 +1061,7 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 	}
 
 	// Finalize deployment migration
-	finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(sourceAddress, deployment.ID);
+	finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(sourceAddress, deployment.ID)
 	if err != nil {
 		return err
 	}
@@ -1082,7 +1082,6 @@ func showMigrationStatus(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return err
@@ -1101,13 +1100,13 @@ func showMigrationStatus(c *cli.Context) error {
 	migration := deployment.Migration
 	if c.GlobalIsSet("non-interactive") {
 		fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
-			migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+			migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
 	} else {
 		fmt.Printf("  Migration status:\n")
 		fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
 		fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
 			migration.DataMigrationCycleSize)
-		fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading + migration.VibsUploaded)
+		fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
 	}
 
 	return nil

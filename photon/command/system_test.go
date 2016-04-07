@@ -388,6 +388,49 @@ func TestDestroy(t *testing.T) {
 	if err != nil {
 		t.Error("Not expecting error serializing expected createTask")
 	}
+
+	getavailabiltyZoneexpectedStruct := photon.AvailabilityZones{
+		Items: []photon.AvailabilityZone{
+			{
+				Name:  "zone1",
+				Kind:  "availabilty-zone",
+				State: "READY",
+				ID:    "fake-zone-id",
+			},
+		},
+	}
+	getavailablityZoneresponse, err := json.Marshal(getavailabiltyZoneexpectedStruct)
+	if err != nil {
+		t.Error("Not expecting error serializing expected response")
+	}
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/availabilityzones",
+		mocks.CreateResponder(200, string(getavailablityZoneresponse[:])))
+	availabilityZonequeuedTask := &photon.Task{
+		Operation: "DELETE_AVAILABILITYZONE",
+		State:     "QUEUED",
+		ID:        "fake-zone-task-id",
+		Entity:    photon.Entity{ID: "fake-zone-id"},
+	}
+	availabilityZonecompletedTask := &photon.Task{
+		Operation: "DELETE_AVAILABILITYZONE",
+		State:     "COMPLETED",
+		ID:        "fake-zone-task-id",
+		Entity:    photon.Entity{ID: "fake-zone-id"},
+	}
+	availabilityZonetaskresponse, err := json.Marshal(availabilityZonecompletedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected createTask")
+	}
+	mocks.RegisterResponder(
+		"DELETE",
+		server.URL+"/availabilityzones/"+availabilityZonequeuedTask.Entity.ID,
+		mocks.CreateResponder(200, string(availabilityZonetaskresponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+availabilityZonequeuedTask.ID,
+		mocks.CreateResponder(200, string(availabilityZonetaskresponse[:])))
 	mocks.RegisterResponder(
 		"DELETE",
 		server.URL+"/hosts/"+hostqueuedTask.Entity.ID,
