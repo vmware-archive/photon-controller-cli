@@ -367,10 +367,11 @@ func TestUpdateImageDatastores(t *testing.T) {
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
-	err = set.Parse([]string{deploymentId, "ds1,ds2"})
+	err = set.Parse([]string{deploymentId})
 	if err != nil {
 		t.Error(err)
 	}
+	set.String("datastores", "ds1,ds2", "blob")
 	ctx := cli.NewContext(nil, set, nil)
 
 	err = updateImageDatastores(ctx)

@@ -235,6 +235,12 @@ func GetDeploymentsCommand() cli.Command {
 			{
 				Name:  "update-image-datastores",
 				Usage: "Updates the list of image datastores",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "datastores, d",
+						Usage: "Comma separated name of datastore names",
+					},
+				},
 				Action: func(c *cli.Context) {
 					err := updateImageDatastores(c)
 					if err != nil {
@@ -786,14 +792,40 @@ func listDeploymentVms(c *cli.Context) error {
 
 // Update the image datastores using the information carried in cli.Context.
 func updateImageDatastores(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 2, "deployment update-image-datastores <id> <comma separated image datastores>")
-	if err != nil {
-		return err
+	//
+	//  err := checkArgNum(c.Args(), 1, "deployment update-image-datastores <id>")
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	// replace the check below with the commented one once the integration tests are
+	// switched over to provide the datastore list using named argument.
+	var err error
+	if len(c.Args()) < 1 {
+		return fmt.Errorf("Please provide 'id' argument. Usage: deployment update-image-datastores <id>")
+	}
+	id := c.Args().First()
+
+	datastores := c.String("datastores")
+	if len(datastores) == 0 && len(c.Args()) == 2 {
+		// temporary hack to not break integration tests with this change
+		datastores = c.Args()[1]
 	}
 
-	id := c.Args().First()
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		datastores, err = askForInput("Datastores: ", datastores)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(datastores) == 0 {
+		return fmt.Errorf("Please provide datastores using --datastores flag")
+	}
+
 	imageDataStores := &photon.ImageDatastores{
-		Items: regexp.MustCompile(`\s*,\s*`).Split(c.Args()[1], -1),
+		Items: regexp.MustCompile(`\s*,\s*`).Split(datastores, -1),
 	}
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
