@@ -235,6 +235,12 @@ func GetDeploymentsCommand() cli.Command {
 			{
 				Name:  "update-image-datastores",
 				Usage: "Updates the list of image datastores",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "datastores, d",
+						Usage: "Comma separated name of datastore names",
+					},
+				},
 				Action: func(c *cli.Context) {
 					err := updateImageDatastores(c)
 					if err != nil {
@@ -786,14 +792,27 @@ func listDeploymentVms(c *cli.Context) error {
 
 // Update the image datastores using the information carried in cli.Context.
 func updateImageDatastores(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 2, "deployment update-image-datastores <id> <comma separated image datastores>")
+	err := checkArgNum(c.Args(), 1, "deployment update-image-datastores <id>")
 	if err != nil {
 		return err
 	}
-
 	id := c.Args().First()
+
+	datastores := c.String("datastores")
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		datastores, err = askForInput("Datastores: ", datastores)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(datastores) == 0 {
+		return fmt.Errorf("Please provide datastores using --datastores flag")
+	}
+
 	imageDataStores := &photon.ImageDatastores{
-		Items: regexp.MustCompile(`\s*,\s*`).Split(c.Args()[1], -1),
+		Items: regexp.MustCompile(`\s*,\s*`).Split(datastores, -1),
 	}
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
