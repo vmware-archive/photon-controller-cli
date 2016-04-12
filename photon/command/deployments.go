@@ -552,11 +552,10 @@ func createDeployment(c *cli.Context) error {
 
 // Sends a delete deployment task to client
 func deleteDeployment(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment delete <id>")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
@@ -578,11 +577,10 @@ func deleteDeployment(c *cli.Context) error {
 
 // Retrieves information about a deployment
 func showDeployment(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment show <id>")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
@@ -740,11 +738,10 @@ func showDeployment(c *cli.Context) error {
 
 // Lists all the hosts associated with the deployment
 func listDeploymentHosts(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment list-hosts <id>")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
@@ -766,11 +763,10 @@ func listDeploymentHosts(c *cli.Context) error {
 
 // Lists all the hosts associated with the deployment
 func listDeploymentVms(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment list-vms <id>")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
@@ -792,7 +788,7 @@ func listDeploymentVms(c *cli.Context) error {
 
 // Update the image datastores using the information carried in cli.Context.
 func updateImageDatastores(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment update-image-datastores <id>")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
@@ -832,11 +828,10 @@ func updateImageDatastores(c *cli.Context) error {
 
 // Sends a pause system task to client
 func pauseSystem(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment pause_system <id>")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
@@ -858,11 +853,10 @@ func pauseSystem(c *cli.Context) error {
 
 // Sends a pause background task to client
 func pauseBackgroundTasks(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment pause_background_tasks <id>")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
@@ -884,11 +878,10 @@ func pauseBackgroundTasks(c *cli.Context) error {
 
 // Sends a resume system task to client
 func resumeSystem(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment resume_system <id>")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
@@ -910,11 +903,10 @@ func resumeSystem(c *cli.Context) error {
 
 //Enable cluster type for the specified deployment id
 func enableClusterType(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment enable_cluster_type <id> [<options>]")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	clusterType := c.String("type")
 	imageID := c.String("image-id")
@@ -970,11 +962,10 @@ func enableClusterType(c *cli.Context) error {
 
 //Disable cluster type for the specified deployment id
 func disableClusterType(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment disable_cluster_type <id> [<options>]")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	clusterType := c.String("type")
 
@@ -1021,11 +1012,10 @@ func disableClusterType(c *cli.Context) error {
 
 // Starts the recurring copy state of source system into destination
 func deploymentMigrationPrepare(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment migration prepare <id> [<options>]")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	sourceAddress := c.String("endpoint")
 	if len(sourceAddress) == 0 {
@@ -1059,11 +1049,10 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 
 // Finishes the copy state of source system into destination and makes this system the active one
 func deploymentMigrationFinalize(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment migration finalize <id> [<options>]")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	sourceAddress := c.String("endpoint")
 	if len(sourceAddress) == 0 {
@@ -1096,11 +1085,10 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 
 // displays the migration status
 func showMigrationStatus(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "deployment migration status <id> [<options>]")
+	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
@@ -1130,6 +1118,36 @@ func showMigrationStatus(c *cli.Context) error {
 	}
 
 	return nil
+}
+
+func getDeploymentId(c *cli.Context) (id string, err error) {
+	if len(c.Args()) > 1 {
+		err = fmt.Errorf("Unknown arguments: %v.", c.Args()[1:])
+		return
+	}
+
+	if len(c.Args()) == 1 {
+		id = c.Args().First()
+		return
+	}
+
+	client.Esxclient, err = client.GetClient(true)
+	if err != nil {
+		return
+	}
+
+	deployments, err := client.Esxclient.Deployments.GetAll()
+	if err != nil {
+		return
+	}
+
+	if len(deployments.Items) != 1 {
+		err = fmt.Errorf("Please provide 'id' argument.")
+		return
+	}
+
+	id = deployments.Items[0].ID
+	return
 }
 
 func displayDeploymentSummary(data []VM_NetworkIPs, isScripting bool) error {
