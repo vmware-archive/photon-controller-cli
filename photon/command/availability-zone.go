@@ -22,7 +22,7 @@ import (
 )
 
 // Creates a cli.Command for availability-zone
-// Subcommands: create; Usage: availability-zone create <name>
+// Subcommands: create; Usage: availability-zone create [<options>]
 //              delete; Usage: availability-zone delete <id>
 //              list;   Usage: availability-zone list
 //              show;   Usage: availability-zone show <id>
@@ -102,10 +102,11 @@ func GetAvailabilityZonesCommand() cli.Command {
 // Sends a create availability-zone task to client based on the cli.Context
 // Returns an error if one occurred
 func createAvailabilityZone(c *cli.Context) error {
-	if len(c.Args()) > 1 {
-		return fmt.Errorf("Unknown argument: %v", c.Args()[1:])
+	err := checkArgNum(c.Args(), 0, "availability-zone create [<options>]")
+	if err != nil {
+		return err
 	}
-	name := c.Args().First()
+	name := c.String("name")
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
@@ -123,7 +124,6 @@ func createAvailabilityZone(c *cli.Context) error {
 		Name: name,
 	}
 
-	var err error
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return err

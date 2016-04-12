@@ -64,11 +64,7 @@ func TestCreateDeleteAvailabilityZone(t *testing.T) {
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
-	set.String("name", "n", "testname")
-	err = set.Parse([]string{"testname"})
-	if err != nil {
-		t.Error("Not expecting arguments parsing to fail")
-	}
+	set.String("name", "fake_availabilityZone", "availability zone name")
 	cxt := cli.NewContext(nil, set, nil)
 
 	err = createAvailabilityZone(cxt)
