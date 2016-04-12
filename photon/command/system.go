@@ -405,7 +405,7 @@ func showMigrationStatusDeprecated(c *cli.Context) error {
 }
 
 func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID string, err error) {
-	err = validate_deployment_arguments(
+	err = validateDeploymentArguments(
 		dcMap.Deployment.ImageDatastores, dcMap.Deployment.AuthEnabled,
 		dcMap.Deployment.AuthTenant, dcMap.Deployment.AuthUsername, dcMap.Deployment.AuthPassword,
 		dcMap.Deployment.AuthSecurityGroups, dcMap.Deployment.VirtualNetworkEnabled,

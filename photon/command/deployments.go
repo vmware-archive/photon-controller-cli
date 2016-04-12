@@ -44,16 +44,26 @@ func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 //              list-vms;   Usage: deployment list-vms <id>
 //              prepare-deployment-migration;   Usage: deployment prepare migration <sourceDeploymentAddress> <id>
 //              finalize-deployment-migration;  Usage: deployment finalize migration <sourceDeploymentAddress> <id>
-//              pause_system;                   Usage: deployment pause_system <id>
-//              pause_background_tasks;         Usage: deployment pause_background_tasks <id>
-//              resume_system;                  Usage: deployment resume_system <id>
-//              enable-cluster-type;            Usage: deployment enable_cluster_type <id> [<options>]
-//              disable-cluster-type;           Usage: deployment disable_cluster_type <id> [<options>]
+//              pause;                          Usage: deployment pause_system <id>
+//              pause-background-tasks;         Usage: deployment pause-background-tasks <id>
+//              resume;                         Usage: deployment resume <id>
+//              enable-cluster-type;            Usage: deployment enable-cluster-type <id> [<options>]
+//              disable-cluster-type;           Usage: deployment disable-cluster-type <id> [<options>]
 func GetDeploymentsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "deployment",
 		Usage: "options for deployment",
 		Subcommands: []cli.Command{
+			{
+				Name:  "list",
+				Usage: "Lists all the deployments",
+				Action: func(c *cli.Context) {
+					err := listDeployments(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
 			{
 				Name:  "create",
 				Usage: "Create a new deployment",
@@ -151,16 +161,6 @@ func GetDeploymentsCommand() cli.Command {
 				Usage: "Delete a deployment by id",
 				Action: func(c *cli.Context) {
 					err := deleteDeployment(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:  "list",
-				Usage: "Lists all the deployments",
-				Action: func(c *cli.Context) {
-					err := listDeployments(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -335,6 +335,44 @@ func GetDeploymentsCommand() cli.Command {
 	return command
 }
 
+// Retrieves a list of deployments
+func listDeployments(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 0, "deployment list")
+	if err != nil {
+		return err
+	}
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	deployments, err := client.Esxclient.Deployments.GetAll()
+	if err != nil {
+		return err
+	}
+
+	if c.GlobalIsSet("non-interactive") {
+		for _, deployment := range deployments.Items {
+			fmt.Printf("%s\n", deployment.ID)
+		}
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+		fmt.Fprintf(w, "ID\n")
+		for _, deployment := range deployments.Items {
+			fmt.Fprintf(w, "%s\n", deployment.ID)
+		}
+		err = w.Flush()
+		if err != nil {
+			return err
+		}
+		fmt.Printf("\nTotal: %d\n", len(deployments.Items))
+	}
+
+	return nil
+}
+
 // Sends a create deployment task to client
 func createDeployment(c *cli.Context) error {
 	err := checkArgNum(c.Args(), 0, "deployment create [<options>]")
@@ -432,7 +470,7 @@ func createDeployment(c *cli.Context) error {
 		oauthSecurityGroupList = regexp.MustCompile(`\s*,\s*`).Split(oauthSecurityGroups, -1)
 	}
 
-	err = validate_deployment_arguments(imageDatastoreList,
+	err = validateDeploymentArguments(imageDatastoreList,
 		enableAuth, oauthTenant, oauthUsername, oauthPassword, oauthSecurityGroupList,
 		enableVirtualNetwork, networkManagerAddress, networkManagerUsername, networkManagerPassword,
 		enableStats, statsStoreEndpoint, statsStorePort)
@@ -527,44 +565,6 @@ func deleteDeployment(c *cli.Context) error {
 	err = waitOnTaskOperation(deleteTask.ID, c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// Retrieves a list of deployments
-func listDeployments(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "deployment list")
-	if err != nil {
-		return err
-	}
-
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
-	if err != nil {
-		return err
-	}
-
-	deployments, err := client.Esxclient.Deployments.GetAll()
-	if err != nil {
-		return err
-	}
-
-	if c.GlobalIsSet("non-interactive") {
-		for _, deployment := range deployments.Items {
-			fmt.Printf("%s\n", deployment.ID)
-		}
-	} else {
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w, "ID\n")
-		for _, deployment := range deployments.Items {
-			fmt.Fprintf(w, "%s\n", deployment.ID)
-		}
-		err = w.Flush()
-		if err != nil {
-			return err
-		}
-		fmt.Printf("\nTotal: %d\n", len(deployments.Items))
 	}
 
 	return nil
@@ -724,7 +724,7 @@ func showDeployment(c *cli.Context) error {
 			fmt.Printf("    No cluster is supported")
 		}
 	}
-	err = display_deployment_summary(data, c.GlobalIsSet("non-interactive"))
+	err = displayDeploymentSummary(data, c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return err
 	}
@@ -1112,7 +1112,7 @@ func showMigrationStatus(c *cli.Context) error {
 	return nil
 }
 
-func display_deployment_summary(data []VM_NetworkIPs, isScripting bool) error {
+func displayDeploymentSummary(data []VM_NetworkIPs, isScripting bool) error {
 	deployment_info := make(map[string]map[string][]string)
 	for _, d := range data {
 		for k, v := range d.vm.Metadata {
@@ -1191,7 +1191,7 @@ func removeDuplicates(a []string) []string {
 	return result
 }
 
-func validate_deployment_arguments(imageDatastoreNames []string, enableAuth bool, oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups []string,
+func validateDeploymentArguments(imageDatastoreNames []string, enableAuth bool, oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups []string,
 	enableVirtualNetwork bool, networkManagerAddress string, networkManagerUsername string, networkManagerPassword string,
 	enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
 	if len(imageDatastoreNames) == 0 {
