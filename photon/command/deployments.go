@@ -44,7 +44,7 @@ func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 //              list-vms;   Usage: deployment list-vms <id>
 //              prepare-deployment-migration;   Usage: deployment prepare migration <sourceDeploymentAddress> <id>
 //              finalize-deployment-migration;  Usage: deployment finalize migration <sourceDeploymentAddress> <id>
-//              pause;                          Usage: deployment pause_system <id>
+//              pause;                          Usage: deployment pause <id>
 //              pause-background-tasks;         Usage: deployment pause-background-tasks <id>
 //              resume;                         Usage: deployment resume <id>
 //              enable-cluster-type;            Usage: deployment enable-cluster-type <id> [<options>]
@@ -792,25 +792,13 @@ func listDeploymentVms(c *cli.Context) error {
 
 // Update the image datastores using the information carried in cli.Context.
 func updateImageDatastores(c *cli.Context) error {
-	//
-	//  err := checkArgNum(c.Args(), 1, "deployment update-image-datastores <id>")
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	// replace the check below with the commented one once the integration tests are
-	// switched over to provide the datastore list using named argument.
-	var err error
-	if len(c.Args()) < 1 {
-		return fmt.Errorf("Please provide 'id' argument. Usage: deployment update-image-datastores <id>")
+	err := checkArgNum(c.Args(), 1, "deployment update-image-datastores <id>")
+	if err != nil {
+		return err
 	}
-	id := c.Args().First()
 
+	id := c.Args().First()
 	datastores := c.String("datastores")
-	if len(datastores) == 0 && len(c.Args()) == 2 {
-		// temporary hack to not break integration tests with this change
-		datastores = c.Args()[1]
-	}
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
