@@ -158,13 +158,9 @@ func showEndpoint(c *cli.Context) error {
 
 // Store token in the config file
 func login(c *cli.Context) error {
-	token, err := getAccessToken(c)
-	if err != nil {
-		return err
-	}
-
 	username := c.String("username")
 	password := c.String("password")
+	token := c.String("access_token")
 
 	if len(token) == 0 && (len(username) == 0 || len(password) == 0) {
 		return fmt.Errorf("Please provide either a token or username/password")
@@ -223,18 +219,6 @@ func logout(c *cli.Context) error {
 	fmt.Println("Token removed from config file")
 
 	return nil
-}
-
-func getAccessToken(c *cli.Context) (token string, err error) {
-	if len(c.Args()) == 1 {
-		token = c.Args()[0]
-	} else if len(c.Args()) > 1 {
-		return "", fmt.Errorf("Unknown arguments: %v.", c.Args()[1:])
-	} else {
-		token = c.String("access_token")
-	}
-
-	return
 }
 
 func configureServerCerts(endpoint string, noChertCheck bool, isNonInterractive bool) (err error) {
