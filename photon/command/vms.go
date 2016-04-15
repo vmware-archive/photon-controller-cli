@@ -261,7 +261,7 @@ func GetVMCommand() cli.Command {
 			},
 			{
 				Name:  "detach-iso",
-				Usage: "detach ISO to VM",
+				Usage: "detach ISO from VM",
 				Action: func(c *cli.Context) {
 					err := detachIso(c)
 					if err != nil {
