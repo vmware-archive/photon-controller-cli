@@ -312,7 +312,6 @@ Viewing images:
     Total: 1
 
     % photon image show 8d0b9383-ff64-4112-85db-e8111e2269fc
-    Using target 'http://10.118.96.41:9000'
     Image ID: 8d0b9383-ff64-4112-85db-e8111e2269fc
       Name:                   photon-os
       State:                  READY
@@ -321,6 +320,26 @@ Viewing images:
       Settings:
         scsi0.virtualDev : lsilogic
         ethernet0.virtualDev : vmxnet3
+
+Deleting images:
+
+    % photon image delete 8d0b9383-ff64-4112-85db-e8111e2269fc
+    Are you sure [y/n]? y
+    DELETE_IMAGE completed for 'image' entity 8d0b9383-ff64-4112-85db-e8111e2269fc
+
+Note that if you delete an image that is being used by a VM, it will
+go into the PENDING_DELETE state. It will be deleted once all VMs that
+are using it have also been deleted.
+
+    % photon image show 8d0b9383-ff64-4112-85db-e8111e2269fc
+    Image ID: 8d0b9383-ff64-4112-85db-e8111e2269fc
+      Name:                       kube
+      State:                      PENDING_DELETE
+      Size:                       16777216146 Byte(s)
+      Image Replication Type:     EAGER
+      Image Replication Progress: 100%
+      Image Seeding Progress:     100%
+      Settings:
 
 ### VMs
 
