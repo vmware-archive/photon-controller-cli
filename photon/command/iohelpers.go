@@ -138,7 +138,7 @@ func printTaskList(taskList []photon.Task, isScripting bool) error {
 
 		for _, task := range taskList {
 			var duration int64
-			startTime := time.Unix(task.StartedTime/1000, 0).Format("2006-01-02 03:04:05.00")
+			startTime := timestampToString(task.StartedTime)
 			if task.EndTime-task.StartedTime > 0 {
 				duration = (task.EndTime - task.StartedTime) / 1000
 			} else {
@@ -182,6 +182,17 @@ func quotaLineItemListToString(qliList []photon.QuotaLineItem) string {
 		scriptUsage = append(scriptUsage, fmt.Sprintf("%s:%g:%s", u.Key, u.Value, u.Unit))
 	}
 	return strings.Join(scriptUsage, ",")
+}
+
+// Converts milliseconds since the epoch (as used in tasks) to a string
+// If the time is zero or negative, returns the string "-"
+// We do this because a timestamp of zero in a task means "undefined"
+func timestampToString(timestamp int64) string {
+	if timestamp <= 0 {
+		return "-"
+	} else {
+		return time.Unix(timestamp/1000, 0).Format("2006-01-02 03:04:05.00")
+	}
 }
 
 func checkArgNum(args []string, num int, usage string) error {

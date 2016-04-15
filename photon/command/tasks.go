@@ -22,7 +22,6 @@ import (
 
 	"encoding/json"
 	"github.com/vmware/photon-controller-cli/photon/client"
-	"time"
 )
 
 type stepSorter []photon.Step
@@ -156,8 +155,8 @@ func showTask(c *cli.Context) error {
 		fmt.Fprintf(w, "Entity:\t%s %s\n", task.Entity.Kind, task.Entity.ID)
 		fmt.Fprintf(w, "State:\t%s\n", task.State)
 		fmt.Fprintf(w, "Operation:\t%s\n", task.Operation)
-		fmt.Fprintf(w, "StartedTime:\t%s\n", time.Unix(task.StartedTime/1000, 0).Format("2006-01-02 03:04:05.00"))
-		fmt.Fprintf(w, "EndTime:\t%s\n", time.Unix(task.EndTime/1000, 0).Format("2006-01-02 03:04:05.00"))
+		fmt.Fprintf(w, "StartedTime:\t%s\n", timestampToString(task.StartedTime))
+		fmt.Fprintf(w, "EndTime:\t%s\n", timestampToString(task.EndTime))
 		if task.ResourceProperties != nil {
 			fmt.Fprintf(w, "ResourceProperties:\t%v\n", resourceProperties)
 		}
@@ -226,8 +225,8 @@ func printTaskSteps(task *photon.Task, isScripting bool) error {
 		sort.Sort(stepSorter(steps))
 		for _, step := range steps {
 			fmt.Fprintf(w, "\t%s\t%s\t%s\t%s\t%s\t%s\n", step.Operation, step.State,
-				time.Unix(step.StartedTime/1000, 0).Format("2006-01-02 03:04:05.00"),
-				time.Unix(step.EndTime/1000, 0).Format("2006-01-02 03:04:05.00"),
+				timestampToString(task.StartedTime),
+				timestampToString(task.EndTime),
 				getApiErrorCode(step.Errors, ", "), getApiErrorCode(step.Warnings, ", "))
 		}
 		err := w.Flush()

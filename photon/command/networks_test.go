@@ -41,11 +41,11 @@ func TestCreateDeleteNetwork(t *testing.T) {
 	}
 	response, err := json.Marshal(queuedTask)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected queuedTask")
+		t.Error("Not expecting error serializing expected queuedTask")
 	}
 	taskresponse, err := json.Marshal(completedTask)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected completedTask")
+		t.Error("Not expecting error serializing expected completedTask")
 	}
 
 	server := mocks.NewTestServer()
@@ -94,11 +94,11 @@ func TestCreateDeleteNetwork(t *testing.T) {
 
 	response, err = json.Marshal(queuedTask)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected queuedTask")
+		t.Error("Not expecting error serializing expected queuedTask")
 	}
 	taskresponse, err = json.Marshal(completedTask)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected completedTask")
+		t.Error("Not expecting error serializing expected completedTask")
 	}
 
 	mocks.RegisterResponder(
@@ -140,7 +140,7 @@ func TestListNetworks(t *testing.T) {
 
 	response, err := json.Marshal(expectedList)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected response")
+		t.Error("Not expecting error serializing expected response")
 	}
 
 	mocks.RegisterResponder(
@@ -156,7 +156,7 @@ func TestListNetworks(t *testing.T) {
 
 	response, err = json.Marshal(expectedList)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected response")
+		t.Error("Not expecting error serializing expected response")
 	}
 
 	mocks.RegisterResponder(
@@ -186,7 +186,7 @@ func TestShowNetworks(t *testing.T) {
 
 	response, err := json.Marshal(expectedStruct)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected response")
+		t.Error("Not expecting error serializing expected response")
 	}
 
 	server := mocks.NewTestServer()
