@@ -19,6 +19,11 @@ type ImagesAPI struct {
 	client *Client
 }
 
+// Options for GetImage API.
+type ImageGetOptions struct {
+	Name string `urlParam:"name"`
+}
+
 var imageUrl string = "/images"
 
 // Uploads a new image, reading from the specified image path.
@@ -50,8 +55,11 @@ func (api *ImagesAPI) Create(reader io.Reader, name string, options *ImageCreate
 }
 
 // Gets all images on this photon instance.
-func (api *ImagesAPI) GetAll() (images *Images, err error) {
+func (api *ImagesAPI) GetAll(options *ImageGetOptions) (images *Images, err error) {
 	uri := api.client.Endpoint + imageUrl
+	if options != nil {
+		uri += getQueryString(options)
+	}
 	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return

@@ -127,6 +127,85 @@ func TestCreateDeleteImage(t *testing.T) {
 	}
 }
 
+func TestFindImagesByName(t *testing.T) {
+	expectedImageList := MockImagesPage{
+		Items: []photon.Image{
+			{
+				Name:            "test",
+				Size:            10,
+				State:           "COMPLETED",
+				ID:              "1",
+				ReplicationType: "EAGER",
+				Settings: []photon.ImageSetting{
+					{
+						Name:         "test-setting",
+						DefaultValue: "test-default-value",
+					},
+				},
+			},
+			{
+				Name:            "test2",
+				Size:            10,
+				State:           "COMPLETED",
+				ID:              "2",
+				ReplicationType: "EAGER",
+				Settings: []photon.ImageSetting{
+					{
+						Name:         "test-setting",
+						DefaultValue: "test-default-value",
+					},
+				},
+			},
+		},
+		NextPageLink:     "fake-next-page-link",
+		PreviousPageLink: "",
+	}
+
+	response, err := json.Marshal(expectedImageList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected response")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/images?name=test",
+		mocks.CreateResponder(200, string(response[:])))
+
+	expectedImageList = MockImagesPage{
+		Items:            []photon.Image{},
+		NextPageLink:     "",
+		PreviousPageLink: "",
+	}
+
+	response, err = json.Marshal(expectedImageList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected response")
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"fake-next-page-link",
+		mocks.CreateResponder(200, string(response[:])))
+
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	set.String("name", "test", "image name")
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, nil)
+	err = listImages(cxt)
+	if err != nil {
+		t.Error("Not expecting an error listing images ", err)
+	}
+}
+
 func TestListImage(t *testing.T) {
 	expectedImageList := MockImagesPage{
 		Items: []photon.Image{
