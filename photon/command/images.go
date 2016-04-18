@@ -67,6 +67,12 @@ func GetImagesCommand() cli.Command {
 			{
 				Name:  "list",
 				Usage: "list images",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "name, n",
+						Usage: "Image name",
+					},
+				},
 				Action: func(c *cli.Context) {
 					err := listImages(c)
 					if err != nil {
@@ -224,7 +230,7 @@ func deleteImage(c *cli.Context) error {
 
 // Lists all images
 func listImages(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "image list")
+	err := checkArgNum(c.Args(), 0, "image list [<options>]")
 	if err != nil {
 		return err
 	}
@@ -233,7 +239,11 @@ func listImages(c *cli.Context) error {
 		return err
 	}
 
-	images, err := client.Esxclient.Images.GetAll()
+	name := c.String("name")
+	options := &photon.ImageGetOptions{
+		Name: name,
+	}
+	images, err := client.Esxclient.Images.GetAll(options)
 	if err != nil {
 		return err
 	}
