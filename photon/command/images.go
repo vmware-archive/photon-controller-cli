@@ -233,7 +233,11 @@ func listImages(c *cli.Context) error {
 		return err
 	}
 
-	images, err := client.Esxclient.Images.GetAll()
+	name := c.String("name")
+	options := &photon.ImageGetOptions{
+		Name: name,
+	}
+	images, err := client.Esxclient.Images.GetAll(options)
 	if err != nil {
 		return err
 	}
