@@ -15,7 +15,6 @@ import (
 	"os"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"text/tabwriter"
 
@@ -36,20 +35,25 @@ func (ip ipsSorter) Swap(i, j int)      { ip[i], ip[j] = ip[j], ip[i] }
 func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 
 // Creates a cli.Command for deployments
-// Subcommands: create;     Usage: deployment create [<options>]
-//              delete;     Usage: deployment delete [<id>]
+// Subcommands:
 //              list;       Usage: deployment list
 //              show;       Usage: deployment show [<id>]
 //              list-hosts; Usage: deployment list-hosts [<id>]
 //              list-vms;   Usage: deployment list-vms [<id>]
-//              migration prepare;              Usage: deployment prepare migration [<id> <options>]
-//              migration finalize;             Usage: deployment finalize migration [<id> <options>]
-//              migration status;               Usage: deployment finalize migration [<id>]
+
+//              update-image-datastores;        Usage: deployment update-image-datastores [<id> <options>]
+
 //              pause;                          Usage: deployment pause [<id>]
 //              pause-background-tasks;         Usage: deployment pause-background-tasks [<id>]
 //              resume;                         Usage: deployment resume [<id>]
+
+//              migration prepare;              Usage: deployment prepare migration [<id> <options>]
+//              migration finalize;             Usage: deployment finalize migration [<id> <options>]
+//              migration status;               Usage: deployment finalize migration [<id>]
+
 //              enable-cluster-type;            Usage: deployment enable-cluster-type [<id> <options>]
 //              disable-cluster-type;           Usage: deployment disable-cluster-type [<id> <options>]
+
 func GetDeploymentsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "deployment",
@@ -60,104 +64,6 @@ func GetDeploymentsCommand() cli.Command {
 				Usage: "Lists all the deployments",
 				Action: func(c *cli.Context) {
 					err := listDeployments(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:  "create",
-				Usage: "Create a new deployment",
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "image_datastores, i",
-						Usage: "Comma-separated image Datastore Names",
-					},
-					cli.StringFlag{
-						Name:  "oauth_endpoint, o",
-						Usage: "Oauth Endpoint",
-					},
-					cli.StringFlag{
-						Name:  "oauth_tenant, t",
-						Usage: "Oauth Tenant name",
-					},
-					cli.StringFlag{
-						Name:  "oauth_username, u",
-						Usage: "Oauth Username",
-					},
-					cli.StringFlag{
-						Name:  "oauth_password, p",
-						Usage: "Oauth Password",
-					},
-					cli.StringFlag{
-						Name:  "oauth_port, r",
-						Usage: "Oauth Port",
-					},
-					cli.StringFlag{
-						Name:  "oauth_security_groups, g",
-						Usage: "Oauth Security Groups",
-					},
-					cli.StringFlag{
-						Name:  "network_manager_address",
-						Usage: "Network Manager Address",
-					},
-					cli.StringFlag{
-						Name:  "network_manager_username",
-						Usage: "Network Manager Username",
-					},
-					cli.StringFlag{
-						Name:  "network_manager_password",
-						Usage: "Network Manager Password",
-					},
-					cli.StringFlag{
-						Name:  "syslog_endpoint, s",
-						Usage: "Syslog Endpoint",
-					},
-					cli.BoolFlag{
-						Name:  "enable_stats, d",
-						Usage: "Enable Stats",
-					},
-					cli.StringFlag{
-						Name:  "stats_store_endpoint, e",
-						Usage: "Stats Store Endpoint",
-					},
-					cli.IntFlag{
-						Name:  "stats_store_port, f",
-						Usage: "Stats Store Port",
-					},
-					cli.StringFlag{
-						Name:  "ntp_endpoint, n",
-						Usage: "Ntp Endpoint",
-					},
-					cli.BoolFlag{
-						Name:  "use_image_datastore_for_vms, v",
-						Usage: "Use image Datastore for VMs",
-					},
-					cli.BoolFlag{
-						Name:  "enable_auth, a",
-						Usage: "Enable authentication/authorization for deployment",
-					},
-					cli.BoolFlag{
-						Name:  "enable_virtual_network",
-						Usage: "Enable virtual network for deployment",
-					},
-					cli.BoolFlag{
-						Name:  "enable_loadbalancer, l",
-						Usage: "Enable Load balancer",
-					},
-				},
-				Action: func(c *cli.Context) {
-					err := createDeployment(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:  "delete",
-				Usage: "Delete a deployment by id",
-				Action: func(c *cli.Context) {
-					err := deleteDeployment(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -276,16 +182,6 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "destroy",
-				Usage: "destroy Photon deployment",
-				Action: func(c *cli.Context) {
-					err := destroy(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
 				Name:  "migration",
 				Usage: "migrates state and hosts between photon controller deployments",
 				Subcommands: []cli.Command{
@@ -371,200 +267,6 @@ func listDeployments(c *cli.Context) error {
 			return err
 		}
 		fmt.Printf("\nTotal: %d\n", len(deployments.Items))
-	}
-
-	return nil
-}
-
-// Sends a create deployment task to client
-func createDeployment(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "deployment create [<options>]")
-	if err != nil {
-		return err
-	}
-
-	imageDatastoreNames := c.String("image_datastores")
-	oauthEndpoint := c.String("oauth_endpoint")
-	oauthTenant := c.String("oauth_tenant")
-	oauthUsername := c.String("oauth_username")
-	oauthPassword := c.String("oauth_password")
-	oauthPort := c.Int("oauth_port")
-	oauthSecurityGroups := c.String("oauth_security_groups")
-	networkManagerAddress := c.String("network_manager_address")
-	networkManagerUsername := c.String("network_manager_username")
-	networkManagerPassword := c.String("network_manager_password")
-	syslogEndpoint := c.String("syslog_endpoint")
-	statsStoreEndpoint := c.String("stats_store_endpoint")
-	enableStats := c.Bool("enable_stats")
-	statsStorePort := c.Int("stats_store_port")
-	ntpEndpoint := c.String("ntp_endpoint")
-	useDatastoreVMs := c.Bool("use_image_datastore_for_vms")
-	enableAuth := c.Bool("enable_auth")
-	enableVirtualNetwork := c.Bool("enable_virtual_network")
-	enableLoadBalancer := true
-	if c.IsSet("enable_loadbalancer") {
-		enableLoadBalancer = c.Bool("enable_loadbalancer")
-	}
-
-	if !c.GlobalIsSet("non-interactive") {
-		var err error
-		imageDatastoreNames, err =
-			askForInput("Comma-separated image datastore names: ", imageDatastoreNames)
-		if err != nil {
-			return err
-		}
-		oauthEndpoint, err = askForInput("OAuth Endpoint: ", oauthEndpoint)
-		if err != nil {
-			return err
-		}
-		oauthTenant, err = askForInput("OAuth Tenant: ", oauthTenant)
-		if err != nil {
-			return err
-		}
-		oauthUsername, err = askForInput("OAuth Username: ", oauthUsername)
-		if err != nil {
-			return err
-		}
-		oauthPassword, err = askForInput("OAuth Password: ", oauthPassword)
-		if err != nil {
-			return err
-		}
-		if !c.IsSet("oauth_port") {
-			port, err := askForInput("OAuth Port: ", "")
-			if err != nil {
-				return err
-			}
-			oauthPort, err = strconv.Atoi(port)
-			if err != nil {
-				return err
-			}
-		}
-		oauthSecurityGroups, err = askForInput("Comma-separated oauth security group names: ", oauthSecurityGroups)
-		if err != nil {
-			return err
-		}
-		syslogEndpoint, err = askForInput("Syslog Endpoint: ", syslogEndpoint)
-		if err != nil {
-			return err
-		}
-		statsStoreEndpoint, err = askForInput("Stats Store Endpoint: ", statsStoreEndpoint)
-		if err != nil {
-			return err
-		}
-		statsStorePortString, err := askForInput("Stats Store Port: ", "")
-		statsStorePort, err = strconv.Atoi(statsStorePortString)
-		if err != nil {
-			return err
-		}
-		ntpEndpoint, err = askForInput("Ntp Endpoint: ", ntpEndpoint)
-		if err != nil {
-			return err
-		}
-	}
-
-	var imageDatastoreList []string
-	if len(imageDatastoreNames) > 0 {
-		imageDatastoreList = regexp.MustCompile(`\s*,\s*`).Split(imageDatastoreNames, -1)
-	}
-
-	var oauthSecurityGroupList []string
-	if oauthSecurityGroups != "" {
-		oauthSecurityGroupList = regexp.MustCompile(`\s*,\s*`).Split(oauthSecurityGroups, -1)
-	}
-
-	err = validateDeploymentArguments(imageDatastoreList,
-		enableAuth, oauthTenant, oauthUsername, oauthPassword, oauthSecurityGroupList,
-		enableVirtualNetwork, networkManagerAddress, networkManagerUsername, networkManagerPassword,
-		enableStats, statsStoreEndpoint, statsStorePort)
-	if err != nil {
-		return err
-	}
-
-	authInfo := &photon.AuthInfo{
-		Enabled:        enableAuth,
-		Tenant:         oauthTenant,
-		Endpoint:       oauthEndpoint,
-		Username:       oauthUsername,
-		Password:       oauthPassword,
-		Port:           oauthPort,
-		SecurityGroups: oauthSecurityGroupList,
-	}
-
-	networkConfiguration := &photon.NetworkConfigurationCreateSpec{
-		Enabled:  enableVirtualNetwork,
-		Address:  networkManagerAddress,
-		Username: networkManagerUsername,
-		Password: networkManagerPassword,
-	}
-
-	statsInfo := &photon.StatsInfo{
-		Enabled:       enableStats,
-		StoreEndpoint: statsStoreEndpoint,
-		StorePort:     statsStorePort,
-	}
-
-	deploymentSpec := &photon.DeploymentCreateSpec{
-		Auth:                 authInfo,
-		NetworkConfiguration: networkConfiguration,
-		ImageDatastores:      imageDatastoreList,
-		NTPEndpoint:          ntpEndpoint,
-		SyslogEndpoint:       syslogEndpoint,
-		Stats:                statsInfo,
-		UseImageDatastoreForVms: useDatastoreVMs,
-		LoadBalancerEnabled:     enableLoadBalancer,
-	}
-
-	if len(ntpEndpoint) == 0 {
-		deploymentSpec.NTPEndpoint = nil
-	}
-
-	if len(syslogEndpoint) == 0 {
-		deploymentSpec.SyslogEndpoint = nil
-	}
-
-	if confirmed(c.GlobalIsSet("non-interactive")) {
-		client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
-		if err != nil {
-			return err
-		}
-
-		createTask, err := client.Esxclient.Deployments.Create(deploymentSpec)
-		if err != nil {
-			return err
-		}
-
-		err = waitOnTaskOperation(createTask.ID, c.GlobalIsSet("non-interactive"))
-		if err != nil {
-			return err
-		}
-
-		return nil
-	} else {
-		fmt.Println("OK, canceled")
-		return nil
-	}
-}
-
-// Sends a delete deployment task to client
-func deleteDeployment(c *cli.Context) error {
-	id, err := getDeploymentId(c)
-	if err != nil {
-		return err
-	}
-
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
-	if err != nil {
-		return err
-	}
-
-	deleteTask, err := client.Esxclient.Deployments.Delete(id)
-	if err != nil {
-		return err
-	}
-
-	err = waitOnTaskOperation(deleteTask.ID, c.GlobalIsSet("non-interactive"))
-	if err != nil {
-		return err
 	}
 
 	return nil
