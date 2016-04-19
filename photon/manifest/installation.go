@@ -24,7 +24,6 @@ type deployment struct {
 	ResumeSystem            bool            `yaml:"resume_system"`
 	ImageDatastores         imageDatastores `yaml:"image_datastores"`
 	UseImageDatastoreForVms bool            `yaml:"use_image_datastore_for_vms"`
-	UsePhotonDHCP           bool            `yaml:"use_photon_dhcp"`
 
 	SyslogEndpoint interface{} `yaml:"syslog_endpoint"`
 	NTPEndpoint    interface{} `yaml:"ntp_endpoint"`

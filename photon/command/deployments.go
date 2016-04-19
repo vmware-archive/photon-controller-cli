@@ -144,10 +144,6 @@ func GetDeploymentsCommand() cli.Command {
 						Name:  "enable_loadbalancer, l",
 						Usage: "Enable Load balancer",
 					},
-					cli.BoolFlag{
-						Name:  "use_photon_dhcp, h",
-						Usage: "Use Photon's DHCP server",
-					},
 				},
 				Action: func(c *cli.Context) {
 					err := createDeployment(c)
@@ -402,7 +398,6 @@ func createDeployment(c *cli.Context) error {
 	statsStorePort := c.Int("stats_store_port")
 	ntpEndpoint := c.String("ntp_endpoint")
 	useDatastoreVMs := c.Bool("use_image_datastore_for_vms")
-	usePhotonDHCP := c.Bool("use_photon_dhcp")
 	enableAuth := c.Bool("enable_auth")
 	enableVirtualNetwork := c.Bool("enable_virtual_network")
 	enableLoadBalancer := true
@@ -516,7 +511,6 @@ func createDeployment(c *cli.Context) error {
 		Stats:                statsInfo,
 		UseImageDatastoreForVms: useDatastoreVMs,
 		LoadBalancerEnabled:     enableLoadBalancer,
-		UsePhotonDHCP:           usePhotonDHCP,
 	}
 
 	if len(ntpEndpoint) == 0 {
@@ -623,9 +617,9 @@ func showDeployment(c *cli.Context) error {
 		imageDataStores := getCommaSeparatedStringFromStringArray(deployment.ImageDatastores)
 		securityGroups := getCommaSeparatedStringFromStringArray(deployment.Auth.SecurityGroups)
 
-		fmt.Printf("%s\t%s\t%s\t%t\t%s\t%s\t%t\t%t\t%s\n", deployment.ID, deployment.State,
+		fmt.Printf("%s\t%s\t%s\t%t\t%s\t%t\t%t\t%s\n", deployment.ID, deployment.State,
 			imageDataStores, deployment.UseImageDatastoreForVms, deployment.SyslogEndpoint,
-			deployment.NTPEndpoint, deployment.UsePhotonDHCP, deployment.LoadBalancerEnabled,
+			deployment.NTPEndpoint, deployment.LoadBalancerEnabled,
 			deployment.LoadBalancerAddress)
 
 		fmt.Printf("%t\t%s\t%s\t%s\t%s\t%d\t%s\n", deployment.Auth.Enabled, deployment.Auth.Username,
@@ -648,8 +642,6 @@ func showDeployment(c *cli.Context) error {
 		fmt.Printf("  Use image datastore for vms: %t\n", deployment.UseImageDatastoreForVms)
 		fmt.Printf("\n  Syslog Endpoint:             %s\n", syslogEndpoint)
 		fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
-		fmt.Printf("  Use Photon DHCP:             %t\n", deployment.UsePhotonDHCP)
-
 		fmt.Printf("\n  LoadBalancer:\n")
 		fmt.Printf("    Enabled:                   %t\n", deployment.LoadBalancerEnabled)
 		if deployment.LoadBalancerEnabled {
