@@ -38,6 +38,26 @@ func GetAuthCommand() cli.Command {
 					}
 				},
 			},
+			{
+				Name:  "get-api-tokens",
+				Usage: "retrieves access and refresh tokens",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "username, u",
+						Usage: "username, if this is provided a password needs to be provided as well",
+					},
+					cli.StringFlag{
+						Name:  "password, p",
+						Usage: "password, if this is provided a username needs to be provided as well",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := getApiTokens(c)
+					if err != nil {
+						log.Fatal(err)
+					}
+				},
+			},
 		},
 	}
 	return command
@@ -62,6 +82,50 @@ func show(c *cli.Context) error {
 	err = printAuthInfo(auth, c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func getApiTokens(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 0, "auth get-tokens")
+	if err != nil {
+		return err
+	}
+
+	username := c.String("username")
+	password := c.String("password")
+
+	if !c.GlobalIsSet("non-interactive") {
+		username, err = askForInput("User name (username@tenant): ", username)
+		if err != nil {
+			return err
+		}
+		password, err = askForInput("Password: ", password)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(username) == 0 || len(password) == 0 {
+		return fmt.Errorf("Please provide username/password")
+	}
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	tokens, err := client.Esxclient.Auth.GetTokensByPassword(username, password)
+	if err != nil {
+		return err
+	}
+
+	if !c.GlobalIsSet("non-interactive") {
+		fmt.Printf("\nAccess Token:\n%s\n\n", tokens.AccessToken)
+		fmt.Printf("Refresh Token:\n%s\n", tokens.RefreshToken)
+	} else {
+		fmt.Printf("%s\t%s", tokens.AccessToken, tokens.RefreshToken)
 	}
 
 	return nil
