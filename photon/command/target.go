@@ -158,9 +158,25 @@ func showEndpoint(c *cli.Context) error {
 
 // Store token in the config file
 func login(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 0, "target login")
+	if err != nil {
+		return err
+	}
+
 	username := c.String("username")
 	password := c.String("password")
 	token := c.String("access_token")
+
+	if !c.GlobalIsSet("non-interactive") && len(token) == 0 {
+		username, err = askForInput("User name (username@tenant): ", username)
+		if err != nil {
+			return err
+		}
+		password, err = askForInput("Password: ", password)
+		if err != nil {
+			return err
+		}
+	}
 
 	if len(token) == 0 && (len(username) == 0 || len(password) == 0) {
 		return fmt.Errorf("Please provide either a token or username/password")
