@@ -48,7 +48,7 @@ func parseAffinitiesListFromFlag(affinities string) ([]photon.LocalitySpec, erro
 	if len(affinities) != 0 {
 		affinitiesListOri := regexp.MustCompile(`\s*,\s*`).Split(affinities, -1)
 		for i := 0; i < len(affinitiesListOri); i++ {
-			affinity := regexp.MustCompile(`\s*:\s*`).Split(affinitiesListOri[i], -1)
+			affinity := regexp.MustCompile(`\s*:\s*`).Split(affinitiesListOri[i], 2)
 			if len(affinity) != 2 {
 				return affinitiesList, fmt.Errorf("Error parsing affinities, should be: <kind>:<id>, <kind>:<id>...")
 			}
