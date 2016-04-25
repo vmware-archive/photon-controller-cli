@@ -24,9 +24,7 @@ import (
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
 	"github.com/vmware/photon-controller-cli/photon/client"
-	"github.com/vmware/photon-controller-cli/photon/configuration"
 	"github.com/vmware/photon-controller-cli/photon/manifest"
-	"strings"
 )
 
 // Create a cli.command object for command "system"
@@ -426,19 +424,12 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		}
 	}
 
-	sgList := dcMap.Deployment.AuthSecurityGroups
-	if dcMap.Deployment.AuthEnabled && dcMap.Deployment.ResumeSystem {
-		adminGrp := fmt.Sprintf("%s\\Administrators", dcMap.Deployment.AuthTenant)
-		if !contains(sgList, adminGrp) {
-			sgList = append(sgList, adminGrp)
-		}
-	}
 	authInfo := &photon.AuthInfo{
 		Enabled:        dcMap.Deployment.AuthEnabled,
 		Tenant:         dcMap.Deployment.AuthTenant,
 		Username:       dcMap.Deployment.AuthUsername,
 		Password:       dcMap.Deployment.AuthPassword,
-		SecurityGroups: sgList,
+		SecurityGroups: dcMap.Deployment.AuthSecurityGroups,
 	}
 	networkConfiguration := &photon.NetworkConfigurationCreateSpec{
 		Enabled:  dcMap.Deployment.VirtualNetworkEnabled,
@@ -656,7 +647,16 @@ func inc(ip net.IP) {
 }
 
 func doDeploy(installSpec *manifest.Installation, deploymentID string) error {
-	deployTask, err := client.Esxclient.Deployments.Deploy(deploymentID)
+	var desiredState string
+	if installSpec.Deployment.ResumeSystem {
+		desiredState = "READY"
+	} else {
+		desiredState = "PAUSED"
+	}
+	deploymentDeployOperation := &photon.DeploymentDeployOperation{
+		DesiredState: desiredState,
+	}
+	deployTask, err := client.Esxclient.Deployments.Deploy(deploymentID, deploymentDeployOperation)
 	if err != nil {
 		return err
 	}
@@ -666,84 +666,8 @@ func doDeploy(installSpec *manifest.Installation, deploymentID string) error {
 		return err
 	}
 
-	if !installSpec.Deployment.ResumeSystem {
-		fmt.Printf("Deployment '%s' is complete.\n", deploymentID)
-		return nil
-	}
-
-	deploymentClient, err := getNewPlaneClient(installSpec, deploymentID)
-	if err != nil {
-		return err
-	}
-
-	resumeTask, err := deploymentClient.Deployments.ResumeSystem(deploymentID)
-	if err != nil {
-		return err
-	}
-
-	_, err = pollTaskWithTimeout(deploymentClient, resumeTask.ID, 30*time.Minute)
-	if err != nil {
-		return err
-	}
-
-	if !installSpec.Deployment.AuthEnabled {
-		fmt.Printf("Deployment '%s' is complete.\n", deploymentID)
-		return nil
-	}
-
-	groups := &photon.SecurityGroupsSpec{
-		Items: installSpec.Deployment.AuthSecurityGroups,
-	}
-	resetSecurityGroupsTasks, err := deploymentClient.Deployments.SetSecurityGroups(deploymentID, groups)
-	if err != nil {
-		return err
-	}
-
-	_, err = pollTaskWithTimeout(deploymentClient, resetSecurityGroupsTasks.ID, 30*time.Minute)
-	if err != nil {
-		return err
-	}
-
 	fmt.Printf("Deployment '%s' is complete.\n", deploymentID)
 	return nil
-}
-
-func getNewPlaneClient(installSpec *manifest.Installation, deploymentID string) (*photon.Client, error) {
-	deployment, err := client.Esxclient.Deployments.Get(deploymentID)
-	if err != nil {
-		return nil, err
-	}
-
-	var url string
-	if strings.Contains(deployment.LoadBalancerAddress, ":") {
-		url = fmt.Sprintf("http://%s", deployment.LoadBalancerAddress)
-	} else {
-		url = fmt.Sprintf("http://%s:9000", deployment.LoadBalancerAddress)
-	}
-
-	config := &configuration.Configuration{
-		CloudTarget:       url,
-		IgnoreCertificate: true,
-	}
-
-	myClient, err := client.NewClient(config)
-	if err != nil {
-		return nil, err
-	}
-
-	if !installSpec.Deployment.AuthEnabled {
-		return myClient, err
-	}
-
-	// if auth is enabled we need to get a token and recreate the client
-	authUser := fmt.Sprintf("administrator@%s", installSpec.Deployment.AuthTenant)
-	tokenOptions, err := myClient.Auth.GetTokensByPassword(authUser, installSpec.Deployment.AuthPassword)
-	if err != nil {
-		return nil, err
-	}
-
-	config.Token = tokenOptions.AccessToken
-	return client.NewClient(config)
 }
 
 func doDestroy(deploymentID string) error {

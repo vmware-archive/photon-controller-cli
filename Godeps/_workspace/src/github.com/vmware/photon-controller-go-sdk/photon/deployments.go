@@ -52,11 +52,16 @@ func (api *DeploymentsAPI) Delete(id string) (task *Task, err error) {
 }
 
 // Deploys a deployment with specified ID.
-func (api *DeploymentsAPI) Deploy(id string) (task *Task, err error) {
+func (api *DeploymentsAPI) Deploy(id string, config *DeploymentDeployOperation) (task *Task, err error) {
+	body, err := json.Marshal(config)
+	if err != nil {
+		return
+	}
+
 	res, err := api.client.restClient.Post(
 		api.getEntityUrl(id)+"/deploy",
 		"application/json",
-		bytes.NewBuffer([]byte("")),
+		bytes.NewBuffer(body),
 		api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
