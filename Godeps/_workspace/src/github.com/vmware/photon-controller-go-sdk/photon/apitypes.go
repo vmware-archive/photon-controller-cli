@@ -447,6 +447,11 @@ type DeploymentCreateSpec struct {
 	LoadBalancerEnabled     bool                            `json:"loadBalancerEnabled"`
 }
 
+// Deployment deploy config.
+type DeploymentDeployOperation struct {
+	DesiredState string `json:"desiredState"`
+}
+
 type MigrationStatus struct {
 	CompletedDataMigrationCycles int `json:"completedDataMigrationCycles"`
 	DataMigrationCycleProgress   int `json:"dataMigrationCycleProgress"`
