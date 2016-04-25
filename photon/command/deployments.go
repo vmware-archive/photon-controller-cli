@@ -929,7 +929,6 @@ func removeDuplicates(a []string) []string {
 }
 
 func validateDeploymentArguments(imageDatastoreNames []string, enableAuth bool, oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups []string,
-	enableVirtualNetwork bool, networkManagerAddress string, networkManagerUsername string, networkManagerPassword string,
 	enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
 	if len(imageDatastoreNames) == 0 {
 		return fmt.Errorf("Image datastore names cannot be nil.")
@@ -946,17 +945,6 @@ func validateDeploymentArguments(imageDatastoreNames []string, enableAuth bool, 
 		}
 		if len(oauthSecurityGroups) == 0 {
 			return fmt.Errorf("OAuth security groups cannot be nil when auth is enabled.")
-		}
-	}
-	if enableVirtualNetwork {
-		if networkManagerAddress == "" {
-			return fmt.Errorf("Network manager address cannot be nil when virtual network is enabled.")
-		}
-		if networkManagerUsername == "" {
-			return fmt.Errorf("Network manager username cannot be nil when virtual network is enabled.")
-		}
-		if networkManagerPassword == "" {
-			return fmt.Errorf("Network manager password cannot be nil when virtual network is enabled.")
 		}
 	}
 	if enableStats {

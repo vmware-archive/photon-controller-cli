@@ -406,9 +406,7 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 	err = validateDeploymentArguments(
 		dcMap.Deployment.ImageDatastores, dcMap.Deployment.AuthEnabled,
 		dcMap.Deployment.AuthTenant, dcMap.Deployment.AuthUsername, dcMap.Deployment.AuthPassword,
-		dcMap.Deployment.AuthSecurityGroups, dcMap.Deployment.VirtualNetworkEnabled,
-		dcMap.Deployment.NetworkManagerAddress, dcMap.Deployment.NetworkManagerUsername,
-		dcMap.Deployment.NetworkManagerPassword,
+		dcMap.Deployment.AuthSecurityGroups,
 		dcMap.Deployment.StatsEnabled, dcMap.Deployment.StatsStoreEndpoint,
 		dcMap.Deployment.StatsPort)
 	if err != nil {
@@ -431,12 +429,6 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		Password:       dcMap.Deployment.AuthPassword,
 		SecurityGroups: dcMap.Deployment.AuthSecurityGroups,
 	}
-	networkConfiguration := &photon.NetworkConfigurationCreateSpec{
-		Enabled:  dcMap.Deployment.VirtualNetworkEnabled,
-		Address:  dcMap.Deployment.NetworkManagerAddress,
-		Username: dcMap.Deployment.NetworkManagerUsername,
-		Password: dcMap.Deployment.NetworkManagerPassword,
-	}
 	statsInfo := &photon.StatsInfo{
 		Enabled:       dcMap.Deployment.StatsEnabled,
 		StoreEndpoint: dcMap.Deployment.StatsStoreEndpoint,
@@ -444,12 +436,11 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 	}
 
 	deploymentSpec := &photon.DeploymentCreateSpec{
-		Auth:                 authInfo,
-		NetworkConfiguration: networkConfiguration,
-		ImageDatastores:      dcMap.Deployment.ImageDatastores,
-		NTPEndpoint:          dcMap.Deployment.NTPEndpoint,
-		SyslogEndpoint:       dcMap.Deployment.SyslogEndpoint,
-		Stats:                statsInfo,
+		Auth:            authInfo,
+		ImageDatastores: dcMap.Deployment.ImageDatastores,
+		NTPEndpoint:     dcMap.Deployment.NTPEndpoint,
+		SyslogEndpoint:  dcMap.Deployment.SyslogEndpoint,
+		Stats:           statsInfo,
 		UseImageDatastoreForVms: dcMap.Deployment.UseImageDatastoreForVms,
 		LoadBalancerEnabled:     lbEnabled,
 	}
