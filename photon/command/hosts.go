@@ -184,7 +184,7 @@ func createHost(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		username, err = askForInput("Deployment ID: ", deploymentID)
+		deploymentID, err = askForInput("Deployment ID: ", deploymentID)
 		if err != nil {
 			return err
 		}
