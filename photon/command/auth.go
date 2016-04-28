@@ -10,16 +10,22 @@
 package command
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"strings"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
+	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 
 	"os"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/configuration"
 )
 
 // Create a cli.command object for command "auth"
@@ -30,7 +36,7 @@ func GetAuthCommand() cli.Command {
 		Subcommands: []cli.Command{
 			{
 				Name:  "show",
-				Usage: "display auth info",
+				Usage: "Display auth info",
 				Action: func(c *cli.Context) {
 					err := show(c)
 					if err != nil {
@@ -39,8 +45,24 @@ func GetAuthCommand() cli.Command {
 				},
 			},
 			{
+				Name:  "show-login-token",
+				Usage: "Show login token",
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name:  "raw, r",
+						Usage: "raw, prints the full JSON text of the token",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := showLoginToken(c)
+					if err != nil {
+						log.Fatal(err)
+					}
+				},
+			},
+			{
 				Name:  "get-api-tokens",
-				Usage: "retrieves access and refresh tokens",
+				Usage: "Retrieve access and refresh tokens",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "username, u",
@@ -49,6 +71,10 @@ func GetAuthCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "password, p",
 						Usage: "password, if this is provided a username needs to be provided as well",
+					},
+					cli.BoolFlag{
+						Name:  "raw, r",
+						Usage: "raw, prints the full JSON text of the token",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -87,6 +113,41 @@ func show(c *cli.Context) error {
 	return nil
 }
 
+func showLoginToken(c *cli.Context) error {
+	return showLoginTokenWriter(c, os.Stdout, nil)
+}
+
+// Handles show-login-token, which shows the current login token, if any
+func showLoginTokenWriter(c *cli.Context, w io.Writer, config *configuration.Configuration) error {
+	err := checkArgNum(c.Args(), 0, "auth show-login-token")
+	if err != nil {
+		return err
+	}
+
+	if config == nil {
+		config, err = configuration.LoadConfig()
+		if err != nil {
+			return err
+		}
+	}
+
+	if config.Token == "" {
+		err = fmt.Errorf("No login token available")
+		return err
+	}
+	if !c.GlobalIsSet("non-interactive") {
+		raw := c.Bool("raw")
+		if raw {
+			dumpTokenDetailsRaw(w, "Login Access Token", config.Token)
+		} else {
+			dumpTokenDetails(w, "Login Access Token", config.Token)
+		}
+	} else {
+		fmt.Fprintf(w, "%s\n", config.Token)
+	}
+	return nil
+}
+
 func getApiTokens(c *cli.Context) error {
 	err := checkArgNum(c.Args(), 0, "auth get-tokens")
 	if err != nil {
@@ -122,8 +183,14 @@ func getApiTokens(c *cli.Context) error {
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		fmt.Printf("\nAccess Token:\n%s\n\n", tokens.AccessToken)
-		fmt.Printf("Refresh Token:\n%s\n", tokens.RefreshToken)
+		raw := c.Bool("raw")
+		if raw {
+			dumpTokenDetailsRaw(os.Stdout, "API Access Token", tokens.AccessToken)
+			dumpTokenDetailsRaw(os.Stdout, "API Refresh Token", tokens.RefreshToken)
+		} else {
+			dumpTokenDetails(os.Stdout, "API Access Token", tokens.AccessToken)
+			dumpTokenDetails(os.Stdout, "API Refresh Token", tokens.RefreshToken)
+		}
 	} else {
 		fmt.Printf("%s\t%s", tokens.AccessToken, tokens.RefreshToken)
 	}
@@ -146,4 +213,44 @@ func printAuthInfo(auth *photon.AuthInfo, isScripting bool) error {
 		}
 	}
 	return nil
+}
+
+// A JSON web token is a set of Base64 encoded strings separated by a period (.)
+// When decoded, it will either be JSON text or a signature
+// Here we decode the strings into a single token structure and print the most
+// useful fields. We do not print the signature.
+func dumpTokenDetails(w io.Writer, name string, encodedToken string) {
+	jwtToken := lightwave.ParseTokenDetails(encodedToken)
+
+	fmt.Fprintf(w, "%s:\n", name)
+	fmt.Fprintf(w, "\tSubject: %s\n", jwtToken.Subject)
+	fmt.Fprintf(w, "\tGroups: ")
+	if jwtToken.Groups == nil {
+		fmt.Fprintf(w, "<none>\n")
+	} else {
+		fmt.Fprintf(w, "%s\n", strings.Join(jwtToken.Groups, ", "))
+	}
+	fmt.Fprintf(w, "\tIssued: %s\n", timestampToString(jwtToken.IssuedAt*1000))
+	fmt.Fprintf(w, "\tExpires: %s\n", timestampToString(jwtToken.Expires*1000))
+	fmt.Fprintf(w, "\tToken: %s\n", encodedToken)
+}
+
+// A JSON web token is a set of Base64 encoded strings separated by a period (.)
+// When decoded, it will either be JSON text or a signature
+// Here we print the full JSON text. We do not print the signature.
+func dumpTokenDetailsRaw(w io.Writer, name string, encodedToken string) {
+	jsonStrings, err := lightwave.ParseRawTokenDetails(encodedToken)
+	if err != nil {
+		fmt.Fprintf(w, "<unparseable>\n")
+	}
+
+	fmt.Fprintf(w, "%s:\n", name)
+	for _, jsonString := range jsonStrings {
+		var prettyJSON bytes.Buffer
+		err = json.Indent(&prettyJSON, []byte(jsonString), "", "  ")
+		if err == nil {
+			fmt.Fprintf(w, "%s\n", string(prettyJSON.Bytes()))
+		}
+	}
+	fmt.Fprintf(w, "Token: %s\n", encodedToken)
 }

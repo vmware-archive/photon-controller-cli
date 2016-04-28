@@ -111,7 +111,7 @@ func TestCreateDeleteImage(t *testing.T) {
 	globalSet.Bool("non-interactive", true, "doc")
 	err = globalSet.Parse([]string{"--non-interactive"})
 	if err != nil {
-		t.Error("Not expectin arguments parsing to fail")
+		t.Error("Not expecting arguments parsing to fail")
 	}
 	globalCtx := cli.NewContext(nil, globalSet, nil)
 	set = flag.NewFlagSet("test", 0)
