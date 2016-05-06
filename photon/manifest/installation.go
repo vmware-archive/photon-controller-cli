@@ -44,6 +44,7 @@ type deployment struct {
 	NetworkManagerAddress  string `yaml:"network_manager_address"`
 	NetworkManagerUsername string `yaml:"network_manager_username"`
 	NetworkManagerPassword string `yaml:"network_manager_password"`
+	NetworkTopRouterId     string `yaml:"network_top_router_id"`
 }
 
 type host struct {
