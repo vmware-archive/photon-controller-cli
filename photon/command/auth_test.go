@@ -150,6 +150,10 @@ func TestShowLoginToken(t *testing.T) {
 	var output bytes.Buffer
 	err = showLoginTokenWriter(cxt, &output, &config)
 
+	var output2 bytes.Buffer
+	dumpTokenDetails(output2, "Login Access Token", config.Token)
+	fmt.Printf("%s\n", output2)
+
 	// Verify it didn't fail
 	if err != nil {
 		t.Error(err)
