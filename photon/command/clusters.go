@@ -429,7 +429,7 @@ func createCluster(c *cli.Context) error {
 			return err
 		}
 
-		err = waitOnTaskOperation(createTask.ID, c.GlobalIsSet("non-interactive"))
+		_, err = waitOnTaskOperation(createTask.ID, c)
 		if err != nil {
 			return err
 		}
@@ -610,7 +610,7 @@ func resizeCluster(c *cli.Context) error {
 			return err
 		}
 
-		err = waitOnTaskOperation(resizeTask.ID, c.GlobalIsSet("non-interactive"))
+		_, err = waitOnTaskOperation(resizeTask.ID, c)
 		if err != nil {
 			return err
 		}
@@ -663,7 +663,7 @@ func deleteCluster(c *cli.Context) error {
 			return err
 		}
 
-		err = waitOnTaskOperation(deleteTask.ID, c.GlobalIsSet("non-interactive"))
+		_, err = waitOnTaskOperation(deleteTask.ID, c)
 		if err != nil {
 			return err
 		}

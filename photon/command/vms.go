@@ -432,7 +432,7 @@ func createVM(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		err = waitOnTaskOperation(createTask.ID, c.GlobalIsSet("non-interactive"))
+		_, err = waitOnTaskOperation(createTask.ID, c)
 		if err != nil {
 			return err
 		}
@@ -462,7 +462,7 @@ func deleteVM(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(deleteTask.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(deleteTask.ID, c)
 	if err != nil {
 		return err
 	}
@@ -628,7 +628,7 @@ func getVMTasks(c *cli.Context) error {
 		return err
 	}
 
-	err = printTaskList(taskList.Items, c.GlobalIsSet("non-interactive"))
+	err = printTaskList(taskList.Items, c)
 	if err != nil {
 		return err
 	}
@@ -651,7 +651,7 @@ func startVM(c *cli.Context) error {
 
 	opTask, err := client.Esxclient.VMs.Start(id)
 
-	err = waitOnTaskOperation(opTask.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(opTask.ID, c)
 	if err != nil {
 		return err
 	}
@@ -674,7 +674,7 @@ func stopVM(c *cli.Context) error {
 
 	opTask, err := client.Esxclient.VMs.Stop(id)
 
-	err = waitOnTaskOperation(opTask.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(opTask.ID, c)
 	if err != nil {
 		return err
 	}
@@ -697,7 +697,7 @@ func suspendVM(c *cli.Context) error {
 
 	opTask, err := client.Esxclient.VMs.Suspend(id)
 
-	err = waitOnTaskOperation(opTask.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(opTask.ID, c)
 	if err != nil {
 		return err
 	}
@@ -720,7 +720,7 @@ func resumeVM(c *cli.Context) error {
 
 	opTask, err := client.Esxclient.VMs.Resume(id)
 
-	err = waitOnTaskOperation(opTask.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(opTask.ID, c)
 	if err != nil {
 		return err
 	}
@@ -743,7 +743,7 @@ func restartVM(c *cli.Context) error {
 
 	opTask, err := client.Esxclient.VMs.Restart(id)
 
-	err = waitOnTaskOperation(opTask.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(opTask.ID, c)
 	if err != nil {
 		return err
 	}
@@ -774,7 +774,7 @@ func attachDisk(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(task.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(task.ID, c)
 	if err != nil {
 		return err
 	}
@@ -805,7 +805,7 @@ func detachDisk(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(task.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(task.ID, c)
 	if err != nil {
 		return err
 	}
@@ -861,7 +861,7 @@ func attachIso(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(task.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(task.ID, c)
 	if err != nil {
 		return err
 	}
@@ -887,7 +887,7 @@ func detachIso(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(task.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(task.ID, c)
 	if err != nil {
 		return err
 	}
@@ -927,7 +927,7 @@ func setVMMetadata(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(task.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(task.ID, c)
 	if err != nil {
 		return err
 	}
@@ -985,7 +985,7 @@ func setVMTag(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(task.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(task.ID, c)
 	if err != nil {
 		return err
 	}

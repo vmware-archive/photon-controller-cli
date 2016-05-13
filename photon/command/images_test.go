@@ -10,6 +10,7 @@
 package command
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"net/http"
@@ -260,15 +261,49 @@ func TestListImage(t *testing.T) {
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
-	set := flag.NewFlagSet("test", 0)
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
 	if err != nil {
-		t.Error("Not expecting arguments parsing to fail")
+		t.Error(err)
 	}
-	cxt := cli.NewContext(nil, set, nil)
+	globalCtx := cli.NewContext(nil, globalFlags, nil)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	err = commandFlags.Parse([]string{})
+	if err != nil {
+		t.Error(err)
+	}
+	cxt := cli.NewContext(nil, commandFlags, globalCtx)
 	err = listImages(cxt)
 	if err != nil {
-		t.Error("Not expecting an error listing images ", err)
+		t.Errorf("Not expecting an error listing images: %s", err)
 	}
+
+	// Now validate the output
+	var output bytes.Buffer
+	err = listImagesWriter(cxt, &output)
+
+	// Verify it didn't fail
+	if err != nil {
+		t.Errorf("List images failed: %s", err)
+	}
+
+	// Verify we printed a list of images: it should start with a bracket
+	err = checkRegExp(`^\s*\[`, output)
+	if err != nil {
+		t.Errorf("List images didn't produce a JSON list that starts with a bracket (list): %s", err)
+	}
+	// and end with a bracket (two regular expressions because it's multiline, it's easier)
+	err = checkRegExp(`\]\s*$`, output)
+	if err != nil {
+		t.Errorf("List images didn't produce JSON that ended in a bracket (list): %s", err)
+	}
+	// And spot check that we have the "id" field
+	err = checkRegExp(`\"id\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("List images didn't produce a JSON field named 'id': %s", err)
+	}
+
 }
 
 func TestImageTasks(t *testing.T) {

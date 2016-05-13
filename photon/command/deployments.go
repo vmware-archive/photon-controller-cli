@@ -538,7 +538,7 @@ func pauseSystem(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(pauseSystemTask.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(pauseSystemTask.ID, c)
 	if err != nil {
 		return err
 	}
@@ -563,7 +563,7 @@ func pauseBackgroundTasks(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(pauseBackgroundTask.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(pauseBackgroundTask.ID, c)
 	if err != nil {
 		return err
 	}
@@ -588,7 +588,7 @@ func resumeSystem(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(resumeSystemTask.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(resumeSystemTask.ID, c)
 	if err != nil {
 		return err
 	}
@@ -694,7 +694,7 @@ func disableClusterType(c *cli.Context) error {
 			return err
 		}
 
-		err = waitOnTaskOperation(task.ID, c.GlobalIsSet("non-interactive"))
+		_, err = waitOnTaskOperation(task.ID, c)
 		if err != nil {
 			return err
 		}
@@ -733,7 +733,7 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(initializeMigrate.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(initializeMigrate.ID, c)
 	if err != nil {
 		return err
 	}
@@ -770,7 +770,7 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(finalizeMigrate.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(finalizeMigrate.ID, c)
 	if err != nil {
 		return err
 	}

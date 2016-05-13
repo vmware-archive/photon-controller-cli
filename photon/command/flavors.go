@@ -180,7 +180,7 @@ func createFlavor(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		err = waitOnTaskOperation(createTask.ID, c.GlobalIsSet("non-interactive"))
+		_, err = waitOnTaskOperation(createTask.ID, c)
 		if err != nil {
 			return err
 		}
@@ -209,7 +209,7 @@ func deleteFlavor(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(deleteTask.ID, c.GlobalIsSet("non-interactive"))
+	_, err = waitOnTaskOperation(deleteTask.ID, c)
 	if err != nil {
 		return err
 	}
@@ -321,7 +321,7 @@ func getFlavorTasks(c *cli.Context) error {
 		return err
 	}
 
-	err = printTaskList(taskList.Items, c.GlobalIsSet("non-interactive"))
+	err = printTaskList(taskList.Items, c)
 	if err != nil {
 		return err
 	}
