@@ -21,7 +21,9 @@ import (
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 
+	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
 )
 
@@ -126,11 +128,13 @@ func confirmed(isScripting bool) bool {
 }
 
 // Prints out the output of tasks
-func printTaskList(taskList []photon.Task, isScripting bool) error {
-	if isScripting {
+func printTaskList(taskList []photon.Task, c *cli.Context) error {
+	if c.GlobalIsSet("non-interactive") {
 		for _, task := range taskList {
 			fmt.Printf("%s\t%s\t%s\t%d\t%d\n", task.ID, task.State, task.Operation, task.StartedTime, task.EndTime-task.StartedTime)
 		}
+	} else if utils.NeedFormatting(c) {
+		utils.FormatObject(taskList, os.Stdout, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -727,21 +731,26 @@ func getProgressBar(cursor int, len int) string {
 	return strings.Repeat("=", cursor) + strings.Repeat(" ", len-cursor)
 }
 
-func waitOnTaskOperation(taskId string, isScripting bool) error {
-	if isScripting {
-		task, err := client.Esxclient.Tasks.Wait(taskId)
+func waitOnTaskOperation(taskId string, c *cli.Context) (string, error) {
+	var task *photon.Task
+	var err error
+	needFormatting := utils.NeedFormatting(c)
+	if c.GlobalIsSet("non-interactive") || needFormatting {
+		task, err = client.Esxclient.Tasks.Wait(taskId)
 		if err != nil {
-			return err
+			return "", err
 		}
-		fmt.Println(task.Entity.ID)
+		if !needFormatting {
+			fmt.Println(task.Entity.ID)
+		}
 	} else {
-		task, err := pollTask(taskId)
+		task, err = pollTask(taskId)
 		if err != nil {
-			return err
+			return "", err
 		}
 		fmt.Printf("%s completed for '%s' entity %s\n", task.Operation, task.Entity.Kind, task.Entity.ID)
 	}
-	return nil
+	return task.Entity.ID, err
 }
 
 func getCommaSeparatedStringFromStringArray(arr []string) string {

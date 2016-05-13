@@ -14,6 +14,7 @@ import (
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/command"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 	"os"
 )
 
@@ -43,6 +44,10 @@ func BuildApp() *cli.App {
 			Name:  "log-file, l",
 			Usage: "writes logging information into a logfile at the specified path",
 		},
+		cli.StringFlag{
+			Name:  "output, o",
+			Usage: "Select output format",
+		},
 	}
 	app.Commands = []cli.Command{
 		command.GetAuthCommand(),
@@ -67,7 +72,7 @@ func BuildApp() *cli.App {
 		if logFile != "" {
 			return client.InitializeLogging(logFile)
 		}
-		return nil
+		return utils.ValidateArgs(c)
 	}
 	app.After = func(c *cli.Context) error {
 		logFile := c.GlobalString("log-file")

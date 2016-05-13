@@ -167,7 +167,7 @@ func createResourceTicket(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		err = waitOnTaskOperation(createTask.ID, c.GlobalIsSet("non-interactive"))
+		_, err = waitOnTaskOperation(createTask.ID, c)
 		if err != nil {
 			return err
 		}
@@ -309,7 +309,7 @@ func getResourceTicketTasks(c *cli.Context) error {
 		return err
 	}
 
-	err = printTaskList(taskList.Items, c.GlobalIsSet("non-interactive"))
+	err = printTaskList(taskList.Items, c)
 	if err != nil {
 		return err
 	}

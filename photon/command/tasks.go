@@ -113,7 +113,7 @@ func listTasks(c *cli.Context) error {
 		return err
 	}
 
-	err = printTaskList(taskList.Items, c.GlobalIsSet("non-interactive"))
+	err = printTaskList(taskList.Items, c)
 	if err != nil {
 		return err
 	}

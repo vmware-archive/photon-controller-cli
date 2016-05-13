@@ -11,6 +11,7 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -18,6 +19,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
@@ -48,7 +50,7 @@ func GetImagesCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createImage(c)
+					err := createImage(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -74,7 +76,7 @@ func GetImagesCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := listImages(c)
+					err := listImages(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -84,7 +86,7 @@ func GetImagesCommand() cli.Command {
 				Name:  "show",
 				Usage: "show an image",
 				Action: func(c *cli.Context) {
-					err := showImage(c)
+					err := showImage(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -112,7 +114,7 @@ func GetImagesCommand() cli.Command {
 }
 
 // Create an image
-func createImage(c *cli.Context) error {
+func createImage(c *cli.Context, w io.Writer) error {
 	if len(c.Args()) > 1 {
 		return fmt.Errorf("Unknown argument: %v", c.Args()[1:])
 	}
@@ -185,7 +187,7 @@ func createImage(c *cli.Context) error {
 		return err
 	}
 
-	err = waitOnTaskOperation(uploadTask.ID, c.GlobalIsSet("non-interactive"))
+	imageID, err := waitOnTaskOperation(uploadTask.ID, c)
 	if err != nil {
 		return err
 	}
@@ -193,6 +195,14 @@ func createImage(c *cli.Context) error {
 	err = file.Close()
 	if err != nil {
 		return err
+	}
+
+	if utils.NeedFormatting(c) {
+		image, err := client.Esxclient.Images.Get(imageID)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(image, w, c)
 	}
 
 	return nil
@@ -217,7 +227,7 @@ func deleteImage(c *cli.Context) error {
 			return err
 		}
 
-		err = waitOnTaskOperation(deleteTask.ID, c.GlobalIsSet("non-interactive"))
+		_, err = waitOnTaskOperation(deleteTask.ID, c)
 		if err != nil {
 			return err
 		}
@@ -229,7 +239,7 @@ func deleteImage(c *cli.Context) error {
 }
 
 // Lists all images
-func listImages(c *cli.Context) error {
+func listImages(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "image list [<options>]")
 	if err != nil {
 		return err
@@ -253,6 +263,8 @@ func listImages(c *cli.Context) error {
 			fmt.Printf("%s\t%s\t%s\t%d\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size,
 				image.ReplicationType, image.ReplicationProgress, image.SeedingProgress)
 		}
+	} else if utils.NeedFormatting(c) {
+		utils.FormatObject(images.Items, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -272,7 +284,7 @@ func listImages(c *cli.Context) error {
 }
 
 // Shows an image based on id
-func showImage(c *cli.Context) error {
+func showImage(c *cli.Context, w io.Writer) error {
 	id := c.Args().First()
 
 	if !c.GlobalIsSet("non-interactive") {
@@ -307,6 +319,8 @@ func showImage(c *cli.Context) error {
 		fmt.Printf("%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size, image.ReplicationType,
 			image.ReplicationProgress, image.SeedingProgress, scriptSettings)
 
+	} else if utils.NeedFormatting(c) {
+		utils.FormatObject(image, w, c)
 	} else {
 		fmt.Printf("Image ID: %s\n", image.ID)
 		fmt.Printf("  Name:                       %s\n", image.Name)
@@ -347,7 +361,7 @@ func getImageTasks(c *cli.Context) error {
 		return err
 	}
 
-	err = printTaskList(taskList.Items, c.GlobalIsSet("non-interactive"))
+	err = printTaskList(taskList.Items, c)
 	if err != nil {
 		return err
 	}
