@@ -1,0 +1,6 @@
+Code-Review+2: Mike Stunes <mstunes@vmware.com>
+Code-Review+2: Mihnea Olteanu <molteanu@vmware.com>
+Verified-1: Gerrit-Jenkins
+Reviewed-on: https://review.ec.eng.vmware.com/13626
+Project: photon-controller-cli
+Branch: refs/heads/v0.8.0
