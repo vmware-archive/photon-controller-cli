@@ -12,6 +12,7 @@ package command
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -568,7 +569,7 @@ func listVms(c *cli.Context) error {
 		return err
 	}
 
-	err = printVMList(vms.Items, c.GlobalIsSet("non-interactive"), false)
+	err = printVMList(vms.Items, os.Stdout, c, false)
 	if err != nil {
 		return err
 	}

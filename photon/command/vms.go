@@ -596,7 +596,7 @@ func listVMs(c *cli.Context) error {
 		return err
 	}
 
-	err = printVMList(vmList.Items, c.GlobalIsSet("non-interactive"), summaryView)
+	err = printVMList(vmList.Items, os.Stdout, c, summaryView)
 	if err != nil {
 		return err
 	}

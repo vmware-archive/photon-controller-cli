@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"reflect"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 )
@@ -45,8 +46,19 @@ func ValidateArgs(c *cli.Context) error {
 	return nil
 }
 
+// Tells the caller if we should assume the user wants non-interactive mode
+// interactive mode means two things:
+// 1. The user may be prompted for input parameters that are not provided
+// 2. The user gets fancy, human-readable output
+// The user can disable this with non-interactive mode
+// It's assumed that if the user wants custom output (e.g. JSON), they may be
+// using this in a script, so it should be non-interactive
+func IsNonInteractive(c *cli.Context) bool {
+	return c.GlobalString("output") != "" || c.GlobalIsSet("non-interactive")
+}
+
 // Tells the caller if the user has requested custom formatting
-func NeedFormatting(c *cli.Context) bool {
+func NeedsFormatting(c *cli.Context) bool {
 	return c.GlobalString("output") != ""
 }
 
@@ -59,6 +71,19 @@ func FormatObject(o interface{}, w io.Writer, c *cli.Context) {
 		formatObjectJson(o, w)
 	default:
 		fmt.Fprintf(w, "Unknown output type: '%s'", outputType)
+	}
+}
+
+// Just like FormatObject, but if the incoming object is nil, it prints
+// it as an empty list, not "null". This makes for nicer JSON output for
+// list commands, which return lists of objects
+func FormatObjects(o interface{}, w io.Writer, c *cli.Context) {
+	value := reflect.ValueOf(o)
+	kind := value.Kind()
+	if (kind == reflect.Array || kind == reflect.Slice) && value.Len() == 0 {
+		FormatObject(new([0]int), w, c)
+	} else {
+		FormatObject(o, w, c)
 	}
 }
 

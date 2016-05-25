@@ -11,11 +11,13 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
@@ -50,7 +52,7 @@ func GetFlavorsCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createFlavor(c)
+					err := createFlavor(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -60,7 +62,7 @@ func GetFlavorsCommand() cli.Command {
 				Name:  "delete",
 				Usage: "Deletes a flavor",
 				Action: func(c *cli.Context) {
-					err := deleteFlavor(c)
+					err := deleteFlavor(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -80,7 +82,7 @@ func GetFlavorsCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := listFlavors(c)
+					err := listFlavors(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -90,7 +92,7 @@ func GetFlavorsCommand() cli.Command {
 				Name:  "show",
 				Usage: "Show flavor info",
 				Action: func(c *cli.Context) {
-					err := showFlavor(c)
+					err := showFlavor(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -106,7 +108,7 @@ func GetFlavorsCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := getFlavorTasks(c)
+					err := getFlavorTasks(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -118,7 +120,7 @@ func GetFlavorsCommand() cli.Command {
 }
 
 // Sends a create flavor task to client
-func createFlavor(c *cli.Context) error {
+func createFlavor(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "flavor create [<options>]")
 	if err != nil {
 		return err
@@ -132,7 +134,7 @@ func createFlavor(c *cli.Context) error {
 		return err
 	}
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		name, err = askForInput("Flavor name: ", name)
 		if err != nil {
 			return err
@@ -161,7 +163,7 @@ func createFlavor(c *cli.Context) error {
 		Cost: costList,
 	}
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		fmt.Printf("Creating flavor: '%s', Kind: '%s'\n\n", name, kind)
 		fmt.Printf("Please make sure limits below are correct: \n")
 		for i, l := range costList {
@@ -169,9 +171,9 @@ func createFlavor(c *cli.Context) error {
 		}
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(utils.IsNonInteractive(c)) {
 		var err error
-		client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+		client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 		if err != nil {
 			return err
 		}
@@ -180,9 +182,16 @@ func createFlavor(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		_, err = waitOnTaskOperation(createTask.ID, c)
+		flavorId, err := waitOnTaskOperation(createTask.ID, c)
 		if err != nil {
 			return err
+		}
+		if utils.NeedsFormatting(c) {
+			flavor, err := client.Esxclient.Flavors.Get(flavorId)
+			if err != nil {
+				return err
+			}
+			utils.FormatObject(flavor, w, c)
 		}
 	} else {
 		fmt.Println("OK. Canceled")
@@ -192,14 +201,14 @@ func createFlavor(c *cli.Context) error {
 }
 
 // Sends a delete flavor task to the client
-func deleteFlavor(c *cli.Context) error {
+func deleteFlavor(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "flavor delete <id>")
 	if err != nil {
 		return err
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -218,12 +227,12 @@ func deleteFlavor(c *cli.Context) error {
 }
 
 // Retrieves a list of flavors
-func listFlavors(c *cli.Context) error {
+func listFlavors(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "flavor list [<options>]")
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -245,6 +254,8 @@ func listFlavors(c *cli.Context) error {
 			costs := quotaLineItemListToString(flavor.Cost)
 			fmt.Printf("%s\t%s\t%s\t%s\n", flavor.ID, flavor.Name, flavor.Kind, costs)
 		}
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObjects(flavors.Items, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -263,14 +274,14 @@ func listFlavors(c *cli.Context) error {
 }
 
 // Retrieves information about a flavor
-func showFlavor(c *cli.Context) error {
+func showFlavor(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "flavor show <id>")
 	if err != nil {
 		return err
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -283,6 +294,8 @@ func showFlavor(c *cli.Context) error {
 	if c.GlobalIsSet("non-interactive") {
 		costs := quotaLineItemListToString(flavor.Cost)
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", flavor.ID, flavor.Name, flavor.Kind, costs, flavor.State)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(flavor, w, c)
 	} else {
 		costList := []string{}
 		for _, cost := range flavor.Cost {
@@ -299,7 +312,7 @@ func showFlavor(c *cli.Context) error {
 }
 
 // Retrieves tasks from specified flavor
-func getFlavorTasks(c *cli.Context) error {
+func getFlavorTasks(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "flavor tasks <id> [<options>]")
 	if err != nil {
 		return err
@@ -311,7 +324,7 @@ func getFlavorTasks(c *cli.Context) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}

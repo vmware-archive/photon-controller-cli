@@ -448,7 +448,7 @@ func listDeploymentHosts(c *cli.Context) error {
 		return err
 	}
 
-	err = printHostList(hosts.Items, c.GlobalIsSet("non-interactive"))
+	err = printHostList(hosts.Items, os.Stdout, c)
 	if err != nil {
 		return err
 	}
@@ -473,7 +473,7 @@ func listDeploymentVms(c *cli.Context) error {
 		return err
 	}
 
-	err = printVMList(vms.Items, c.GlobalIsSet("non-interactive"), false)
+	err = printVMList(vms.Items, os.Stdout, c, false)
 	if err != nil {
 		return err
 	}

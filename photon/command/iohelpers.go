@@ -12,6 +12,7 @@ package command
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -45,13 +46,15 @@ func askForInput(msg string, name string) (string, error) {
 	return strings.TrimSpace(line), nil
 }
 
-func printHostList(hostList []photon.Host, isScripting bool) error {
-	if isScripting {
+func printHostList(hostList []photon.Host, w io.Writer, c *cli.Context) error {
+	if c.GlobalIsSet("non-interactive") {
 		for _, host := range hostList {
 			tag := strings.Trim(fmt.Sprint(host.Tags), "[]")
 			scriptTag := strings.Replace(tag, " ", ",", -1)
 			fmt.Printf("%s\t%s\t%s\t%s\n", host.ID, host.State, host.Address, scriptTag)
 		}
+	} else if c.GlobalString("output") != "" {
+		utils.FormatObjects(hostList, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -133,8 +136,8 @@ func printTaskList(taskList []photon.Task, c *cli.Context) error {
 		for _, task := range taskList {
 			fmt.Printf("%s\t%s\t%s\t%d\t%d\n", task.ID, task.State, task.Operation, task.StartedTime, task.EndTime-task.StartedTime)
 		}
-	} else if utils.NeedFormatting(c) {
-		utils.FormatObject(taskList, os.Stdout, c)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObjects(taskList, os.Stdout, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -281,18 +284,20 @@ func askForVMDiskList(disksList []photon.AttachedDisk) ([]photon.AttachedDisk, e
 	return disksList, nil
 }
 
-func printVMList(vmList []photon.VM, isScripting bool, summaryView bool) error {
+func printVMList(vmList []photon.VM, w io.Writer, c *cli.Context, summaryView bool) error {
 	stateCount := make(map[string]int)
 	for _, vm := range vmList {
 		stateCount[vm.State]++
 	}
 
-	if isScripting {
+	if c.GlobalIsSet("non-interactive") {
 		if !summaryView {
 			for _, vm := range vmList {
 				fmt.Printf("%s\t%s\t%s\n", vm.ID, vm.Name, vm.State)
 			}
 		}
+	} else if c.GlobalString("output") != "" {
+		utils.FormatObjects(vmList, w, c)
 	} else {
 		if !summaryView {
 			w := new(tabwriter.Writer)
@@ -734,13 +739,13 @@ func getProgressBar(cursor int, len int) string {
 func waitOnTaskOperation(taskId string, c *cli.Context) (string, error) {
 	var task *photon.Task
 	var err error
-	needFormatting := utils.NeedFormatting(c)
-	if c.GlobalIsSet("non-interactive") || needFormatting {
+	needsFormatting := utils.NeedsFormatting(c)
+	if c.GlobalIsSet("non-interactive") || needsFormatting {
 		task, err = client.Esxclient.Tasks.Wait(taskId)
 		if err != nil {
 			return "", err
 		}
-		if !needFormatting {
+		if !needsFormatting {
 			fmt.Println(task.Entity.ID)
 		}
 	} else {

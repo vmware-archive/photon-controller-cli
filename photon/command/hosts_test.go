@@ -10,11 +10,13 @@
 package command
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -92,7 +94,7 @@ func TestCreateDeleteHost(t *testing.T) {
 		server.URL+"/deployments",
 		mocks.CreateResponder(200, string(response[:])))
 
-	err = createHost(cxt)
+	err = createHost(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating host: " + err.Error())
 	}
@@ -131,7 +133,7 @@ func TestCreateDeleteHost(t *testing.T) {
 	}
 
 	cxt = cli.NewContext(nil, set, nil)
-	err = deleteHost(cxt)
+	err = deleteHost(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error deleting host: " + err.Error())
 	}
@@ -156,11 +158,39 @@ func TestListHosts(t *testing.T) {
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
-	set := flag.NewFlagSet("test", 0)
-	cxt := cli.NewContext(nil, set, nil)
-	err = listHosts(cxt)
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
+	if err != nil {
+		t.Error(err)
+	}
+	globalCtx := cli.NewContext(nil, globalFlags, nil)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	err = commandFlags.Parse([]string{})
+	if err != nil {
+		t.Error(err)
+	}
+	cxt := cli.NewContext(nil, commandFlags, globalCtx)
+	var output bytes.Buffer
+	err = listHosts(cxt, &output)
 	if err != nil {
 		t.Error("listHosts with one deployment failed unexpectedly: " + err.Error())
+	}
+
+	// Verify we printed a list of hosts: it should start with a bracket
+	err = checkRegExp(`^\s*\[`, output)
+	if err != nil {
+		t.Errorf("List hosts didn't produce a JSON list that starts with a bracket (list): %s", err)
+	}
+	// and end with a bracket (two regular expressions because it's multiline, it's easier)
+	err = checkRegExp(`\]\s*$`, output)
+	if err != nil {
+		t.Errorf("List hosts didn't produce JSON that ended in a bracket (list): %s", err)
+	}
+	// And spot check that we have the "id" field
+	err = checkRegExp(`\"id\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("List hosts didn't produce a JSON field named 'id': %s", err)
 	}
 
 	// Now we verify that with zero deployments, we fail as expected
@@ -168,7 +198,7 @@ func TestListHosts(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to mock zero deployments: " + err.Error())
 	}
-	err = listHosts(cxt)
+	err = listHosts(cxt, os.Stdout)
 	if err == nil {
 		t.Error("listHosts with zero deployments succeeded unexpectedly: " + err.Error())
 	} else if !strings.Contains(err.Error(), "There are no deployments") {
@@ -180,7 +210,7 @@ func TestListHosts(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to mock two deployments: " + err.Error())
 	}
-	err = listHosts(cxt)
+	err = listHosts(cxt, os.Stdout)
 	if err == nil {
 		t.Error("listHosts with two deployments succeeded unexpectedly: " + err.Error())
 	} else if !strings.Contains(err.Error(), "There are multiple deployments") {
@@ -289,7 +319,7 @@ func TestShowHost(t *testing.T) {
 	}
 
 	cxt := cli.NewContext(nil, set, nil)
-	err = showHost(cxt)
+	err = showHost(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Error showing hosts: " + err.Error())
 	}
@@ -337,7 +367,7 @@ func TestSetHostAvailabilityZone(t *testing.T) {
 	err = set.Parse([]string{"fake-host-id", "fake-availability-zone-id"})
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = setHostAvailabilityZone(cxt)
+	err = setHostAvailabilityZone(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Error listing hosts: " + err.Error())
 	}
@@ -395,7 +425,7 @@ func TestHostTasks(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	cxt := cli.NewContext(nil, set, nil)
-	err = getHostTasks(cxt)
+	err = getHostTasks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error retrieving tenant tasks")
 	}
@@ -447,7 +477,7 @@ func TestHostGetVMs(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	cxt := cli.NewContext(nil, set, nil)
-	err = listHostVMs(cxt)
+	err = listHostVMs(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting deployment list hosts to fail")
 	}

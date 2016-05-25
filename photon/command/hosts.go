@@ -11,11 +11,14 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"encoding/json"
 
@@ -70,7 +73,7 @@ func GetHostsCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createHost(c)
+					err := createHost(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -80,7 +83,7 @@ func GetHostsCommand() cli.Command {
 				Name:  "delete",
 				Usage: "Delete a host with specified id",
 				Action: func(c *cli.Context) {
-					err := deleteHost(c)
+					err := deleteHost(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -90,7 +93,7 @@ func GetHostsCommand() cli.Command {
 				Name:  "list",
 				Usage: "List all the hosts",
 				Action: func(c *cli.Context) {
-					err := listHosts(c)
+					err := listHosts(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -100,7 +103,7 @@ func GetHostsCommand() cli.Command {
 				Name:  "show",
 				Usage: "Show host info with specified id",
 				Action: func(c *cli.Context) {
-					err := showHost(c)
+					err := showHost(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -110,7 +113,7 @@ func GetHostsCommand() cli.Command {
 				Name:  "list-vms",
 				Usage: "List all the vms on the host",
 				Action: func(c *cli.Context) {
-					err := listHostVMs(c)
+					err := listHostVMs(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -120,7 +123,7 @@ func GetHostsCommand() cli.Command {
 				Name:  "set-availability-zone",
 				Usage: "Set host's availability zone",
 				Action: func(c *cli.Context) {
-					err := setHostAvailabilityZone(c)
+					err := setHostAvailabilityZone(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -136,7 +139,7 @@ func GetHostsCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := getHostTasks(c)
+					err := getHostTasks(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -149,7 +152,7 @@ func GetHostsCommand() cli.Command {
 
 // Sends a create host task to client based on the cli.Context
 // Returns an error if one occurred
-func createHost(c *cli.Context) error {
+func createHost(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "host create [<options>]")
 	if err != nil {
 		return err
@@ -162,7 +165,7 @@ func createHost(c *cli.Context) error {
 	metadata := c.String("metadata")
 	deploymentID := c.String("deployment_id")
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		var err error
 		username, err = askForInput("Username: ", username)
 		if err != nil {
@@ -208,7 +211,7 @@ func createHost(c *cli.Context) error {
 		hostSpec.Metadata = data
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -216,9 +219,17 @@ func createHost(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = waitOnTaskOperation(createTask.ID, c)
+	id, err := waitOnTaskOperation(createTask.ID, c)
 	if err != nil {
 		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		host, err := client.Esxclient.Hosts.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(host, w, c)
 	}
 
 	return nil
@@ -226,14 +237,14 @@ func createHost(c *cli.Context) error {
 
 // Sends a delete host task to client based on the cli.Context
 // Returns an error if one occurred
-func deleteHost(c *cli.Context) error {
+func deleteHost(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "host delete <id>")
 	if err != nil {
 		return err
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -254,13 +265,13 @@ func deleteHost(c *cli.Context) error {
 // This uses the same back-end code as "deployments list-hosts", but we look up the
 // deployment ID so that users don't have to specify it. In most or all installations,
 // there will not be more than one deployment ID.
-func listHosts(c *cli.Context) error {
+func listHosts(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "host list")
 	if err != nil {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -278,7 +289,7 @@ func listHosts(c *cli.Context) error {
 	}
 	id := deployments.Items[0].ID
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -288,7 +299,7 @@ func listHosts(c *cli.Context) error {
 		return err
 	}
 
-	err = printHostList(hosts.Items, c.GlobalIsSet("non-interactive"))
+	err = printHostList(hosts.Items, w, c)
 	if err != nil {
 		return err
 	}
@@ -296,14 +307,14 @@ func listHosts(c *cli.Context) error {
 }
 
 // Show host info with the specified host ID, returns an error if one occurred
-func showHost(c *cli.Context) error {
+func showHost(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "host show <id>")
 	if err != nil {
 		return err
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -320,6 +331,8 @@ func showHost(c *cli.Context) error {
 		scriptMetadata := strings.Replace(metadata, " ", ",", -1)
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", host.ID, host.Username, host.Password, host.Address,
 			scriptTag, host.State, scriptMetadata, host.AvailabilityZone, host.EsxVersion)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(host, w, c)
 	} else {
 		fmt.Println("Host ID: ", host.ID)
 		fmt.Println("  Username:          ", host.Username)
@@ -336,7 +349,7 @@ func showHost(c *cli.Context) error {
 }
 
 // Set host's availability zone with the specified host ID, returns an error if one occurred
-func setHostAvailabilityZone(c *cli.Context) error {
+func setHostAvailabilityZone(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 2, "host set-availability-zone <id> <availability-zone-id>")
 	if err != nil {
 		return err
@@ -344,7 +357,7 @@ func setHostAvailabilityZone(c *cli.Context) error {
 	id := c.Args().First()
 	availabilityZoneId := c.Args()[1]
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -355,15 +368,22 @@ func setHostAvailabilityZone(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = waitOnTaskOperation(setTask.ID, c)
+	id, err = waitOnTaskOperation(setTask.ID, c)
 	if err != nil {
 		return err
+	}
+	if utils.NeedsFormatting(c) {
+		host, err := client.Esxclient.Hosts.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(host, w, c)
 	}
 
 	return nil
 }
 
-func getHostTasks(c *cli.Context) error {
+func getHostTasks(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "host tasks <id> [<options>]")
 	if err != nil {
 		return err
@@ -375,7 +395,7 @@ func getHostTasks(c *cli.Context) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -392,14 +412,14 @@ func getHostTasks(c *cli.Context) error {
 	return nil
 }
 
-func listHostVMs(c *cli.Context) error {
+func listHostVMs(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "host list-vms <id>")
 	if err != nil {
 		return err
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -409,7 +429,7 @@ func listHostVMs(c *cli.Context) error {
 		return err
 	}
 
-	err = printVMList(vmList.Items, c.GlobalIsSet("non-interactive"), false)
+	err = printVMList(vmList.Items, w, c, false)
 	if err != nil {
 		return err
 	}
