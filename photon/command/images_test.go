@@ -304,7 +304,6 @@ func TestListImage(t *testing.T) {
 	if err != nil {
 		t.Errorf("List images didn't produce a JSON field named 'id': %s", err)
 	}
-
 }
 
 func TestImageTasks(t *testing.T) {

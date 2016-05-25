@@ -10,9 +10,11 @@
 package command
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -77,7 +79,7 @@ func TestCreateDeleteFlavor(t *testing.T) {
 	set.String("cost", "vm.test1 1 B, vm.test2 1 GB", "flavor cost")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = createFlavor(cxt)
+	err = createFlavor(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating host: " + err.Error())
 	}
@@ -105,7 +107,7 @@ func TestCreateDeleteFlavor(t *testing.T) {
 
 	set = flag.NewFlagSet("test", 0)
 	cxt = cli.NewContext(nil, set, nil)
-	err = listFlavors(cxt)
+	err = listFlavors(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting list deployment to fail")
 	}
@@ -142,7 +144,7 @@ func TestCreateDeleteFlavor(t *testing.T) {
 	}
 
 	cxt = cli.NewContext(nil, set, nil)
-	err = deleteFlavor(cxt)
+	err = deleteFlavor(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error deleting host: " + err.Error())
 	}
@@ -179,7 +181,7 @@ func TestShowFlavor(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = showFlavor(cxt)
+	err = showFlavor(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting get deployment to fail")
 	}
@@ -237,7 +239,7 @@ func TestFlavorTasks(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	cxt := cli.NewContext(nil, set, nil)
-	err = getFlavorTasks(cxt)
+	err = getFlavorTasks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error retrieving tenant tasks")
 	}
@@ -291,11 +293,43 @@ func TestListFlavors(t *testing.T) {
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
-	set := flag.NewFlagSet("test", 0)
-	cxt := cli.NewContext(nil, set, nil)
-
-	err = listFlavors(cxt)
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
+	if err != nil {
+		t.Error(err)
+	}
+	globalCtx := cli.NewContext(nil, globalFlags, nil)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	err = commandFlags.Parse([]string{})
+	if err != nil {
+		t.Error(err)
+	}
+	cxt := cli.NewContext(nil, commandFlags, globalCtx)
+	err = listFlavors(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error listing flavors: " + err.Error())
+	}
+
+	// Now validate output
+	var output bytes.Buffer
+	err = listFlavors(cxt, &output)
+	if err != nil {
+		t.Error("listFlavors failed: " + err.Error())
+	}
+	// Verify we printed a list of flavors: it should start with a bracket
+	err = checkRegExp(`^\s*\[`, output)
+	if err != nil {
+		t.Errorf("List flavors didn't produce JSON that starts with a bracket (list): %s", err)
+	}
+	// and end with a bracket (two regular expressions because it's multiline, it's easier)
+	err = checkRegExp(`\]\s*$`, output)
+	if err != nil {
+		t.Errorf("List flavors didn't produce JSON that ended in a bracket (list): %s", err)
+	}
+	// And spot check that we have the "id" field
+	err = checkRegExp(`\"id\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("List flavors didn't produce a JSON field named 'id': %s", err)
 	}
 }
