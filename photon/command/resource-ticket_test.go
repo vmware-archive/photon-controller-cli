@@ -10,10 +10,12 @@
 package command
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -108,7 +110,7 @@ func TestCreateResourceTicket(t *testing.T) {
 	set.String("limits", "vm.test1 1 B, vm.test2 1 GB", "rt limits")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = createResourceTicket(cxt)
+	err = createResourceTicket(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating resource ticket: " + err.Error())
 	}
@@ -147,7 +149,7 @@ func TestShowResourceTicket(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = showResourceTicket(cxt)
+	err = showResourceTicket(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing resource ticket: " + err.Error())
 	}
@@ -191,13 +193,41 @@ func TestListResourceTickets(t *testing.T) {
 		server.URL+"fake-next-page-link",
 		mocks.CreateResponder(200, string(listResponse[:])))
 
-	set := flag.NewFlagSet("test", 0)
-	set.String("tenant", tenantName, "tenant name")
-	cxt := cli.NewContext(nil, set, nil)
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
+	if err != nil {
+		t.Error(err)
+	}
+	globalCxt := cli.NewContext(nil, globalFlags, nil)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	commandFlags.String("tenant", tenantName, "tenant name")
+	err = commandFlags.Parse([]string{})
+	if err != nil {
+		t.Error(err)
+	}
+	cxt := cli.NewContext(nil, commandFlags, globalCxt)
+	var output bytes.Buffer
 
-	err = listResourceTickets(cxt)
+	err = listResourceTickets(cxt, &output)
 	if err != nil {
 		t.Error("Not expecting error listing resource ticket: " + err.Error())
+	}
+
+	// Verify we printed a list of resource ticket starting with a bracket
+	err = checkRegExp(`^\s*\[`, output)
+	if err != nil {
+		t.Errorf("List resource ticket didn't produce a JSON list that starts with a bracket (list): %s", err)
+	}
+	// and end with a bracket (two regular expressions because it's multiline, it's easier)
+	err = checkRegExp(`\]\s*$`, output)
+	if err != nil {
+		t.Errorf("List resource ticket didn't produce JSON that ended in a bracket (list): %s", err)
+	}
+	// And spot check that we have the "id" field
+	err = checkRegExp(`\"id\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("List resource ticket didn't produce a JSON field named 'id': %s", err)
 	}
 }
 
@@ -247,7 +277,7 @@ func TestListResourceTicketTasks(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = getResourceTicketTasks(cxt)
+	err = getResourceTicketTasks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing resource ticket tasks: " + err.Error())
 	}

@@ -11,6 +11,7 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"regexp"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
@@ -47,7 +49,7 @@ func GetTenantsCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createTenant(c)
+					err := createTenant(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -67,7 +69,7 @@ func GetTenantsCommand() cli.Command {
 				Name:  "show",
 				Usage: "Show tenant info with specified id",
 				Action: func(c *cli.Context) {
-					err := showTenant(c)
+					err := showTenant(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -77,7 +79,7 @@ func GetTenantsCommand() cli.Command {
 				Name:  "list",
 				Usage: "List tenants",
 				Action: func(c *cli.Context) {
-					err := listTenants(c)
+					err := listTenants(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -97,7 +99,7 @@ func GetTenantsCommand() cli.Command {
 				Name:  "get",
 				Usage: "Get current tenant",
 				Action: func(c *cli.Context) {
-					err := getTenant(c)
+					err := getTenant(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -113,7 +115,7 @@ func GetTenantsCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := getTenantTasks(c)
+					err := getTenantTasks(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -136,14 +138,14 @@ func GetTenantsCommand() cli.Command {
 
 // Sends a create tenant task to client based on the cli.Context
 // Returns an error if one occurred
-func createTenant(c *cli.Context) error {
+func createTenant(c *cli.Context, w io.Writer) error {
 	if len(c.Args()) > 1 {
 		return fmt.Errorf("Unknown argument: %v", c.Args()[1:])
 	}
 	name := c.Args().First()
 	securityGroups := c.String("security-groups")
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		var err error
 		name, err = askForInput("Tenant name: ", name)
 		if err != nil {
@@ -155,7 +157,6 @@ func createTenant(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-
 	}
 
 	if len(name) == 0 {
@@ -172,7 +173,7 @@ func createTenant(c *cli.Context) error {
 	}
 
 	var err error
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -183,21 +184,29 @@ func createTenant(c *cli.Context) error {
 		return err
 	}
 
-	_, err = waitOnTaskOperation(createTask.ID, c)
+	id, err := waitOnTaskOperation(createTask.ID, c)
 	if err != nil {
 		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		tenant, err := client.Esxclient.Tenants.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(tenant, w, c)
 	}
 
 	return nil
 }
 
 // Retrieves a list of tenants, returns an error if one occurred
-func listTenants(c *cli.Context) error {
+func listTenants(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "tenant list")
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -211,6 +220,8 @@ func listTenants(c *cli.Context) error {
 		for _, tenant := range tenants.Items {
 			fmt.Printf("%s\t%s\n", tenant.ID, tenant.Name)
 		}
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObjects(tenants.Items, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -237,7 +248,7 @@ func deleteTenant(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -260,14 +271,14 @@ func deleteTenant(c *cli.Context) error {
 	return nil
 }
 
-func showTenant(c *cli.Context) error {
+func showTenant(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "tenant show <id>")
 	if err != nil {
 		return err
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -284,6 +295,8 @@ func showTenant(c *cli.Context) error {
 		}
 		scriptSecurityGroups := strings.Join(securityGroups, ",")
 		fmt.Printf("%s\t%s\t%s\n", tenant.ID, tenant.Name, scriptSecurityGroups)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(tenant, w, c)
 	} else {
 		fmt.Println("Tenant ID: ", tenant.ID)
 		fmt.Println("  Name:              ", tenant.Name)
@@ -305,7 +318,7 @@ func setTenant(c *cli.Context) error {
 	}
 	name := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -332,12 +345,14 @@ func setTenant(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("Tenant set to '%s'\n", name)
+	if !utils.IsNonInteractive(c) {
+		fmt.Printf("Tenant set to '%s'\n", name)
+	}
 	return nil
 }
 
 // Outputs the set tenant otherwise informs user it is not set
-func getTenant(c *cli.Context) error {
+func getTenant(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "tenant get")
 	if err != nil {
 		return err
@@ -353,6 +368,8 @@ func getTenant(c *cli.Context) error {
 	} else {
 		if c.GlobalIsSet("non-interactive") {
 			fmt.Printf("%s\t%s\n", tenant.ID, tenant.Name)
+		} else if utils.NeedsFormatting(c) {
+			utils.FormatObject(tenant, w, c)
 		} else {
 			fmt.Printf("Current tenant is '%s' with ID %s\n", tenant.Name, tenant.ID)
 		}
@@ -361,7 +378,7 @@ func getTenant(c *cli.Context) error {
 }
 
 // Retrieves tasks from specified tenant
-func getTenantTasks(c *cli.Context) error {
+func getTenantTasks(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "tenant tasks <id> [<options>]")
 	if err != nil {
 		return err
@@ -373,7 +390,7 @@ func getTenantTasks(c *cli.Context) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -405,7 +422,7 @@ func setSecurityGroups(c *cli.Context) error {
 		Items: items,
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}

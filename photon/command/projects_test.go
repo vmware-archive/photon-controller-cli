@@ -10,9 +10,11 @@
 package command
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -99,7 +101,7 @@ func TestCreateProject(t *testing.T) {
 	set.String("security-groups", "fake_security_group", "security groups")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = createProject(cxt)
+	err = createProject(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating project: " + err.Error())
 	}
@@ -133,13 +135,13 @@ func TestShowProject(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = showProject(cxt)
+	err = showProject(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing project: " + err.Error())
 	}
 }
 
-func TestSetShowProject(t *testing.T) {
+func TestSetGetProject(t *testing.T) {
 	configOri, err := cf.LoadConfig()
 	if err != nil {
 		t.Error("Not expecting error loading config file")
@@ -194,7 +196,7 @@ func TestSetShowProject(t *testing.T) {
 	set = flag.NewFlagSet("test", 0)
 	cxt = cli.NewContext(nil, set, nil)
 
-	err = getProject(cxt)
+	err = getProject(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing project: " + err.Error())
 	}
@@ -251,13 +253,42 @@ func TestListProjects(t *testing.T) {
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
-	set := flag.NewFlagSet("test", 0)
-	set.String("tenant", "fake_tenant_name", "tenant name")
-	cxt := cli.NewContext(nil, set, nil)
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
+	if err != nil {
+		t.Error(err)
+	}
+	globalCxt := cli.NewContext(nil, globalFlags, nil)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	commandFlags.String("tenant", "fake_tenant_name", "tenant name")
+	err = commandFlags.Parse([]string{})
+	if err != nil {
+		t.Error(err)
+	}
+	cxt := cli.NewContext(nil, commandFlags, globalCxt)
 
-	err = listProjects(cxt)
+	var output bytes.Buffer
+
+	err = listProjects(cxt, &output)
 	if err != nil {
 		t.Error("Not expecting error listing projects: " + err.Error())
+	}
+
+	// Verify we printed a list of resource ticket starting with a bracket
+	err = checkRegExp(`^\s*\[`, output)
+	if err != nil {
+		t.Errorf("List resource ticket didn't produce a JSON list that starts with a bracket (list): %s", err)
+	}
+	// and end with a bracket (two regular expressions because it's multiline, it's easier)
+	err = checkRegExp(`\]\s*$`, output)
+	if err != nil {
+		t.Errorf("List resource ticket didn't produce JSON that ended in a bracket (list): %s", err)
+	}
+	// And spot check that we have the "id" field
+	err = checkRegExp(`\"id\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("List resource ticket didn't produce a JSON field named 'id': %s", err)
 	}
 }
 
@@ -307,7 +338,7 @@ func TestListProjectTasks(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = getProjectTasks(cxt)
+	err = getProjectTasks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing project tasks: " + err.Error())
 	}
