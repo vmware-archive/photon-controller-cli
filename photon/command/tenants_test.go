@@ -10,9 +10,11 @@
 package command
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
 
@@ -73,7 +75,7 @@ func TestCreateDeleteTenant(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = createTenant(cxt)
+	err = createTenant(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting create tenant to fail")
 	}
@@ -144,7 +146,7 @@ func TestShowTenant(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = showTenant(cxt)
+	err = showTenant(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing tenant: " + err.Error())
 	}
@@ -199,11 +201,39 @@ func TestListTenant(t *testing.T) {
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
-	set := flag.NewFlagSet("test", 0)
-	cxt := cli.NewContext(nil, set, nil)
-	err = listTenants(cxt)
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
 	if err != nil {
-		t.Error("Not expecting list tenant to fail")
+		t.Error(err)
+	}
+	globalCxt := cli.NewContext(nil, globalFlags, nil)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	err = commandFlags.Parse([]string{})
+	if err != nil {
+		t.Error(err)
+	}
+	cxt := cli.NewContext(nil, commandFlags, globalCxt)
+	var output bytes.Buffer
+	err = listTenants(cxt, &output)
+	if err != nil {
+		t.Errorf("Not expecting list tenant to fail: %s", err)
+	}
+
+	// Verify we printed a list of tenants starting with a bracket
+	err = checkRegExp(`^\s*\[`, output)
+	if err != nil {
+		t.Errorf("List tenants didn't produce a JSON list that starts with a bracket (list): %s", err)
+	}
+	// and end with a bracket (two regular expressions because it's multiline, it's easier)
+	err = checkRegExp(`\]\s*$`, output)
+	if err != nil {
+		t.Errorf("List tenants didn't produce JSON that ended in a bracket (list): %s", err)
+	}
+	// And spot check that we have the "id" field
+	err = checkRegExp(`\"id\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("List tenants didn't produce a JSON field named 'id': %s", err)
 	}
 }
 
@@ -401,7 +431,7 @@ func TestTenantTasks(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	cxt := cli.NewContext(nil, set, nil)
-	err = getTenantTasks(cxt)
+	err = getTenantTasks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error retrieving tenant tasks")
 	}

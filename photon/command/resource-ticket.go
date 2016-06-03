@@ -11,11 +11,13 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
@@ -49,7 +51,7 @@ func GetResourceTicketCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createResourceTicket(c)
+					err := createResourceTicket(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -65,7 +67,7 @@ func GetResourceTicketCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := showResourceTicket(c)
+					err := showResourceTicket(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -81,7 +83,7 @@ func GetResourceTicketCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := listResourceTickets(c)
+					err := listResourceTickets(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -101,7 +103,7 @@ func GetResourceTicketCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := getResourceTicketTasks(c)
+					err := getResourceTicketTasks(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -114,7 +116,7 @@ func GetResourceTicketCommand() cli.Command {
 
 // Sends a create resource-ticket task to client based on the cli.Context
 // Returns an error if one occurred
-func createResourceTicket(c *cli.Context) error {
+func createResourceTicket(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "resource-ticket create [<options>]")
 	if err != nil {
 		return err
@@ -123,7 +125,7 @@ func createResourceTicket(c *cli.Context) error {
 	name := c.String("name")
 	limits := c.String("limits")
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -138,7 +140,7 @@ func createResourceTicket(c *cli.Context) error {
 		return err
 	}
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		name, err = askForInput("Resource ticket name: ", name)
 		if err != nil {
 			return err
@@ -153,7 +155,7 @@ func createResourceTicket(c *cli.Context) error {
 	rtSpec.Name = name
 	rtSpec.Limits = limitsList
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		fmt.Printf("\nTenant name: %s\n", tenant.Name)
 		fmt.Printf("Creating resource ticket name: %s\n\n", name)
 		fmt.Println("Please make sure limits below are correct:")
@@ -162,14 +164,26 @@ func createResourceTicket(c *cli.Context) error {
 		}
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(utils.IsNonInteractive(c)) {
 		createTask, err := client.Esxclient.Tenants.CreateResourceTicket(tenant.ID, &rtSpec)
 		if err != nil {
 			return err
 		}
+
 		_, err = waitOnTaskOperation(createTask.ID, c)
 		if err != nil {
 			return err
+		}
+
+		if utils.NeedsFormatting(c) {
+			options := &photon.ResourceTicketGetOptions{
+				Name: name,
+			}
+			tickets, err := client.Esxclient.Tenants.GetResourceTickets(tenant.ID, options)
+			if err != nil {
+				return err
+			}
+			utils.FormatObject(tickets.Items[0], w, c)
 		}
 	} else {
 		fmt.Println("OK. Canceled")
@@ -180,7 +194,7 @@ func createResourceTicket(c *cli.Context) error {
 
 // Sends a show resource-ticket task to client based on the cli.Context
 // Returns an error if one occurred
-func showResourceTicket(c *cli.Context) error {
+func showResourceTicket(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "resource-ticket show <name> [<options>]")
 	if err != nil {
 		return err
@@ -188,7 +202,7 @@ func showResourceTicket(c *cli.Context) error {
 	name := c.Args().First()
 	tenantName := c.String("tenant")
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -207,6 +221,8 @@ func showResourceTicket(c *cli.Context) error {
 		usage := quotaLineItemListToString(rt.Usage)
 		limits := quotaLineItemListToString(rt.Limits)
 		fmt.Printf("%s\t%s\t%s\t%s\n", rt.Name, rt.ID, limits, usage)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(rt, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -232,14 +248,14 @@ func showResourceTicket(c *cli.Context) error {
 }
 
 // Retrieves a list of resource tickets, returns an error if one occurred
-func listResourceTickets(c *cli.Context) error {
+func listResourceTickets(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "resource-ticket list [<options>]")
 	if err != nil {
 		return err
 	}
 	tenantName := c.String("tenant")
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -259,6 +275,8 @@ func listResourceTickets(c *cli.Context) error {
 			limits := quotaLineItemListToString(t.Limits)
 			fmt.Printf("%s\t%s\t%s\n", t.ID, t.Name, limits)
 		}
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObjects(tickets.Items, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -276,7 +294,7 @@ func listResourceTickets(c *cli.Context) error {
 }
 
 // Retrieves tasks for resource ticket
-func getResourceTicketTasks(c *cli.Context) error {
+func getResourceTicketTasks(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "resource-ticket tasks <name> [<options>]")
 	if err != nil {
 		return err
@@ -285,7 +303,7 @@ func getResourceTicketTasks(c *cli.Context) error {
 	tenantName := c.String("tenant")
 	state := c.String("state")
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}

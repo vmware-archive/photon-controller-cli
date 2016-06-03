@@ -11,6 +11,7 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"regexp"
@@ -19,19 +20,20 @@ import (
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
 )
 
 // Creates a cli.Command for project
-// Subcommands:  create; Usage: project create [<options>]
-//	             delete; Usage: project delete <id>
-//               show;   Usage: project show <id>
-//	             set;    Usage: project set <name>
-//	             get;    Usage: project get
-//	             list;   Usage: project list [<options>]
-//	             tasks;  Usage: project tasks <id> [<options>]
+// Subcommands: create; Usage: project create [<options>]
+//              delete; Usage: project delete <id>
+//              show;   Usage: project show <id>
+//              set;    Usage: project set <name>
+//              get;    Usage: project get
+//              list;   Usage: project list [<options>]
+//              tasks;  Usage: project tasks <id> [<options>]
 func GetProjectsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "project",
@@ -67,7 +69,7 @@ func GetProjectsCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createProject(c)
+					err := createProject(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -87,7 +89,7 @@ func GetProjectsCommand() cli.Command {
 				Name:  "show",
 				Usage: "Show project info with specified id",
 				Action: func(c *cli.Context) {
-					err := showProject(c)
+					err := showProject(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -97,7 +99,7 @@ func GetProjectsCommand() cli.Command {
 				Name:  "get",
 				Usage: "Get project in config file",
 				Action: func(c *cli.Context) {
-					err := getProject(c)
+					err := getProject(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -123,7 +125,7 @@ func GetProjectsCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := listProjects(c)
+					err := listProjects(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -143,7 +145,7 @@ func GetProjectsCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := getProjectTasks(c)
+					err := getProjectTasks(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -166,7 +168,7 @@ func GetProjectsCommand() cli.Command {
 
 // Sends a create project task to client based on the cli.Context
 // Returns an error if one occurred
-func createProject(c *cli.Context) error {
+func createProject(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "project create [<options>]")
 	if err != nil {
 		return err
@@ -178,7 +180,7 @@ func createProject(c *cli.Context) error {
 	percent := c.Float64("percent")
 	securityGroups := c.String("security-groups")
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -203,7 +205,7 @@ func createProject(c *cli.Context) error {
 			{Key: "subdivide.percent", Value: percent, Unit: "COUNT"}}
 	}
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		name, err = askForInput("Project name: ", name)
 		if err != nil {
 			return err
@@ -222,7 +224,7 @@ func createProject(c *cli.Context) error {
 	projectSpec.Name = name
 	projectSpec.ResourceTicket = photon.ResourceTicketReservation{Name: rtName, Limits: limitsList}
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		fmt.Printf("\nTenant name: %s\n", tenant.Name)
 		fmt.Printf("Resource ticket name: %s\n", rtName)
 		fmt.Printf("Creating project name: %s\n\n", name)
@@ -231,7 +233,7 @@ func createProject(c *cli.Context) error {
 			fmt.Printf("%d: %s, %g, %s\n", i+1, l.Key, l.Value, l.Unit)
 		}
 	}
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(utils.IsNonInteractive(c)) {
 		if len(securityGroups) > 0 {
 			projectSpec.SecurityGroups = regexp.MustCompile(`\s*,\s*`).Split(securityGroups, -1)
 		}
@@ -240,9 +242,17 @@ func createProject(c *cli.Context) error {
 			return err
 		}
 
-		_, err = waitOnTaskOperation(createTask.ID, c)
+		id, err := waitOnTaskOperation(createTask.ID, c)
 		if err != nil {
 			return err
+		}
+
+		if utils.NeedsFormatting(c) {
+			project, err := client.Esxclient.Projects.Get(id)
+			if err != nil {
+				return err
+			}
+			utils.FormatObject(project, w, c)
 		}
 	} else {
 		fmt.Println("OK. Canceled")
@@ -260,7 +270,7 @@ func deleteProject(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -283,14 +293,14 @@ func deleteProject(c *cli.Context) error {
 }
 
 // Show project info with the specified project id, returns an error if one occurred
-func showProject(c *cli.Context) error {
+func showProject(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "project show <id>")
 	if err != nil {
 		return err
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -311,7 +321,8 @@ func showProject(c *cli.Context) error {
 
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n", project.ID, project.Name, project.ResourceTicket.TenantTicketID,
 			project.ResourceTicket.TenantTicketName, limits, usages, scriptSecurityGroups)
-
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(project, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -343,7 +354,7 @@ func showProject(c *cli.Context) error {
 
 // Sends a get project task to client based on the config file
 // Returns an error if one occurred
-func getProject(c *cli.Context) error {
+func getProject(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "project get")
 	if err != nil {
 		return err
@@ -360,6 +371,8 @@ func getProject(c *cli.Context) error {
 
 	if c.GlobalIsSet("non-interactive") {
 		fmt.Printf("%s\t%s\n", project.ID, project.Name)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(project, w, c)
 	} else {
 		fmt.Printf("Current project is '%s' with ID %s\n", project.ID, project.Name)
 	}
@@ -375,7 +388,7 @@ func setProject(c *cli.Context) error {
 	}
 	name := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -400,7 +413,7 @@ func setProject(c *cli.Context) error {
 		return err
 	}
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		fmt.Printf("Project set to '%s'\n", name)
 	}
 
@@ -408,14 +421,14 @@ func setProject(c *cli.Context) error {
 }
 
 // Retrieves a list of projects, returns an error if one occurred
-func listProjects(c *cli.Context) error {
+func listProjects(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "project list [<options>]")
 	if err != nil {
 		return err
 	}
 	tenantName := c.String("tenant")
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -425,22 +438,24 @@ func listProjects(c *cli.Context) error {
 		return err
 	}
 
-	tickets, err := client.Esxclient.Tenants.GetProjects(tenant.ID, nil)
+	projects, err := client.Esxclient.Tenants.GetProjects(tenant.ID, nil)
 	if err != nil {
 		return err
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		for _, t := range tickets.Items {
+		for _, t := range projects.Items {
 			limits := quotaLineItemListToString(t.ResourceTicket.Limits)
 			usage := quotaLineItemListToString(t.ResourceTicket.Usage)
 			fmt.Printf("%s\t%s\t%s\t%s\n", t.ID, t.Name, limits, usage)
 		}
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObjects(projects.Items, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
 		fmt.Fprintf(w, "ID\tName\tLimit\tUsage\n")
-		for _, t := range tickets.Items {
+		for _, t := range projects.Items {
 			rt := t.ResourceTicket
 			for i := 0; i < len(rt.Limits); i++ {
 				if i == 0 {
@@ -461,13 +476,13 @@ func listProjects(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("\nTotal projects: %d\n", len(tickets.Items))
+		fmt.Printf("\nTotal projects: %d\n", len(projects.Items))
 	}
 	return nil
 }
 
 // Retrieves tasks for project
-func getProjectTasks(c *cli.Context) error {
+func getProjectTasks(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "project tasks <id> [<options>]")
 	if err != nil {
 		return err
@@ -476,7 +491,7 @@ func getProjectTasks(c *cli.Context) error {
 	state := c.String("state")
 	kind := c.String("kind")
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -509,7 +524,7 @@ func setSecurityGroupsForProject(c *cli.Context) error {
 	securityGroups := &photon.SecurityGroupsSpec{
 		Items: regexp.MustCompile(`\s*,\s*`).Split(c.Args()[1], -1),
 	}
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
