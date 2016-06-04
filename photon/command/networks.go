@@ -27,6 +27,7 @@ import (
 //              delete; Usage: network delete <id>
 //              list;   Usage: network list
 //              show;   Usage: network show <id>
+//              setDefault; Usage: network setDefault <id>
 func GetNetworksCommand() cli.Command {
 	command := cli.Command{
 		Name:  "network",
@@ -87,6 +88,16 @@ func GetNetworksCommand() cli.Command {
 				Usage: "Show specified network",
 				Action: func(c *cli.Context) {
 					err := showNetwork(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "setDefault",
+				Usage: "Set default network",
+				Action: func(c *cli.Context) {
+					err := setDefaultNetwork(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -209,9 +220,10 @@ func listNetworks(c *cli.Context) error {
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w, "ID\tName\tState\tPortGroups\tDescriptions\n")
+		fmt.Fprintf(w, "ID\tName\tState\tPortGroups\tDescriptions\tIsDefault\n")
 		for _, network := range networks.Items {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State, network.PortGroups, network.Description)
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%t\n", network.ID, network.Name, network.State, network.PortGroups,
+				network.Description, network.IsDefault)
 		}
 		err = w.Flush()
 		if err != nil {
@@ -249,7 +261,36 @@ func showNetwork(c *cli.Context) error {
 		fmt.Printf("  State:       %s\n", network.State)
 		fmt.Printf("  Description: %s\n", network.Description)
 		fmt.Printf("  Port Groups: %s\n", network.PortGroups)
+		fmt.Printf("  Is Default: %t\n", network.IsDefault)
 	}
 
+	return nil
+}
+
+func setDefaultNetwork(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "network setDefault <id>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	task, err := client.Esxclient.Networks.SetDefault(id)
+	if err != nil {
+		return err
+	}
+
+	if confirmed(c.GlobalIsSet("non-interactive")) {
+		_, err = waitOnTaskOperation(task.ID, c)
+		if err != nil {
+			return err
+		}
+	} else {
+		fmt.Println("OK. Canceled")
+	}
 	return nil
 }

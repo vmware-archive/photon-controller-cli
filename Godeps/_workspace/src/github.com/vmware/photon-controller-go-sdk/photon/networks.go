@@ -84,3 +84,18 @@ func (api *NetworksAPI) GetAll(options *NetworkGetOptions) (result *Networks, er
 	err = json.Unmarshal(res, result)
 	return
 }
+
+// Sets default network.
+func (api *NetworksAPI) SetDefault(id string) (task *Task, err error) {
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+networkUrl+"/"+id+"/set_default",
+		"application/json",
+		nil,
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}

@@ -537,6 +537,7 @@ type Network struct {
 	PortGroups  []string `json:"portGroups"`
 	Tags        []string `json:"tags,omitempty"`
 	SelfLink    string   `json:"selfLink"`
+	IsDefault   bool     `json:"isDefault"`
 }
 
 // Represents multiple networks returned by the API
