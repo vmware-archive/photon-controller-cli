@@ -132,6 +132,7 @@ func TestListNetworks(t *testing.T) {
 				ID:         "network_id",
 				Name:       "network_name",
 				PortGroups: []string{"port", "group"},
+				IsDefault:  false,
 			},
 		},
 		NextPageLink:     "/fake-next-page-link",
@@ -182,6 +183,7 @@ func TestShowNetworks(t *testing.T) {
 		ID:         "network_id",
 		Name:       "network_name",
 		PortGroups: []string{"port", "group"},
+		IsDefault:  false,
 	}
 
 	response, err := json.Marshal(expectedStruct)
@@ -206,5 +208,50 @@ func TestShowNetworks(t *testing.T) {
 	err = showNetwork(cxt)
 	if err != nil {
 		t.Error("Error showing networks: " + err.Error())
+	}
+}
+
+func TestSetDefaultNetwork(t *testing.T) {
+	completedTask := &photon.Task{
+		Operation: "SET_DEFAULT_NETWORK",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: "id"},
+	}
+
+	taskresponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/networks/"+completedTask.Entity.ID+"/set_default",
+		mocks.CreateResponder(200, string(taskresponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+completedTask.ID,
+		mocks.CreateResponder(200, string(taskresponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", true, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{completedTask.Entity.ID})
+	cxt := cli.NewContext(nil, set, globalCtx)
+
+	err = setDefaultNetwork(cxt)
+	if err != nil {
+		t.Error("Not expecting set default network to fail", err)
 	}
 }

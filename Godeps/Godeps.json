@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/vmware/photon-controller-cli",
 	"GoVersion": "go1.5",
-	"GodepVersion": "v62",
+	"GodepVersion": "v74",
 	"Packages": [
 		"./..."
 	],
@@ -143,13 +143,13 @@
 		},
 		{
 			"ImportPath": "github.com/vmware/photon-controller-go-sdk/photon",
-			"Comment": "PROMOTED-143-1-gc29b18f",
-			"Rev": "c29b18f46ad16533fdad8ac9ef3edee6f1f8183d"
+			"Comment": "PROMOTED-177",
+			"Rev": "4345effc8ba194e507fdb0fb22b5785ebe73a9df"
 		},
 		{
 			"ImportPath": "github.com/vmware/photon-controller-go-sdk/photon/lightwave",
-			"Comment": "PROMOTED-143-1-gc29b18f",
-			"Rev": "c29b18f46ad16533fdad8ac9ef3edee6f1f8183d"
+			"Comment": "PROMOTED-177",
+			"Rev": "4345effc8ba194e507fdb0fb22b5785ebe73a9df"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
