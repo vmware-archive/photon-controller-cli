@@ -289,11 +289,6 @@ func listHosts(c *cli.Context, w io.Writer) error {
 	}
 	id := deployments.Items[0].ID
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
-	if err != nil {
-		return err
-	}
-
 	hosts, err := client.Esxclient.Deployments.GetHosts(id)
 	if err != nil {
 		return err
