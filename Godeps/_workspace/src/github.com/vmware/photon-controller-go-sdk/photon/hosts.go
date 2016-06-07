@@ -137,3 +137,35 @@ func (api *HostsAPI) GetVMs(id string) (result *VMs, err error) {
 	err = json.NewDecoder(res.Body).Decode(result)
 	return
 }
+
+// Suspend the host with the specified id
+func (api *HostsAPI) Suspend(id string) (task *Task, err error) {
+	body := []byte{}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+hostUrl+"/"+id+"/suspend",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
+// Resume the host with the specified id
+func (api *HostsAPI) Resume(id string) (task *Task, err error) {
+	body := []byte{}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+hostUrl+"/"+id+"/resume",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}

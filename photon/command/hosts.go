@@ -34,6 +34,8 @@ import (
 //              list-vms;              Usage: host list-vms <id>
 //              set-availability-zone; Usage: host set-availability-zone <id> <availability-zone-id>
 //              tasks;                 Usage: host tasks <id> [<options>]
+//              suspend;               Usage: host suspend <id>
+//              resume;                Usage: host resume <id>
 func GetHostsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "host",
@@ -140,6 +142,26 @@ func GetHostsCommand() cli.Command {
 				},
 				Action: func(c *cli.Context) {
 					err := getHostTasks(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "suspend",
+				Usage: "Suspend host with specified id",
+				Action: func(c *cli.Context) {
+					err := suspendHost(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "resume",
+				Usage: "Resume host with specified id",
+				Action: func(c *cli.Context) {
+					err := resumeHost(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -425,6 +447,58 @@ func listHostVMs(c *cli.Context, w io.Writer) error {
 	}
 
 	err = printVMList(vmList.Items, w, c, false)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Sends a suspend host task to client based on the cli.Context
+// Returns an error if one occurred
+func suspendHost(c *cli.Context, w io.Writer) error {
+	err := checkArgNum(c.Args(), 1, "host suspend <id>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	if err != nil {
+		return err
+	}
+
+	suspendTask, err := client.Esxclient.Hosts.Suspend(id)
+	if err != nil {
+		return err
+	}
+	_, err = waitOnTaskOperation(suspendTask.ID, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Sends a resume host task to client based on the cli.Context
+// Returns an error if one occurred
+func resumeHost(c *cli.Context, w io.Writer) error {
+	err := checkArgNum(c.Args(), 1, "host resume <id>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	if err != nil {
+		return err
+	}
+
+	resumeTask, err := client.Esxclient.Hosts.Resume(id)
+	if err != nil {
+		return err
+	}
+	_, err = waitOnTaskOperation(resumeTask.ID, c)
 	if err != nil {
 		return err
 	}
