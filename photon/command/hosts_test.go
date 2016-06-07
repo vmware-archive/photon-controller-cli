@@ -116,6 +116,10 @@ func TestCreateDeleteHost(t *testing.T) {
 	if err != nil {
 		t.Error("Not expecting error serializing expected deletedTask")
 	}
+	taskresponse, err = json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing completedTask")
+	}
 
 	mocks.RegisterResponder(
 		"DELETE",
