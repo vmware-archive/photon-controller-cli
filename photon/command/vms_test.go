@@ -993,3 +993,62 @@ func TestGetVMMksTicket(t *testing.T) {
 		t.Error("Not expecting error getting vm mks ticket: " + err.Error())
 	}
 }
+
+func TestCreateVMImage(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "CREATE_VM_IMAGE",
+		State:     "QUEUED",
+		ID:        "fake-vm-task-ID",
+		Entity:    photon.Entity{ID: "fake_vm_ID"},
+	}
+	completedTask := &photon.Task{
+		Operation: "CREATE_VM_IMAGE",
+		State:     "COMPLETED",
+		ID:        "fake-vm-task-ID",
+		Entity:    photon.Entity{ID: "fake_vm_ID"},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/vms/"+"fake_vm_ID"+"/create_image",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", true, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake_vm_ID"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, globalCtx)
+
+	err = createVmImage(cxt)
+	if err != nil {
+		t.Error("Not expecting error creating VM image: " + err.Error())
+	}
+}
