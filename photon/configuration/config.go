@@ -73,13 +73,18 @@ func SaveConfig(config *Configuration) error {
 	return nil
 }
 
-func getUserConfigDirectory() (string, error) {
-	var err error
+var UserConfigDir string
+
+func getUserConfigDirectory() (userConfigDir string, err error) {
+	if len(UserConfigDir) != 0 {
+		return UserConfigDir, err
+	}
+
 	var homedir_input = "HOME"
 	if runtime.GOOS == "windows" {
 		homedir_input = "APPDATA"
 	}
-	userConfigDir := os.Getenv(homedir_input)
+	userConfigDir = os.Getenv(homedir_input)
 	userConfigDir = path.Join(userConfigDir, ".photon-cli")
 
 	if isFileExist(userConfigDir) && !isFileDirectory(userConfigDir) {

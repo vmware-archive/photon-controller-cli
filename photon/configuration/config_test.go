@@ -7,106 +7,124 @@
 // license terms. Your use of these subcomponents is subject to the terms and conditions
 // of the subcomponent's license, as noted in the LICENSE file.
 
-package configuration
+package configuration_test
 
 import (
-	"testing"
+	. "github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/onsi/ginkgo"
+	. "github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/onsi/gomega"
+	. "github.com/vmware/photon-controller-cli/photon/configuration"
+	"io/ioutil"
+	"os"
 )
 
-func TestLoadConfig(t *testing.T) {
-	// test Load when config file does not exist
-	err := RemoveConfigFile()
-	if err != nil {
-		t.Error("Not expecting error removing config file")
-	}
+var _ = Describe("Config", func() {
+	BeforeEach(func() {
+		var err error
+		UserConfigDir, err = ioutil.TempDir("", "config-test-")
+		Expect(err).To(BeNil())
+	})
 
-	config, err := LoadConfig()
-	if err != nil {
-		t.Error("Not expecting error reading non existing config file.")
-	}
+	AfterEach(func() {
+		err := RemoveConfigFile()
+		err2 := os.Remove(UserConfigDir)
+		Expect(err).To(BeNil())
+		Expect(err2).To(BeNil())
+	})
 
-	configExpected := &Configuration{}
-	if *config != *configExpected {
-		t.Error("Expected to get empty config object when reading non existing config file.")
-	}
+	Describe("LoadConfig", func() {
+		Context("when config file does not exist", func() {
+			BeforeEach(func() {
+				err := RemoveConfigFile()
+				Expect(err).To(BeNil())
+			})
 
-	// test Load when config file is non json
-	nonJson := "<target>http://localhost:9080</target>\n"
-	err = ChangeConfigFileContents(nonJson)
-	if err != nil {
-		t.Error("Not expecting error writing string to config file")
-	}
+			It("retuns empty config and no error", func() {
+				config, err := LoadConfig()
 
-	config, err = LoadConfig()
-	if err == nil {
-		t.Error("Expected to receive error trying to load non json file.")
-	}
+				Expect(err).To(BeNil())
+				Expect(config).To(BeEquivalentTo(&Configuration{}))
+			})
+		})
 
-	configExpected = &Configuration{}
-	if *config != *configExpected {
-		t.Error("Expected to get empty config object when reading non json config file.")
-	}
+		Context("when config file is not json", func() {
+			BeforeEach(func() {
+				nonJson := "<target>http://localhost:9080</target>\n"
+				err := ChangeConfigFileContents(nonJson)
+				Expect(err).To(BeNil())
+			})
 
-	// test Load when target in config file is valid
-	endpoint := "http://localhost:9080"
-	configExpected = &Configuration{
-		CloudTarget: endpoint,
-	}
-	err = SaveConfig(configExpected)
-	if err != nil {
-		t.Error("Not expecting error saving config file")
-	}
+			It("returns empty config and error", func() {
+				config, err := LoadConfig()
 
-	config, err = LoadConfig()
-	if err != nil {
-		t.Error("Not expecting error loading endpoint when endpoint is valid.")
-	}
+				Expect(err).To(
+					MatchError("Error loading configuration: invalid character '<' looking for beginning of value"))
+				Expect(config).To(BeEquivalentTo(&Configuration{}))
+			})
+		})
 
-	if *config != *configExpected {
-		t.Error("Config read from file not match what is written to file.")
-	}
+		Context("when config file is valid", func() {
+			var (
+				configExpected *Configuration
+			)
+			BeforeEach(func() {
+				configExpected = &Configuration{
+					CloudTarget: "http://localhost:9080",
+				}
 
-}
+				err := SaveConfig(configExpected)
+				Expect(err).To(BeNil())
+			})
 
-func TestSaveConfig(t *testing.T) {
-	// test Save to a new config file
-	err := RemoveConfigFile()
-	if err != nil {
-		t.Error("Not expecting error removing config file")
-	}
+			It("returns the config", func() {
+				config, err := LoadConfig()
 
-	configExpected := &Configuration{
-		CloudTarget: "test-save-1",
-	}
-	err = SaveConfig(configExpected)
-	if err != nil {
-		t.Error("Not expecting error when saving to a new config file.")
-	}
+				Expect(err).To(BeNil())
+				Expect(config).To(BeEquivalentTo(configExpected))
+			})
+		})
+	})
 
-	config, err := LoadConfig()
-	if err != nil {
-		t.Error("Not expecting error loading config file.")
-	}
+	Describe("SaveConfig", func() {
+		Context("when config file does not exist", func() {
+			BeforeEach(func() {
+				err := RemoveConfigFile()
+				Expect(err).To(BeNil())
+			})
 
-	if *config != *configExpected {
-		t.Error("Configuration read from file not match what is written to file.")
-	}
+			It("saves to file", func() {
+				configExpected := &Configuration{
+					CloudTarget: "test-save-1",
+				}
 
-	// test Save to an existing config file
-	configExpected = &Configuration{
-		CloudTarget: "test-write-to-file-2",
-	}
-	err = SaveConfig(configExpected)
-	if err != nil {
-		t.Error("Not expecting error when saving to an existing config file.")
-	}
+				err := SaveConfig(configExpected)
+				Expect(err).To(BeNil())
 
-	config, err = LoadConfig()
-	if err != nil {
-		t.Error("Not expecting error loading config file.")
-	}
+				config, err := LoadConfig()
+				Expect(err).To(BeNil())
+				Expect(config).To(BeEquivalentTo(configExpected))
+			})
+		})
 
-	if *config != *configExpected {
-		t.Error("Configuration read from file not match what is written to file.")
-	}
-}
+		Context("when config file exists", func() {
+			BeforeEach(func() {
+				config := "{CloudTarget: \"http://localhost:9080\"}"
+
+				err := ChangeConfigFileContents(config)
+				Expect(err).To(BeNil())
+			})
+
+			It("saves to updates to file", func() {
+				configExpected := &Configuration{
+					CloudTarget: "test-write-to-file-2",
+				}
+
+				err := SaveConfig(configExpected)
+				Expect(err).To(BeNil())
+
+				config, err := LoadConfig()
+				Expect(err).To(BeNil())
+				Expect(config).To(BeEquivalentTo(configExpected))
+			})
+		})
+	})
+})
