@@ -44,6 +44,7 @@ import (
 //      set-tag;      Usage: vm set-tag <id> [<options>]
 //      networks;     Usage: vm networks <id>
 //      mks-ticket;   Usage: vm mks-ticket <id>
+//      create-image; Usage: vm create-image <id> [<options>]
 func GetVMCommand() cli.Command {
 	command := cli.Command{
 		Name:  "vm",
@@ -316,6 +317,26 @@ func GetVMCommand() cli.Command {
 				Usage: "Get VM MKS ticket",
 				Action: func(c *cli.Context) {
 					err := getVMMksTicket(c)
+					if err != nil {
+						log.Fatal(err)
+					}
+				},
+			},
+			{
+				Name:  "create-image",
+				Usage: "Create an image by cloning VM",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "name, n",
+						Usage: "Image name",
+					},
+					cli.StringFlag{
+						Name:  "image_replication, i",
+						Usage: "Image replication type",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := createVmImage(c)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -1026,5 +1047,60 @@ func getVMMksTicket(c *cli.Context) error {
 		mksTicket := task.ResourceProperties.(map[string]interface{})
 		fmt.Printf("VM ID: %s \nMks ticket ID is %v\n", task.Entity.ID, mksTicket["ticket"])
 	}
+	return nil
+}
+
+func createVmImage(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "vm create-image <id> [<options>]")
+	if err != nil {
+		return err
+	}
+
+	id := c.Args().First()
+
+	name := c.String("name")
+	replicationType := c.String("image_replication")
+
+	defaultName := "image-from-vm-" + id
+	defaultReplication := "EAGER"
+	if !c.GlobalIsSet("non-interactive") {
+		name, err = askForInput("Image name (default: "+defaultName+"): ", name)
+		if err != nil {
+			return err
+		}
+
+		replicationType, err = askForInput("Image replication type (default: "+defaultReplication+"): ", replicationType)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(name) == 0 {
+		name = defaultName
+	}
+	if len(replicationType) == 0 {
+		replicationType = defaultReplication
+	}
+
+	options := &photon.ImageCreateSpec{
+		Name:            name,
+		ReplicationType: replicationType,
+	}
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	task, err := client.Esxclient.VMs.CreateImage(id, options)
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
