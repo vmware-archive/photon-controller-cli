@@ -577,3 +577,94 @@ func TestSuspendAndResumeHost(t *testing.T) {
 		t.Error("Not expecting error resuming host: " + err.Error())
 	}
 }
+
+func TestEnterAndExitMaintenanceMode(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "ENTER_MAINTENANCE_MODE",
+		State:     "QUEUED",
+		ID:        "fake-task-id",
+		Entity:    photon.Entity{ID: "fake-host-id"},
+	}
+	completedTask := &photon.Task{
+		Operation: "ENTER_MAINTENANCE_MODE",
+		State:     "COMPLETED",
+		ID:        "fake-task-id",
+		Entity:    photon.Entity{ID: "fake-host-id"},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/hosts"+"/fake-host-id"+"/enter_maintenance",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake-host-id"})
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = enterMaintenanceMode(cxt, os.Stdout)
+	if err != nil {
+		t.Error("Error entering maintenance mode: " + err.Error())
+	}
+
+	queuedTask = &photon.Task{
+		Operation: "EXIT_MAINTENANCE_MODE",
+		State:     "QUEUED",
+		ID:        "fake-task-id",
+		Entity:    photon.Entity{ID: "fake-host-id"},
+	}
+	completedTask = &photon.Task{
+		Operation: "EXIT_MAINTENANCE_MODE",
+		State:     "COMPLETED",
+		ID:        "fake-task-id",
+		Entity:    photon.Entity{ID: "fake-host-id"},
+	}
+
+	response, err = json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected queuedTask")
+	}
+	taskResponse, err = json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected completedTask")
+	}
+
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/hosts"+"/fake-host-id"+"/exit_maintenance",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+
+	set = flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake-host-id"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+
+	cxt = cli.NewContext(nil, set, nil)
+	err = exitMaintenanceMode(cxt, os.Stdout)
+	if err != nil {
+		t.Error("Not expecting error exiting maintenance mode: " + err.Error())
+	}
+}

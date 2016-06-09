@@ -36,6 +36,8 @@ import (
 //              tasks;                 Usage: host tasks <id> [<options>]
 //              suspend;               Usage: host suspend <id>
 //              resume;                Usage: host resume <id>
+//              enter-maintenance;     Usage: host enter-maintenance <id>
+//              exit-maintenance;      Usage: host exit-maintenance <id>
 func GetHostsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "host",
@@ -162,6 +164,26 @@ func GetHostsCommand() cli.Command {
 				Usage: "Resume host with specified id",
 				Action: func(c *cli.Context) {
 					err := resumeHost(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "enter-maintenance",
+				Usage: "Host with specified id enter maintenance mode",
+				Action: func(c *cli.Context) {
+					err := enterMaintenanceMode(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "exit-maintenance",
+				Usage: "Host with specified id exit maintenance mode",
+				Action: func(c *cli.Context) {
+					err := exitMaintenanceMode(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -499,6 +521,58 @@ func resumeHost(c *cli.Context, w io.Writer) error {
 		return err
 	}
 	_, err = waitOnTaskOperation(resumeTask.ID, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Put host with specified id into maintenance mode
+// Returns an error if one occurred
+func enterMaintenanceMode(c *cli.Context, w io.Writer) error {
+	err := checkArgNum(c.Args(), 1, "host enter-maintenance <id>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	if err != nil {
+		return err
+	}
+
+	enterTask, err := client.Esxclient.Hosts.EnterMaintenanceMode(id)
+	if err != nil {
+		return err
+	}
+	_, err = waitOnTaskOperation(enterTask.ID, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Take host with specified id out of maintenance mode
+// Returns an error if one occurred
+func exitMaintenanceMode(c *cli.Context, w io.Writer) error {
+	err := checkArgNum(c.Args(), 1, "host exit-maintenance <id>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	if err != nil {
+		return err
+	}
+
+	exitTask, err := client.Esxclient.Hosts.ExitMaintenanceMode(id)
+	if err != nil {
+		return err
+	}
+	_, err = waitOnTaskOperation(exitTask.ID, c)
 	if err != nil {
 		return err
 	}
