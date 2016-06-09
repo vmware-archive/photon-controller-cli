@@ -145,11 +145,15 @@ func (api *DeploymentsAPI) GetVms(id string) (result *VMs, err error) {
 }
 
 // Initialize deployment migration from source to destination
-func (api *DeploymentsAPI) InitializeDeploymentMigration(sourceAddress string, id string) (task *Task, err error) {
+func (api *DeploymentsAPI) InitializeDeploymentMigration(sourceAddress *InitializeMigrationOperation, id string) (task *Task, err error) {
+	body, err := json.Marshal(sourceAddress)
+	if err != nil {
+		return
+	}
 	res, err := api.client.restClient.Post(
 		api.getEntityUrl(id)+"/initialize_migration",
 		"application/json",
-		bytes.NewBuffer([]byte(sourceAddress)),
+		bytes.NewBuffer(body),
 		api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
@@ -160,11 +164,15 @@ func (api *DeploymentsAPI) InitializeDeploymentMigration(sourceAddress string, i
 }
 
 // Finalize deployment migration from source to destination
-func (api *DeploymentsAPI) FinalizeDeploymentMigration(sourceAddress string, id string) (task *Task, err error) {
+func (api *DeploymentsAPI) FinalizeDeploymentMigration(sourceAddress *FinalizeMigrationOperation, id string) (task *Task, err error) {
+	body, err := json.Marshal(sourceAddress)
+	if err != nil {
+		return
+	}
 	res, err := api.client.restClient.Post(
 		api.getEntityUrl(id)+"/finalize_migration",
 		"application/json",
-		bytes.NewBuffer([]byte(sourceAddress)),
+		bytes.NewBuffer(body),
 		api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
