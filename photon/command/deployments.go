@@ -726,9 +726,11 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	initializeMigrationSpec := photon.InitializeMigrationOperation{}
+	initializeMigrationSpec.SourceLoadBalancerAddress = sourceAddress
 
 	// Initialize deployment migration
-	initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(sourceAddress, deployment.ID)
+	initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(&initializeMigrationSpec, deployment.ID)
 	if err != nil {
 		return err
 	}
@@ -763,9 +765,11 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	finalizeMigrationSpec := photon.FinalizeMigrationOperation{}
+	finalizeMigrationSpec.SourceLoadBalancerAddress = sourceAddress
 
 	// Finalize deployment migration
-	finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(sourceAddress, deployment.ID)
+	finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(&finalizeMigrationSpec, deployment.ID)
 	if err != nil {
 		return err
 	}

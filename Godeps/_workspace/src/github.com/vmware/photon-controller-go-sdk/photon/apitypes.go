@@ -484,6 +484,16 @@ type Deployments struct {
 	Items []Deployment `json:"items"`
 }
 
+// Represents source load balacer address to migrate deployment
+type InitializeMigrationOperation struct {
+	SourceLoadBalancerAddress string `json:"sourceLoadBalancerAddress"`
+}
+
+// Represents source load balacer address to finish migration of deployment
+type FinalizeMigrationOperation struct {
+	SourceLoadBalancerAddress string `json:"sourceLoadBalancerAddress"`
+}
+
 // Represents stats information
 type StatsInfo struct {
 	Enabled       bool   `json:"enabled,omitempty"`
