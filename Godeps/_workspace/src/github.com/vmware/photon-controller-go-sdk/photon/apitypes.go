@@ -642,3 +642,9 @@ type HostSetAvailabilityZoneOperation struct {
 type ImageDatastores struct {
 	Items []string `json:"items"`
 }
+
+// Image creation spec.
+type ImageCreateSpec struct {
+	Name            string `json:"name"`
+	ReplicationType string `json:"replicationType"`
+}

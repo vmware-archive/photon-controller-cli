@@ -36,3 +36,20 @@ func (api *ResourceTicketsAPI) GetTasks(id string, options *TaskGetOptions) (res
 	err = json.Unmarshal(res, result)
 	return
 }
+
+// Gets the resource ticket with a specified ID.
+func (api *ResourceTicketsAPI) Get(id string) (resourceTicket *ResourceTicket, err error) {
+	res, err := api.client.restClient.Get(api.client.Endpoint+resourceTicketUrl+"/"+id,
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	res, err = getError(res)
+	if err != nil {
+		return
+	}
+	resourceTicket = &ResourceTicket{}
+	err = json.NewDecoder(res.Body).Decode(resourceTicket)
+	return
+}
