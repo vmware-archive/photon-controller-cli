@@ -304,3 +304,102 @@ func TestDeleteDisk(t *testing.T) {
 		t.Error("Not expecting error deleting disk: " + err.Error())
 	}
 }
+
+func TestFindDisksByName(t *testing.T) {
+	diskName := "fake_disk_name"
+
+	tenantStruct := photon.Tenants{
+		Items: []photon.Tenant{
+			{
+				Name: "fake_tenant_name",
+				ID:   "fake_tenant_ID",
+			},
+		},
+	}
+	tenantResponse, err := json.Marshal(tenantStruct)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected tenantStruct")
+	}
+
+	projectStruct := photon.ProjectList{
+		Items: []photon.ProjectCompact{
+			{
+				Name: "fake_project_name",
+				ID:   "fake_project_ID",
+			},
+		},
+	}
+	projectResponse, err := json.Marshal(projectStruct)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected projectStruct")
+	}
+
+	diskList := MockDisksPage{
+		Items: []photon.PersistentDisk{
+			{
+				Name:       diskName,
+				ID:         "fake_disk_ID",
+				Flavor:     "fake_flavor_name",
+				Kind:       "persistent-disk",
+				CapacityGB: 1,
+				State:      "DETACHED",
+				Datastore:  "fake_datastore_ID",
+			},
+		},
+		NextPageLink:     "fake-next-page-link",
+		PreviousPageLink: "",
+	}
+	response, err := json.Marshal(diskList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected diskList")
+	}
+
+	server := mocks.NewTestServer()
+	defer server.Close()
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants",
+		mocks.CreateResponder(200, string(tenantResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
+		mocks.CreateResponder(200, string(projectResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/projects/"+"fake_project_ID"+"/disks?name="+diskName,
+		mocks.CreateResponder(200, string(response[:])))
+
+	diskList = MockDisksPage{
+		Items:            []photon.PersistentDisk{},
+		NextPageLink:     "",
+		PreviousPageLink: "",
+	}
+	response, err = json.Marshal(diskList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected diskList")
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"fake-next-page-link",
+		mocks.CreateResponder(200, string(response[:])))
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	set.String("tenant", "fake_tenant_name", "tenant name")
+	set.String("project", "fake_project_name", "project name")
+	set.String("name", diskName, "disk name")
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+
+	cxt := cli.NewContext(nil, set, nil)
+	err = listDisks(cxt)
+	if err != nil {
+		t.Error("Not expecting an error listing disks by name", err)
+	}
+}
