@@ -720,6 +720,113 @@ func TestListVMs(t *testing.T) {
 	}
 }
 
+func TestFindVMsByName(t *testing.T) {
+	vmName := "fake_vm_name"
+
+	tenantStruct := photon.Tenants{
+		Items: []photon.Tenant{
+			{
+				Name: "fake_tenant_name",
+				ID:   "fake_tenant_ID",
+			},
+		},
+	}
+	tenantResponse, err := json.Marshal(tenantStruct)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected tenants")
+	}
+
+	projectListStruct := photon.ProjectList{
+		Items: []photon.ProjectCompact{
+			{
+				Name: "fake_project_name",
+				ID:   "fake_project_ID",
+				ResourceTicket: photon.ProjectTicket{
+					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
+					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
+				},
+			},
+		},
+	}
+	listProjectResponse, err := json.Marshal(projectListStruct)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected projectLists")
+	}
+
+	vmList := MockVMsPage{
+		Items: []photon.VM{
+			{
+				Name:          vmName,
+				ID:            "fake_vm_ID",
+				Flavor:        "fake_vm_flavor_name",
+				State:         "STOPPED",
+				SourceImageID: "fake_image_ID",
+				Host:          "fake_host_ip",
+				Datastore:     "fake_datastore_ID",
+				AttachedDisks: []photon.AttachedDisk{
+					{
+						Name:       "d1",
+						Kind:       "ephemeral-disk",
+						Flavor:     "fake_ephemeral_flavor_ID",
+						CapacityGB: 0,
+						BootDisk:   true,
+					},
+				},
+			},
+		},
+		NextPageLink:     "/fake-next-page-link",
+		PreviousPageLink: "",
+	}
+	listVmResponse, err := json.Marshal(vmList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected vmList")
+	}
+
+	vmList = MockVMsPage{
+		Items:            []photon.VM{},
+		NextPageLink:     "",
+		PreviousPageLink: "",
+	}
+	nextVmPageResponse, err := json.Marshal(vmList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected vmList")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants",
+		mocks.CreateResponder(200, string(tenantResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
+		mocks.CreateResponder(200, string(listProjectResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/projects/"+"fake_project_ID"+"/vms?name="+vmName,
+		mocks.CreateResponder(200, string(listVmResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/fake-next-page-link",
+		mocks.CreateResponder(200, string(nextVmPageResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	set.String("tenant", "fake_tenant_name", "tenant name")
+	set.String("project", "fake_project_name", "project name")
+	set.String("name", vmName, "VM name")
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = listVMs(cxt)
+	if err != nil {
+		t.Error("Not expecting error listing VMs by name: " + err.Error())
+	}
+}
+
 func TestListVMTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{

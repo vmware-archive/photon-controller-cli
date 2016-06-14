@@ -134,6 +134,10 @@ func GetVMCommand() cli.Command {
 						Name:  "summary, s",
 						Usage: "Summary view",
 					},
+					cli.StringFlag{
+						Name:  "name, n",
+						Usage: "VM name",
+					},
 				},
 				Action: func(c *cli.Context) {
 					err := listVMs(c)
@@ -598,6 +602,11 @@ func listVMs(c *cli.Context) error {
 	projectName := c.String("project")
 	summaryView := c.IsSet("summary")
 
+	name := c.String("name")
+	options := &photon.VmGetOptions{
+		Name: name,
+	}
+
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return err
@@ -612,7 +621,7 @@ func listVMs(c *cli.Context) error {
 		return err
 	}
 
-	vmList, err := client.Esxclient.Projects.GetVMs(project.ID, nil)
+	vmList, err := client.Esxclient.Projects.GetVMs(project.ID, options)
 	if err != nil {
 		return err
 	}
