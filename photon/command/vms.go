@@ -671,6 +671,9 @@ func startVM(c *cli.Context) error {
 	}
 
 	opTask, err := client.Esxclient.VMs.Start(id)
+	if err != nil {
+		return err
+	}
 
 	_, err = waitOnTaskOperation(opTask.ID, c)
 	if err != nil {
@@ -694,6 +697,9 @@ func stopVM(c *cli.Context) error {
 	}
 
 	opTask, err := client.Esxclient.VMs.Stop(id)
+	if err != nil {
+		return err
+	}
 
 	_, err = waitOnTaskOperation(opTask.ID, c)
 	if err != nil {
@@ -717,6 +723,9 @@ func suspendVM(c *cli.Context) error {
 	}
 
 	opTask, err := client.Esxclient.VMs.Suspend(id)
+	if err != nil {
+		return err
+	}
 
 	_, err = waitOnTaskOperation(opTask.ID, c)
 	if err != nil {
@@ -740,6 +749,9 @@ func resumeVM(c *cli.Context) error {
 	}
 
 	opTask, err := client.Esxclient.VMs.Resume(id)
+	if err != nil {
+		return err
+	}
 
 	_, err = waitOnTaskOperation(opTask.ID, c)
 	if err != nil {
@@ -763,6 +775,9 @@ func restartVM(c *cli.Context) error {
 	}
 
 	opTask, err := client.Esxclient.VMs.Restart(id)
+	if err != nil {
+		return err
+	}
 
 	_, err = waitOnTaskOperation(opTask.ID, c)
 	if err != nil {
