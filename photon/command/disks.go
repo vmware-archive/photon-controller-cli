@@ -111,6 +111,10 @@ func GetDiskCommand() cli.Command {
 						Name:  "summary, s",
 						Usage: "Summary view",
 					},
+					cli.StringFlag{
+						Name:  "name, n",
+						Usage: "disk name",
+					},
 				},
 				Action: func(c *cli.Context) {
 					err := listDisks(c)
@@ -307,6 +311,11 @@ func listDisks(c *cli.Context) error {
 	projectName := c.String("project")
 	summaryView := c.IsSet("summary")
 
+	name := c.String("name")
+	options := &photon.DiskGetOptions{
+		Name: name,
+	}
+
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return err
@@ -321,7 +330,7 @@ func listDisks(c *cli.Context) error {
 		return err
 	}
 
-	diskList, err := client.Esxclient.Projects.GetDisks(project.ID, nil)
+	diskList, err := client.Esxclient.Projects.GetDisks(project.ID, options)
 	if err != nil {
 		return err
 	}
