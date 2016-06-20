@@ -409,13 +409,23 @@ func TestResumeSystem(t *testing.T) {
 
 func TestEnableClusterType(t *testing.T) {
 	deploymentId := "deployment1"
-	clusterConfig := photon.ClusterConfiguration{
-		Type:    "SWARM",
-		ImageID: "abcd",
+	queuedTask := &photon.Task{
+		Operation: "CONFIGURE_CLUSTER",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: deploymentId},
 	}
-	response, err := json.Marshal(clusterConfig)
+	completedTask := &photon.Task{
+		Operation: "CONFIGURE_CLUSTER",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: deploymentId},
+	}
+	response, err := json.Marshal(queuedTask)
 	if err != nil {
-		t.Error("Not expecting error serializing cluster configuration")
+		t.Error("Not expecting error during serializing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected completedTask")
 	}
 
 	server := mocks.NewTestServer()
@@ -423,6 +433,11 @@ func TestEnableClusterType(t *testing.T) {
 		"POST",
 		server.URL+"/deployments/"+deploymentId+"/enable_cluster_type",
 		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+
 	defer server.Close()
 
 	mocks.Activate(true)

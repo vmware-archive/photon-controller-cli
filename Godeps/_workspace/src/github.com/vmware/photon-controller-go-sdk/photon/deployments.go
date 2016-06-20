@@ -256,7 +256,7 @@ func (api *DeploymentsAPI) ResumeSystem(id string) (task *Task, err error) {
 }
 
 //  Enable cluster type with specified deployment ID.
-func (api *DeploymentsAPI) EnableClusterType(id string, clusterConfigSpec *ClusterConfigurationSpec) (result *ClusterConfiguration, err error) {
+func (api *DeploymentsAPI) EnableClusterType(id string, clusterConfigSpec *ClusterConfigurationSpec) (task *Task, err error) {
 	body, err := json.Marshal(clusterConfigSpec)
 	if err != nil {
 		return
@@ -269,12 +269,9 @@ func (api *DeploymentsAPI) EnableClusterType(id string, clusterConfigSpec *Clust
 	if err != nil {
 		return
 	}
-	res, err = getError(res)
-	if err != nil {
-		return
-	}
-	result = &ClusterConfiguration{}
-	err = json.NewDecoder(res.Body).Decode(result)
+	defer res.Body.Close()
+
+	task, err = getTask(getError(res))
 	return
 }
 

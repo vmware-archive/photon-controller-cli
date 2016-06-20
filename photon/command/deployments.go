@@ -639,16 +639,16 @@ func enableClusterType(c *cli.Context) error {
 			ImageID: imageID,
 		}
 
-		clusterConfiguration, err := client.Esxclient.Deployments.EnableClusterType(id, clusterConfigSpec)
+		task, err := client.Esxclient.Deployments.EnableClusterType(id, clusterConfigSpec)
 		if err != nil {
 			return err
 		}
-		if c.GlobalIsSet("non-interactive") {
-			fmt.Printf("%s\t%s\n", clusterConfiguration.Type, clusterConfiguration.ImageID)
-		} else {
-			fmt.Printf("Cluster Type: %s\n", clusterConfiguration.Type)
-			fmt.Printf("Image ID:     %s\n", clusterConfiguration.ImageID)
+
+		_, err = waitOnTaskOperation(task.ID, c)
+		if err != nil {
+			return err
 		}
+
 	} else {
 		fmt.Println("Cancelled")
 	}
