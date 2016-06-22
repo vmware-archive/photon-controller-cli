@@ -11,11 +11,13 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
@@ -42,7 +44,7 @@ func GetAvailabilityZonesCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createAvailabilityZone(c)
+					err := createAvailabilityZone(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -62,7 +64,7 @@ func GetAvailabilityZonesCommand() cli.Command {
 				Name:  "list",
 				Usage: "List availability-zones",
 				Action: func(c *cli.Context) {
-					err := listAvailabilityZones(c)
+					err := listAvailabilityZones(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -72,7 +74,7 @@ func GetAvailabilityZonesCommand() cli.Command {
 				Name:  "show",
 				Usage: "Show specified availability-zone",
 				Action: func(c *cli.Context) {
-					err := showAvailabilityZone(c)
+					err := showAvailabilityZone(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -88,7 +90,7 @@ func GetAvailabilityZonesCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := getAvailabilityZoneTasks(c)
+					err := getAvailabilityZoneTasks(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -101,14 +103,14 @@ func GetAvailabilityZonesCommand() cli.Command {
 
 // Sends a create availability-zone task to client based on the cli.Context
 // Returns an error if one occurred
-func createAvailabilityZone(c *cli.Context) error {
+func createAvailabilityZone(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "availability-zone create [<options>]")
 	if err != nil {
 		return err
 	}
 	name := c.String("name")
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		var err error
 		name, err = askForInput("AvailabilityZone name: ", name)
 		if err != nil {
@@ -124,7 +126,7 @@ func createAvailabilityZone(c *cli.Context) error {
 		Name: name,
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -134,23 +136,31 @@ func createAvailabilityZone(c *cli.Context) error {
 		return err
 	}
 
-	_, err = waitOnTaskOperation(createTask.ID, c)
+	id, err := waitOnTaskOperation(createTask.ID, c)
 	if err != nil {
 		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		zone, err := client.Esxclient.AvailabilityZones.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(zone, w, c)
 	}
 
 	return nil
 }
 
 // Retrieves availability zone against specified id.
-func showAvailabilityZone(c *cli.Context) error {
+func showAvailabilityZone(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "availability-zone show <id>")
 	if err != nil {
 		return err
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -162,6 +172,8 @@ func showAvailabilityZone(c *cli.Context) error {
 
 	if c.GlobalIsSet("non-interactive") {
 		fmt.Printf("%s\t%s\t%s\t%s\n", zone.ID, zone.Name, zone.Kind, zone.State)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(zone, w, c)
 	} else {
 		fmt.Printf("AvailabilityZone ID: %s\n", zone.ID)
 		fmt.Printf("  Name:        %s\n", zone.Name)
@@ -173,12 +185,12 @@ func showAvailabilityZone(c *cli.Context) error {
 }
 
 // Retrieves a list of availability zones, returns an error if one occurred
-func listAvailabilityZones(c *cli.Context) error {
+func listAvailabilityZones(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "availability-zone list")
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -192,6 +204,8 @@ func listAvailabilityZones(c *cli.Context) error {
 		for _, zone := range zones.Items {
 			fmt.Printf("%s\t%s\n", zone.ID, zone.Name)
 		}
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObjects(zones.Items, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -218,7 +232,7 @@ func deleteAvailabilityZone(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -237,7 +251,7 @@ func deleteAvailabilityZone(c *cli.Context) error {
 }
 
 // Retrieves tasks from specified availability zone
-func getAvailabilityZoneTasks(c *cli.Context) error {
+func getAvailabilityZoneTasks(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "availability-zone tasks <id> [<options>]")
 	if err != nil {
 		return err
@@ -249,7 +263,7 @@ func getAvailabilityZoneTasks(c *cli.Context) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}

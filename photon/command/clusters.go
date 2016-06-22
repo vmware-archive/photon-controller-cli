@@ -11,6 +11,7 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -19,6 +20,7 @@ import (
 	"time"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
@@ -126,7 +128,7 @@ func GetClusterCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createCluster(c)
+					err := createCluster(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -136,7 +138,7 @@ func GetClusterCommand() cli.Command {
 				Name:  "show",
 				Usage: "Show information about a cluster",
 				Action: func(c *cli.Context) {
-					err := showCluster(c)
+					err := showCluster(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -160,7 +162,7 @@ func GetClusterCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := listClusters(c)
+					err := listClusters(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -170,7 +172,7 @@ func GetClusterCommand() cli.Command {
 				Name:  "list_vms",
 				Usage: "List the VMs associated with a cluster",
 				Action: func(c *cli.Context) {
-					err := listVms(c)
+					err := listVms(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -186,7 +188,7 @@ func GetClusterCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := resizeCluster(c)
+					err := resizeCluster(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -209,7 +211,7 @@ func GetClusterCommand() cli.Command {
 
 // Sends a "create cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
-func createCluster(c *cli.Context) error {
+func createCluster(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "cluster create [<options>]")
 	if err != nil {
 		return err
@@ -254,7 +256,7 @@ func createCluster(c *cli.Context) error {
 		return err
 	}
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		name, err = askForInput("Cluster name: ", name)
 		if err != nil {
 			return err
@@ -283,7 +285,7 @@ func createCluster(c *cli.Context) error {
 		slave_count = DEFAULT_SLAVE_COUNT
 	}
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		dns, err = askForInput("Cluster DNS server: ", dns)
 		if err != nil {
 			return err
@@ -310,7 +312,7 @@ func createCluster(c *cli.Context) error {
 	cluster_type = strings.ToUpper(cluster_type)
 	switch cluster_type {
 	case "KUBERNETES":
-		if !c.GlobalIsSet("non-interactive") {
+		if !utils.IsNonInteractive(c) {
 			master_ip, err = askForInput("Kubernetes master static IP address: ", master_ip)
 			if err != nil {
 				return err
@@ -345,7 +347,7 @@ func createCluster(c *cli.Context) error {
 			}
 		}
 	case "MESOS":
-		if !c.GlobalIsSet("non-interactive") {
+		if !utils.IsNonInteractive(c) {
 			zookeeper1, err = askForInput("Zookeeper server 1 static IP address: ", zookeeper1)
 			if err != nil {
 				return err
@@ -370,7 +372,7 @@ func createCluster(c *cli.Context) error {
 			}
 		}
 	case "SWARM":
-		if !c.GlobalIsSet("non-interactive") {
+		if !utils.IsNonInteractive(c) {
 			etcd1, err = askForInput("etcd server 1 static IP address: ", etcd1)
 			if err != nil {
 				return err
@@ -408,7 +410,7 @@ func createCluster(c *cli.Context) error {
 	clusterSpec.BatchSize = batch_size
 	clusterSpec.ExtendedProperties = extended_properties
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		fmt.Printf("\n")
 		fmt.Printf("Creating cluster: %s (%s)\n", clusterSpec.Name, clusterSpec.Type)
 		if len(clusterSpec.VMFlavor) != 0 {
@@ -424,7 +426,7 @@ func createCluster(c *cli.Context) error {
 		fmt.Printf("\n")
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(utils.IsNonInteractive(c)) {
 		createTask, err := client.Esxclient.Projects.CreateCluster(project.ID, &clusterSpec)
 		if err != nil {
 			return err
@@ -436,12 +438,20 @@ func createCluster(c *cli.Context) error {
 		}
 
 		if wait_for_ready {
-			fmt.Printf("Waiting for cluster %s to become ready\n", createTask.Entity.ID)
+			if !utils.NeedsFormatting(c) {
+				fmt.Printf("Waiting for cluster %s to become ready\n", createTask.Entity.ID)
+			}
 			cluster, err := waitForCluster(createTask.Entity.ID)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Cluster %s is ready\n", cluster.ID)
+
+			if utils.NeedsFormatting(c) {
+				utils.FormatObject(cluster, w, c)
+			} else {
+				fmt.Printf("Cluster %s is ready\n", cluster.ID)
+			}
+
 		} else {
 			fmt.Println("Note: the cluster has been created with minimal resources. You can use the cluster now.")
 			fmt.Println("A background task is running to gradually expand the cluster to its target capacity.")
@@ -456,14 +466,14 @@ func createCluster(c *cli.Context) error {
 
 // Sends a "show cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
-func showCluster(c *cli.Context) error {
+func showCluster(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "cluster show <id>")
 	if err != nil {
 		return err
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -492,6 +502,8 @@ func showCluster(c *cli.Context) error {
 		extendedProperties := strings.Trim(strings.TrimLeft(fmt.Sprint(cluster.ExtendedProperties), "map"), "[]")
 		fmt.Printf("%s\t%s\t%s\t%s\t%d\t%s\n", cluster.ID, cluster.Name, cluster.State, cluster.Type,
 			cluster.SlaveCount, extendedProperties)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(cluster, w, c)
 	} else {
 		fmt.Println("Cluster ID:            ", cluster.ID)
 		fmt.Println("  Name:                ", cluster.Name)
@@ -512,7 +524,7 @@ func showCluster(c *cli.Context) error {
 
 // Sends a "list clusters" request to the API client based on the cli.Context
 // Returns an error if one occurred
-func listClusters(c *cli.Context) error {
+func listClusters(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "cluster list [<options>]")
 	if err != nil {
 		return err
@@ -522,7 +534,7 @@ func listClusters(c *cli.Context) error {
 	projectName := c.String("project")
 	summaryView := c.IsSet("summary")
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -542,7 +554,7 @@ func listClusters(c *cli.Context) error {
 		return err
 	}
 
-	err = printClusterList(clusterList.Items, c.GlobalIsSet("non-interactive"), summaryView)
+	err = printClusterList(clusterList.Items, w, c, summaryView)
 	if err != nil {
 		return err
 	}
@@ -552,14 +564,14 @@ func listClusters(c *cli.Context) error {
 
 // Sends a "list VMs for cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
-func listVms(c *cli.Context) error {
+func listVms(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "cluster list_vms <id>")
 	if err != nil {
 		return err
 	}
 	cluster_id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -569,7 +581,7 @@ func listVms(c *cli.Context) error {
 		return err
 	}
 
-	err = printVMList(vms.Items, os.Stdout, c, false)
+	err = printVMList(vms.Items, w, c, false)
 	if err != nil {
 		return err
 	}
@@ -579,7 +591,7 @@ func listVms(c *cli.Context) error {
 
 // Sends a "resize cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
-func resizeCluster(c *cli.Context) error {
+func resizeCluster(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 2, "cluster resize <id> <new slave count> [<options>]")
 	if err != nil {
 		return err
@@ -594,16 +606,16 @@ func resizeCluster(c *cli.Context) error {
 		return fmt.Errorf("Provide a valid cluster ID and slave count")
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		fmt.Printf("\nResizing cluster %s to slave count %d\n", cluster_id, slave_count)
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(utils.IsNonInteractive(c)) {
 		resizeSpec := photon.ClusterResizeOperation{}
 		resizeSpec.NewSlaveCount = slave_count
 		resizeTask, err := client.Esxclient.Clusters.Resize(cluster_id, &resizeSpec)
@@ -621,7 +633,11 @@ func resizeCluster(c *cli.Context) error {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Cluster %s is ready\n", cluster.ID)
+			if utils.NeedsFormatting(c) {
+				utils.FormatObject(cluster, w, c)
+			} else {
+				fmt.Printf("Cluster %s is ready\n", cluster.ID)
+			}
 		} else {
 			fmt.Println("Note: A background task is running to gradually resize the cluster to its target capacity.")
 			fmt.Printf("You may continue to use the cluster. You can run 'cluster show %s'\n", resizeTask.Entity.ID)
@@ -649,16 +665,16 @@ func deleteCluster(c *cli.Context) error {
 		return fmt.Errorf("Please provide a valid cluster ID")
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		fmt.Printf("\nDeleting cluster %s\n", cluster_id)
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(utils.IsNonInteractive(c)) {
 		deleteTask, err := client.Esxclient.Clusters.Delete(cluster_id)
 		if err != nil {
 			return err

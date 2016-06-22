@@ -10,9 +10,11 @@
 package command
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -76,7 +78,7 @@ func TestCreateDeleteNetwork(t *testing.T) {
 
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = createNetwork(cxt)
+	err = createNetwork(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting create network to fail", err)
 	}
@@ -169,12 +171,40 @@ func TestListNetworks(t *testing.T) {
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
-	set := flag.NewFlagSet("test", 0)
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
+	if err != nil {
+		t.Error(err)
+	}
+	globalCxt := cli.NewContext(nil, globalFlags, nil)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	err = commandFlags.Parse([]string{})
+	if err != nil {
+		t.Error(err)
+	}
+	cxt := cli.NewContext(nil, commandFlags, globalCxt)
+	var output bytes.Buffer
 
-	cxt := cli.NewContext(nil, set, nil)
-	err = listNetworks(cxt)
+	err = listNetworks(cxt, &output)
 	if err != nil {
 		t.Error("Error listing networks: " + err.Error())
+	}
+
+	// Verify we printed a list of networks starting with a bracket
+	err = checkRegExp(`^\s*\[`, output)
+	if err != nil {
+		t.Errorf("List networks didn't produce a JSON list that starts with a bracket (list): %s", err)
+	}
+	// and end with a bracket (two regular expressions because it's multiline, it's easier)
+	err = checkRegExp(`\]\s*$`, output)
+	if err != nil {
+		t.Errorf("List networks didn't produce JSON that ended in a bracket (list): %s", err)
+	}
+	// And spot check that we have the "id" field
+	err = checkRegExp(`\"id\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("List networks didn't produce a JSON field named 'id': %s", err)
 	}
 }
 
@@ -205,7 +235,7 @@ func TestShowNetworks(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{expectedStruct.ID})
 	cxt := cli.NewContext(nil, set, nil)
-	err = showNetwork(cxt)
+	err = showNetwork(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Error showing networks: " + err.Error())
 	}
@@ -250,7 +280,7 @@ func TestSetDefaultNetwork(t *testing.T) {
 	err = set.Parse([]string{completedTask.Entity.ID})
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = setDefaultNetwork(cxt)
+	err = setDefaultNetwork(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting set default network to fail", err)
 	}

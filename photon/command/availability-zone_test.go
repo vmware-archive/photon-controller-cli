@@ -10,9 +10,11 @@
 package command
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -67,7 +69,7 @@ func TestCreateDeleteAvailabilityZone(t *testing.T) {
 	set.String("name", "fake_availabilityZone", "availability zone name")
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = createAvailabilityZone(cxt)
+	err = createAvailabilityZone(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting create availability zone to fail: " + err.Error())
 	}
@@ -138,7 +140,7 @@ func TestShowAvailabilityZone(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{expectedStruct.ID})
 	cxt := cli.NewContext(nil, set, nil)
-	err = showAvailabilityZone(cxt)
+	err = showAvailabilityZone(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting show availabilityzone to fail: " + err.Error())
 	}
@@ -193,11 +195,39 @@ func TestListAvailabilityZones(t *testing.T) {
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
-	set := flag.NewFlagSet("test", 0)
-	cxt := cli.NewContext(nil, set, nil)
-	err = listAvailabilityZones(cxt)
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
+	if err != nil {
+		t.Error(err)
+	}
+	globalCxt := cli.NewContext(nil, globalFlags, nil)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	err = commandFlags.Parse([]string{})
+	if err != nil {
+		t.Error(err)
+	}
+	cxt := cli.NewContext(nil, commandFlags, globalCxt)
+	var output bytes.Buffer
+	err = listAvailabilityZones(cxt, &output)
 	if err != nil {
 		t.Error("Not expecting list availabilityzone to fail: " + err.Error())
+	}
+
+	// Verify we printed a list of availability zones starting with a bracket
+	err = checkRegExp(`^\s*\[`, output)
+	if err != nil {
+		t.Errorf("List availability zones didn't produce a JSON list that starts with a bracket (list): %s", err)
+	}
+	// and end with a bracket (two regular expressions because it's multiline, it's easier)
+	err = checkRegExp(`\]\s*$`, output)
+	if err != nil {
+		t.Errorf("List availability zones didn't produce JSON that ended in a bracket (list): %s", err)
+	}
+	// And spot check that we have the "id" field
+	err = checkRegExp(`\"id\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("List availability zones didn't produce a JSON field named 'id': %s", err)
 	}
 }
 
@@ -252,7 +282,7 @@ func TestAvailabilityZoneTasks(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	cxt := cli.NewContext(nil, set, nil)
-	err = getAvailabilityZoneTasks(cxt)
+	err = getAvailabilityZoneTasks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting retrieving availabilityzone tasks to fail: " + err.Error())
 	}
