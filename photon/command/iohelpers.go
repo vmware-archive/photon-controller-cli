@@ -319,18 +319,20 @@ func printVMList(vmList []photon.VM, w io.Writer, c *cli.Context, summaryView bo
 	return nil
 }
 
-func printClusterList(clusterList []photon.Cluster, isScripting bool, summaryView bool) error {
+func printClusterList(clusterList []photon.Cluster, w io.Writer, c *cli.Context, summaryView bool) error {
 	stateCount := make(map[string]int)
 	for _, cluster := range clusterList {
 		stateCount[cluster.State]++
 	}
 
-	if isScripting {
+	if c.GlobalIsSet("non-interactive") {
 		if !summaryView {
 			for _, cluster := range clusterList {
 				fmt.Printf("%s\t%s\t%s\t%s\t%d\n", cluster.ID, cluster.Name, cluster.Type, cluster.State, cluster.SlaveCount)
 			}
 		}
+	} else if c.GlobalString("output") != "" {
+		utils.FormatObjects(clusterList, w, c)
 	} else {
 		if !summaryView {
 			w := new(tabwriter.Writer)

@@ -10,9 +10,11 @@
 package command
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -122,7 +124,7 @@ func TestCreateDeleteCluster(t *testing.T) {
 	set.String("netmask", "0.0.0.255", "VM network netmask")
 	ctx := cli.NewContext(nil, set, globalCtx)
 
-	err = createCluster(ctx)
+	err = createCluster(ctx, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating cluster: " + err.Error())
 	}
@@ -275,7 +277,7 @@ func TestShowCluster(t *testing.T) {
 	}
 	ctx := cli.NewContext(nil, set, nil)
 
-	err = showCluster(ctx)
+	err = showCluster(ctx, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing cluster: " + err.Error())
 	}
@@ -362,14 +364,43 @@ func TestListClusters(t *testing.T) {
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
-	set := flag.NewFlagSet("test", 0)
-	set.String("tenant", "fake_tenant_name", "tenant name")
-	set.String("project", "fake_project_name", "project name")
-	ctx := cli.NewContext(nil, set, nil)
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
+	if err != nil {
+		t.Error(err)
+	}
+	globalCxt := cli.NewContext(nil, globalFlags, nil)
 
-	err = listClusters(ctx)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	commandFlags.String("tenant", "fake_tenant_name", "tenant name")
+	commandFlags.String("project", "fake_project_name", "project name")
+	err = commandFlags.Parse([]string{})
+	if err != nil {
+		t.Error(err)
+	}
+	ctx := cli.NewContext(nil, commandFlags, globalCxt)
+	var output bytes.Buffer
+
+	err = listClusters(ctx, &output)
 	if err != nil {
 		t.Error("Not expecting error listing clusters: " + err.Error())
+	}
+
+	// Verify we printed a list of clusters starting with a bracket
+	err = checkRegExp(`^\s*\[`, output)
+	if err != nil {
+		t.Errorf("List clusters didn't produce a JSON list that starts with a bracket (list): %s", err)
+	}
+	// and end with a bracket (two regular expressions because it's multiline, it's easier)
+	err = checkRegExp(`\]\s*$`, output)
+	if err != nil {
+		t.Errorf("List clusters didn't produce JSON that ended in a bracket (list): %s", err)
+	}
+	// And spot check that we have the "id" field
+	err = checkRegExp(`\"id\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("List clusters didn't produce a JSON field named 'id': %s", err)
 	}
 }
 
@@ -427,7 +458,7 @@ func TestResizeCluster(t *testing.T) {
 	}
 	ctx := cli.NewContext(nil, set, globalCtx)
 
-	err = resizeCluster(ctx)
+	err = resizeCluster(ctx, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error resizing cluster: " + err.Error())
 	}
@@ -492,15 +523,40 @@ func TestListClusterVms(t *testing.T) {
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
-	set := flag.NewFlagSet("test", 0)
-	err = set.Parse([]string{"fake_cluster_id"})
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
 	if err != nil {
-		t.Error("Not expecting argument parsing to fail")
+		t.Error(err)
 	}
-	ctx := cli.NewContext(nil, set, nil)
+	globalCxt := cli.NewContext(nil, globalFlags, nil)
 
-	err = listVms(ctx)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	err = commandFlags.Parse([]string{"fake_cluster_id"})
+	if err != nil {
+		t.Error(err)
+	}
+	ctx := cli.NewContext(nil, commandFlags, globalCxt)
+	var output bytes.Buffer
+
+	err = listVms(ctx, &output)
 	if err != nil {
 		t.Error("Not expecting error listing cluster VMs: " + err.Error())
+	}
+
+	// Verify we printed a list of cluster vms starting with a bracket
+	err = checkRegExp(`^\s*\[`, output)
+	if err != nil {
+		t.Errorf("List cluster vms didn't produce a JSON list that starts with a bracket (list): %s", err)
+	}
+	// and end with a bracket (two regular expressions because it's multiline, it's easier)
+	err = checkRegExp(`\]\s*$`, output)
+	if err != nil {
+		t.Errorf("List cluster vms didn't produce JSON that ended in a bracket (list): %s", err)
+	}
+	// And spot check that we have the "id" field
+	err = checkRegExp(`\"id\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("List cluster vms didn't produce a JSON field named 'id': %s", err)
 	}
 }

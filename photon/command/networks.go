@@ -11,12 +11,14 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"regexp"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
@@ -27,7 +29,7 @@ import (
 //              delete; Usage: network delete <id>
 //              list;   Usage: network list
 //              show;   Usage: network show <id>
-//              setDefault; Usage: network setDefault <id>
+//              set-default; Usage: network setDefault <id>
 func GetNetworksCommand() cli.Command {
 	command := cli.Command{
 		Name:  "network",
@@ -51,7 +53,7 @@ func GetNetworksCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createNetwork(c)
+					err := createNetwork(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -77,7 +79,7 @@ func GetNetworksCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := listNetworks(c)
+					err := listNetworks(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -87,17 +89,17 @@ func GetNetworksCommand() cli.Command {
 				Name:  "show",
 				Usage: "Show specified network",
 				Action: func(c *cli.Context) {
-					err := showNetwork(c)
+					err := showNetwork(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
 				},
 			},
 			{
-				Name:  "setDefault",
+				Name:  "set-default",
 				Usage: "Set default network",
 				Action: func(c *cli.Context) {
-					err := setDefaultNetwork(c)
+					err := setDefaultNetwork(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -108,7 +110,7 @@ func GetNetworksCommand() cli.Command {
 	return command
 }
 
-func createNetwork(c *cli.Context) error {
+func createNetwork(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "network create [<options>]")
 	if err != nil {
 		return err
@@ -118,7 +120,7 @@ func createNetwork(c *cli.Context) error {
 	description := c.String("description")
 	portGroups := c.String("portgroups")
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !utils.IsNonInteractive(c) {
 		name, err = askForInput("Network name: ", name)
 		if err != nil {
 			return err
@@ -147,7 +149,7 @@ func createNetwork(c *cli.Context) error {
 		PortGroups:  portGroupList,
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -157,9 +159,17 @@ func createNetwork(c *cli.Context) error {
 		return err
 	}
 
-	_, err = waitOnTaskOperation(task.ID, c)
+	id, err := waitOnTaskOperation(task.ID, c)
 	if err != nil {
 		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		network, err := client.Esxclient.Networks.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(network, w, c)
 	}
 
 	return nil
@@ -172,7 +182,7 @@ func deleteNetwork(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -193,12 +203,12 @@ func deleteNetwork(c *cli.Context) error {
 	return nil
 }
 
-func listNetworks(c *cli.Context) error {
+func listNetworks(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 0, "network list [<options>]")
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -217,6 +227,8 @@ func listNetworks(c *cli.Context) error {
 		for _, network := range networks.Items {
 			fmt.Printf("%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State, network.PortGroups, network.Description)
 		}
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObjects(networks.Items, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -235,14 +247,14 @@ func listNetworks(c *cli.Context) error {
 	return nil
 }
 
-func showNetwork(c *cli.Context) error {
+func showNetwork(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "network show <id>")
 	if err != nil {
 		return err
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -255,6 +267,8 @@ func showNetwork(c *cli.Context) error {
 	if c.GlobalIsSet("non-interactive") {
 		portGroups := getCommaSeparatedStringFromStringArray(network.PortGroups)
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State, portGroups, network.Description)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(network, w, c)
 	} else {
 		fmt.Printf("Network ID: %s\n", network.ID)
 		fmt.Printf("  Name:        %s\n", network.Name)
@@ -267,14 +281,14 @@ func showNetwork(c *cli.Context) error {
 	return nil
 }
 
-func setDefaultNetwork(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "network setDefault <id>")
+func setDefaultNetwork(c *cli.Context, w io.Writer) error {
+	err := checkArgNum(c.Args(), 1, "network set-default <id>")
 	if err != nil {
 		return err
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
 		return err
 	}
@@ -284,10 +298,18 @@ func setDefaultNetwork(c *cli.Context) error {
 		return err
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
-		_, err = waitOnTaskOperation(task.ID, c)
+	if confirmed(utils.IsNonInteractive(c)) {
+		id, err := waitOnTaskOperation(task.ID, c)
 		if err != nil {
 			return err
+		}
+
+		if utils.NeedsFormatting(c) {
+			network, err := client.Esxclient.Networks.Get(id)
+			if err != nil {
+				return err
+			}
+			utils.FormatObject(network, w, c)
 		}
 	} else {
 		fmt.Println("OK. Canceled")
