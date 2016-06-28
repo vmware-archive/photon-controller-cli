@@ -436,11 +436,12 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		SecurityGroups: dcMap.Deployment.AuthSecurityGroups,
 	}
 	networkConfiguration := &photon.NetworkConfigurationCreateSpec{
-		Enabled:     dcMap.Deployment.VirtualNetworkEnabled,
-		Address:     dcMap.Deployment.NetworkManagerAddress,
-		Username:    dcMap.Deployment.NetworkManagerUsername,
-		Password:    dcMap.Deployment.NetworkManagerPassword,
-		TopRouterId: dcMap.Deployment.NetworkTopRouterId,
+		Enabled:       dcMap.Deployment.VirtualNetworkEnabled,
+		Address:       dcMap.Deployment.NetworkManagerAddress,
+		Username:      dcMap.Deployment.NetworkManagerUsername,
+		Password:      dcMap.Deployment.NetworkManagerPassword,
+		NetworkZoneId: dcMap.Deployment.NetworkZoneId,
+		TopRouterId:   dcMap.Deployment.NetworkTopRouterId,
 	}
 	statsInfo := &photon.StatsInfo{
 		Enabled:       dcMap.Deployment.StatsEnabled,

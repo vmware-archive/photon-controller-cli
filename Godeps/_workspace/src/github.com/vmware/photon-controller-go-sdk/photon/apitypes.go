@@ -514,20 +514,22 @@ type AuthInfo struct {
 
 // Represents creation spec for network configuration.
 type NetworkConfigurationCreateSpec struct {
-	Enabled     bool   `json:"virtualNetworkEnabled,omitempty"`
-	Address     string `json:"networkManagerAddress,omitempty"`
-	Username    string `json:"networkManagerUsername,omitempty"`
-	Password    string `json:"networkManagerPassword,omitempty"`
-	TopRouterId string `json:"networkTopRouterId,omitempty"`
+	Enabled       bool   `json:"virtualNetworkEnabled,omitempty"`
+	Address       string `json:"networkManagerAddress,omitempty"`
+	Username      string `json:"networkManagerUsername,omitempty"`
+	Password      string `json:"networkManagerPassword,omitempty"`
+	NetworkZoneId string `json:"networkZoneId,omitempty"`
+	TopRouterId   string `json:"networkTopRouterId,omitempty"`
 }
 
 // Represents network configuration.
 type NetworkConfiguration struct {
-	Enabled     bool   `json:"virtualNetworkEnabled,omitempty"`
-	Address     string `json:"networkManagerAddress,omitempty"`
-	Username    string `json:"networkManagerUsername,omitempty"`
-	Password    string `json:"networkManagerPassword,omitempty"`
-	TopRouterId string `json:"networkTopRouterId,omitempty"`
+	Enabled       bool   `json:"virtualNetworkEnabled,omitempty"`
+	Address       string `json:"networkManagerAddress,omitempty"`
+	Username      string `json:"networkManagerUsername,omitempty"`
+	Password      string `json:"networkManagerPassword,omitempty"`
+	NetworkZoneId string `json:"networkZoneId,omitempty"`
+	TopRouterId   string `json:"networkTopRouterId,omitempty"`
 }
 
 // Creation spec for networks.
