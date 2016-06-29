@@ -266,7 +266,8 @@ func showNetwork(c *cli.Context, w io.Writer) error {
 
 	if c.GlobalIsSet("non-interactive") {
 		portGroups := getCommaSeparatedStringFromStringArray(network.PortGroups)
-		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State, portGroups, network.Description)
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%t\n", network.ID, network.Name, network.State, portGroups,
+			network.Description, network.IsDefault)
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(network, w, c)
 	} else {
