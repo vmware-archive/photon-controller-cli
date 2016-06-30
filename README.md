@@ -186,7 +186,7 @@ You create resource tickets to control the allocations granted to projects,
 which are owned by tenants.
 
 A resource ticket must specify the number of VMs that can be created as well
-as the total number of VMs. It's possible to have user-defined
+as the total amount of RAM consumed by those VMs. It's possible to have user-defined
 resources as well. These are specified as comma-separated limits, and each
 limit is a set of three things:
 
@@ -210,6 +210,7 @@ Creating a ticket with user-defined resources:
 
 
 Viewing tickets:
+
     % photon -n resource-ticket list
     1
     32ad527e-d21a-4b2a-a235-b0883bd64354	cloud-dev-resources vm.memory:2000:GB,vm:1000:COUNT
@@ -300,6 +301,7 @@ Uploading an image (OVA, OVF, or VMDK). The replication type is either EAGER or 
 Usage: `photon image create <IMAGE-FILENAME> -n <IMAGE-NAME> -i <TYPE>`
 
 Example:
+
     % photon image create photon.ova -n photon-os -i EAGER
     Created image 'photon-os' ID: 8d0b9383-ff64-4112-85db-e8111e2269fc
 
