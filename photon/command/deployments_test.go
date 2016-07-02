@@ -407,6 +407,64 @@ func TestResumeSystem(t *testing.T) {
 	}
 }
 
+func TestSetDeploymentSecurityGroups(t *testing.T) {
+	deploymentId := "deployment1"
+	queuedTask := &photon.Task{
+		Operation: "UPDATE_DEPLOYMENT_SECURITY_GROUPS",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: deploymentId},
+	}
+	completedTask := &photon.Task{
+		Operation: "UPDATE_DEPLOYMENT_SECURITY_GROUPS",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: deploymentId},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/deployments/"+deploymentId+"/set_security_groups",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", true, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{deploymentId, "tenant\admingroup"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, globalCtx)
+
+	err = setDeploymentSecurityGroups(cxt)
+	if err != nil {
+		t.Error(err)
+		t.Error("Not expecting setDeploymentSecurityGroups to fail")
+	}
+}
+
 func TestEnableClusterType(t *testing.T) {
 	deploymentId := "deployment1"
 	queuedTask := &photon.Task{
