@@ -18,6 +18,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/vmware/photon-controller-cli/photon/utils"
+
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -46,6 +48,7 @@ func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 //              pause;                          Usage: deployment pause [<id>]
 //              pause-background-tasks;         Usage: deployment pause-background-tasks [<id>]
 //              resume;                         Usage: deployment resume [<id>]
+//              set-security-groups             Usage: deployment set-security-groups [<id>] comma-separated-groups
 
 //              migration prepare;              Usage: deployment prepare migration [<id> <options>]
 //              migration finalize;             Usage: deployment finalize migration [<id> <options>]
@@ -176,6 +179,16 @@ func GetDeploymentsCommand() cli.Command {
 				Usage: "Resume system under the deployment",
 				Action: func(c *cli.Context) {
 					err := resumeSystem(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "set-security-groups",
+				Usage: "Set security groups for a deployment",
+				Action: func(c *cli.Context) {
+					err := setDeploymentSecurityGroups(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -596,6 +609,51 @@ func resumeSystem(c *cli.Context) error {
 	return nil
 }
 
+// Set security groups for a deployment
+func setDeploymentSecurityGroups(c *cli.Context) error {
+	var err error
+	var deploymentId string
+	var groups string
+
+	// We have two cases:
+	// Case 1: arguments are: id groups
+	// Case 2: arguments are: groups
+	if len(c.Args()) == 2 {
+		deploymentId = c.Args()[0]
+		groups = c.Args()[1]
+	} else if len(c.Args()) == 1 {
+		deploymentId, err = getDefaultDeploymentId()
+		if err != nil {
+			return err
+		}
+		groups = c.Args()[0]
+	} else {
+		return fmt.Errorf("Usage: deployments set-security-groups [id] groups")
+	}
+
+	items := regexp.MustCompile(`\s*,\s*`).Split(groups, -1)
+	securityGroups := &photon.SecurityGroupsSpec{
+		Items: items,
+	}
+
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	if err != nil {
+		return err
+	}
+
+	task, err := client.Esxclient.Deployments.SetSecurityGroups(deploymentId, securityGroups)
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 //Enable cluster type for the specified deployment id
 func enableClusterType(c *cli.Context) error {
 	id, err := getDeploymentId(c)
@@ -832,6 +890,11 @@ func getDeploymentId(c *cli.Context) (id string, err error) {
 		return
 	}
 
+	return getDefaultDeploymentId()
+}
+
+// If there is exactly one deployment, return its id, otherwise return an error
+func getDefaultDeploymentId() (id string, err error) {
 	client.Esxclient, err = client.GetClient(true)
 	if err != nil {
 		return
