@@ -143,7 +143,7 @@ func createNetwork(c *cli.Context, w io.Writer) error {
 	}
 
 	portGroupList := regexp.MustCompile(`\s*,\s*`).Split(portGroups, -1)
-	createSpec := &photon.NetworkCreateSpec{
+	createSpec := &photon.SubnetCreateSpec{
 		Name:        name,
 		Description: description,
 		PortGroups:  portGroupList,
@@ -154,7 +154,7 @@ func createNetwork(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	task, err := client.Esxclient.Networks.Create(createSpec)
+	task, err := client.Esxclient.Subnets.Create(createSpec)
 	if err != nil {
 		return err
 	}
@@ -165,7 +165,7 @@ func createNetwork(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		network, err := client.Esxclient.Networks.Get(id)
+		network, err := client.Esxclient.Subnets.Get(id)
 		if err != nil {
 			return err
 		}
@@ -187,7 +187,7 @@ func deleteNetwork(c *cli.Context) error {
 		return err
 	}
 
-	task, err := client.Esxclient.Networks.Delete(id)
+	task, err := client.Esxclient.Subnets.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -214,11 +214,11 @@ func listNetworks(c *cli.Context, w io.Writer) error {
 	}
 
 	name := c.String("name")
-	options := &photon.NetworkGetOptions{
+	options := &photon.SubnetGetOptions{
 		Name: name,
 	}
 
-	networks, err := client.Esxclient.Networks.GetAll(options)
+	networks, err := client.Esxclient.Subnets.GetAll(options)
 	if err != nil {
 		return err
 	}
@@ -259,7 +259,7 @@ func showNetwork(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	network, err := client.Esxclient.Networks.Get(id)
+	network, err := client.Esxclient.Subnets.Get(id)
 	if err != nil {
 		return err
 	}
@@ -294,7 +294,7 @@ func setDefaultNetwork(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	task, err := client.Esxclient.Networks.SetDefault(id)
+	task, err := client.Esxclient.Subnets.SetDefault(id)
 	if err != nil {
 		return err
 	}
@@ -306,7 +306,7 @@ func setDefaultNetwork(c *cli.Context, w io.Writer) error {
 		}
 
 		if utils.NeedsFormatting(c) {
-			network, err := client.Esxclient.Networks.Get(id)
+			network, err := client.Esxclient.Subnets.Get(id)
 			if err != nil {
 				return err
 			}

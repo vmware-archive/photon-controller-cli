@@ -239,7 +239,7 @@ func (api *VmAPI) GetTasks(id string, options *TaskGetOptions) (result *TaskList
 }
 
 func (api *VmAPI) GetNetworks(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Get(api.client.Endpoint+vmUrl+id+"/networks", api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Get(api.client.Endpoint+vmUrl+id+"/subnets", api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
 	}

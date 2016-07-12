@@ -437,7 +437,7 @@ func createVM(c *cli.Context) error {
 	vmSpec.AttachedDisks = disksList
 	vmSpec.Affinities = affinitiesList
 	vmSpec.Environment = environmentMap
-	vmSpec.Networks = networkList
+	vmSpec.Subnets = networkList
 
 	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("\nCreating VM: %s(%s)\n", vmSpec.Name, vmSpec.Flavor)

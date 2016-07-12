@@ -25,12 +25,12 @@ import (
 )
 
 type MockNetworksPage struct {
-	Items            []photon.Network `json:"items"`
-	NextPageLink     string           `json:"nextPageLink"`
-	PreviousPageLink string           `json:"previousPageLink"`
+	Items            []photon.Subnet `json:"items"`
+	NextPageLink     string          `json:"nextPageLink"`
+	PreviousPageLink string          `json:"previousPageLink"`
 }
 
-func TestCreateDeleteNetwork(t *testing.T) {
+func TestCreateDeleteSubnet(t *testing.T) {
 	queuedTask := &photon.Task{
 		Operation: "CREATE_NETWORK",
 		State:     "QUEUED",
@@ -53,7 +53,7 @@ func TestCreateDeleteNetwork(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/networks",
+		server.URL+"/subnets",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -105,7 +105,7 @@ func TestCreateDeleteNetwork(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/networks/"+queuedTask.Entity.ID,
+		server.URL+"/subnets/"+queuedTask.Entity.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -129,7 +129,7 @@ func TestListNetworks(t *testing.T) {
 	defer server.Close()
 
 	expectedList := MockNetworksPage{
-		Items: []photon.Network{
+		Items: []photon.Subnet{
 			{
 				ID:         "network_id",
 				Name:       "network_name",
@@ -148,11 +148,11 @@ func TestListNetworks(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/networks",
+		server.URL+"/subnets",
 		mocks.CreateResponder(200, string(response[:])))
 
 	expectedList = MockNetworksPage{
-		Items:            []photon.Network{},
+		Items:            []photon.Subnet{},
 		NextPageLink:     "",
 		PreviousPageLink: "",
 	}
@@ -209,7 +209,7 @@ func TestListNetworks(t *testing.T) {
 }
 
 func TestShowNetworks(t *testing.T) {
-	expectedStruct := photon.Network{
+	expectedStruct := photon.Subnet{
 		ID:         "network_id",
 		Name:       "network_name",
 		PortGroups: []string{"port", "group"},
@@ -224,7 +224,7 @@ func TestShowNetworks(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/networks/"+expectedStruct.ID,
+		server.URL+"/subnets/"+expectedStruct.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -256,7 +256,7 @@ func TestSetDefaultNetwork(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/networks/"+completedTask.Entity.ID+"/set_default",
+		server.URL+"/subnets/"+completedTask.Entity.ID+"/set_default",
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	mocks.RegisterResponder(
 		"GET",

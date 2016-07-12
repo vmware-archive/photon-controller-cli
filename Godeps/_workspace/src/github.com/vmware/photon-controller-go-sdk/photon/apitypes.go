@@ -313,7 +313,7 @@ type VmCreateSpec struct {
 	Affinities    []LocalitySpec    `json:"affinities,omitempty"`
 	Name          string            `json:"name"`
 	Tags          []string          `json:"tags,omitempty"`
-	Networks      []string          `json:"networks,omitempty"`
+	Subnets       []string          `json:"subnets,omitempty"`
 	Environment   map[string]string `json:"environment,omitempty"`
 }
 
@@ -532,15 +532,15 @@ type NetworkConfiguration struct {
 	TopRouterId   string `json:"networkTopRouterId,omitempty"`
 }
 
-// Creation spec for networks.
-type NetworkCreateSpec struct {
+// Creation spec for subnets.
+type SubnetCreateSpec struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description,omitempty"`
 	PortGroups  []string `json:"portGroups"`
 }
 
-// Represents a network
-type Network struct {
+// Represents a subnet
+type Subnet struct {
 	Kind        string   `json:"kind"`
 	Name        string   `json:"name"`
 	Description string   `json:"description,omitempty"`
@@ -552,9 +552,9 @@ type Network struct {
 	IsDefault   bool     `json:"isDefault"`
 }
 
-// Represents multiple networks returned by the API
-type Networks struct {
-	Items []Network `json:"items"`
+// Represents multiple subnets returned by the API
+type Subnets struct {
+	Items []Subnet `json:"items"`
 }
 
 // Creation spec for Cluster Configuration.

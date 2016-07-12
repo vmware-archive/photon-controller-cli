@@ -15,25 +15,25 @@ import (
 )
 
 // Contains functionality for networks API.
-type NetworksAPI struct {
+type SubnetsAPI struct {
 	client *Client
 }
 
 // Options used for GetAll API
-type NetworkGetOptions struct {
+type SubnetGetOptions struct {
 	Name string `urlParam:"name"`
 }
 
-var networkUrl string = "/networks"
+var subnetUrl string = "/subnets"
 
 // Creates a network.
-func (api *NetworksAPI) Create(networkSpec *NetworkCreateSpec) (task *Task, err error) {
+func (api *SubnetsAPI) Create(networkSpec *SubnetCreateSpec) (task *Task, err error) {
 	body, err := json.Marshal(networkSpec)
 	if err != nil {
 		return
 	}
 	res, err := api.client.restClient.Post(
-		api.client.Endpoint+networkUrl,
+		api.client.Endpoint+subnetUrl,
 		"application/json",
 		bytes.NewBuffer(body),
 		api.client.options.TokenOptions.AccessToken)
@@ -46,8 +46,8 @@ func (api *NetworksAPI) Create(networkSpec *NetworkCreateSpec) (task *Task, err 
 }
 
 // Deletes a network with specified ID.
-func (api *NetworksAPI) Delete(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Delete(api.client.Endpoint+networkUrl+"/"+id, api.client.options.TokenOptions.AccessToken)
+func (api *SubnetsAPI) Delete(id string) (task *Task, err error) {
+	res, err := api.client.restClient.Delete(api.client.Endpoint+subnetUrl+"/"+id, api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
 	}
@@ -57,8 +57,8 @@ func (api *NetworksAPI) Delete(id string) (task *Task, err error) {
 }
 
 // Gets a network with the specified ID.
-func (api *NetworksAPI) Get(id string) (network *Network, err error) {
-	res, err := api.client.restClient.Get(api.client.Endpoint+networkUrl+"/"+id, api.client.options.TokenOptions.AccessToken)
+func (api *SubnetsAPI) Get(id string) (network *Subnet, err error) {
+	res, err := api.client.restClient.Get(api.client.Endpoint+subnetUrl+"/"+id, api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
 	}
@@ -67,28 +67,28 @@ func (api *NetworksAPI) Get(id string) (network *Network, err error) {
 	if err != nil {
 		return
 	}
-	var result Network
+	var result Subnet
 	err = json.NewDecoder(res.Body).Decode(&result)
 	return &result, nil
 }
 
 // Returns all networks
-func (api *NetworksAPI) GetAll(options *NetworkGetOptions) (result *Networks, err error) {
-	uri := api.client.Endpoint + networkUrl
+func (api *SubnetsAPI) GetAll(options *SubnetGetOptions) (result *Subnets, err error) {
+	uri := api.client.Endpoint + subnetUrl
 	if options != nil {
 		uri += getQueryString(options)
 	}
 	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions.AccessToken)
 
-	result = &Networks{}
+	result = &Subnets{}
 	err = json.Unmarshal(res, result)
 	return
 }
 
 // Sets default network.
-func (api *NetworksAPI) SetDefault(id string) (task *Task, err error) {
+func (api *SubnetsAPI) SetDefault(id string) (task *Task, err error) {
 	res, err := api.client.restClient.Post(
-		api.client.Endpoint+networkUrl+"/"+id+"/set_default",
+		api.client.Endpoint+subnetUrl+"/"+id+"/set_default",
 		"application/json",
 		bytes.NewBuffer([]byte("")),
 		api.client.options.TokenOptions.AccessToken)

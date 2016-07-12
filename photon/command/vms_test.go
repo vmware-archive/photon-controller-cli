@@ -969,7 +969,7 @@ func TestVMNetworks(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/vms/"+"fake_vm_ID"+"/networks",
+		server.URL+"/vms/"+"fake_vm_ID"+"/subnets",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
