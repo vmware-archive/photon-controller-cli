@@ -419,17 +419,18 @@ func getVMNetworks(id string, isScripting bool) (networks []interface{}, err err
 }
 
 func printVMNetworks(networks []interface{}, isScripting bool) error {
-	networkName := "-"
-	macAddr := "-"
-	ipAddr := "-"
-	netMask := "-"
-	isConnected := "-"
 	w := new(tabwriter.Writer)
 	if !isScripting {
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
 		fmt.Fprintf(w, "Network\tMAC Address\tIP Address\tNetmask\tIsConnected\n")
 	}
 	for _, nt := range networks {
+		networkName := "-"
+		macAddr := "-"
+		ipAddr := "-"
+		netMask := "-"
+		isConnected := "-"
+
 		network := nt.(map[string]interface{})
 		if val, ok := network["network"]; ok && val != nil {
 			networkName = val.(string)
