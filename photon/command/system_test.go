@@ -86,7 +86,7 @@ deployment:
   ntp_endpoint: 10.20.144.1
   use_image_datastore_for_vms: true
   auth_enabled: false
-  virtual_network_enabled: false
+  sdn_enabled: false
 hosts:
   - address_ranges: 10.146.38.91
     username: root

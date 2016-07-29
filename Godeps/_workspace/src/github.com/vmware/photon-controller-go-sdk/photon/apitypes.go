@@ -514,7 +514,7 @@ type AuthInfo struct {
 
 // Represents creation spec for network configuration.
 type NetworkConfigurationCreateSpec struct {
-	Enabled       bool   `json:"virtualNetworkEnabled,omitempty"`
+	Enabled       bool   `json:"sdnEnabled,omitempty"`
 	Address       string `json:"networkManagerAddress,omitempty"`
 	Username      string `json:"networkManagerUsername,omitempty"`
 	Password      string `json:"networkManagerPassword,omitempty"`
@@ -524,7 +524,7 @@ type NetworkConfigurationCreateSpec struct {
 
 // Represents network configuration.
 type NetworkConfiguration struct {
-	Enabled       bool   `json:"virtualNetworkEnabled,omitempty"`
+	Enabled       bool   `json:"sdnEnabled,omitempty"`
 	Address       string `json:"networkManagerAddress,omitempty"`
 	Username      string `json:"networkManagerUsername,omitempty"`
 	Password      string `json:"networkManagerPassword,omitempty"`
