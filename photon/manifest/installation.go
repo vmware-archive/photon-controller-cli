@@ -40,7 +40,7 @@ type deployment struct {
 	AuthTenant         string   `yaml:"oauth_tenant"`
 	AuthSecurityGroups []string `yaml:"oauth_security_groups"`
 
-	VirtualNetworkEnabled  bool   `yaml:"virtual_network_enabled"`
+	SdnEnabled             bool   `yaml:"sdn_enabled"`
 	NetworkManagerAddress  string `yaml:"network_manager_address"`
 	NetworkManagerUsername string `yaml:"network_manager_username"`
 	NetworkManagerPassword string `yaml:"network_manager_password"`

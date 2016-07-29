@@ -410,7 +410,7 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 	err = validateDeploymentArguments(
 		dcMap.Deployment.ImageDatastores, dcMap.Deployment.AuthEnabled,
 		dcMap.Deployment.AuthTenant, dcMap.Deployment.AuthUsername, dcMap.Deployment.AuthPassword,
-		dcMap.Deployment.AuthSecurityGroups, dcMap.Deployment.VirtualNetworkEnabled,
+		dcMap.Deployment.AuthSecurityGroups, dcMap.Deployment.SdnEnabled,
 		dcMap.Deployment.NetworkManagerAddress, dcMap.Deployment.NetworkManagerUsername,
 		dcMap.Deployment.NetworkManagerPassword,
 		dcMap.Deployment.StatsEnabled, dcMap.Deployment.StatsStoreEndpoint,
@@ -436,7 +436,7 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		SecurityGroups: dcMap.Deployment.AuthSecurityGroups,
 	}
 	networkConfiguration := &photon.NetworkConfigurationCreateSpec{
-		Enabled:       dcMap.Deployment.VirtualNetworkEnabled,
+		Enabled:       dcMap.Deployment.SdnEnabled,
 		Address:       dcMap.Deployment.NetworkManagerAddress,
 		Username:      dcMap.Deployment.NetworkManagerUsername,
 		Password:      dcMap.Deployment.NetworkManagerPassword,
