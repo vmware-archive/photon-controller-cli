@@ -22,6 +22,8 @@ import (
 	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 	"github.com/vmware/photon-controller-cli/photon/client"
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Create a cli.command object for command "target"
@@ -172,9 +174,14 @@ func login(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		password, err = askForInput("Password: ", password)
-		if err != nil {
-			return err
+		if len(password) == 0 {
+			fmt.Printf("Password:")
+			bytePassword, err := terminal.ReadPassword(0)
+			if err != nil {
+				return err
+			}
+			password = string(bytePassword)
+			fmt.Printf("\n")
 		}
 	}
 
