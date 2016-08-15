@@ -17,7 +17,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
+	"github.com/vmware/photon-controller-go-sdk/photon"
 
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
 )

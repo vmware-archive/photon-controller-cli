@@ -22,8 +22,8 @@ import (
 
 	"encoding/json"
 
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
+	"github.com/codegangsta/cli"
+	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
 // Creates a cli.Command for host

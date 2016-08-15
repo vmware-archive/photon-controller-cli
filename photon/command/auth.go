@@ -17,9 +17,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon/lightwave"
+	"github.com/codegangsta/cli"
+	"github.com/vmware/photon-controller-go-sdk/photon"
+	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 
 	"os"
 	"text/tabwriter"
