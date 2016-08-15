@@ -10,7 +10,7 @@
 package manifest
 
 import (
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"regexp"
 )

@@ -16,12 +16,12 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
+	"github.com/codegangsta/cli"
 
 	"crypto/x509"
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 	"github.com/vmware/photon-controller-cli/photon/client"
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
+	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 
 	"golang.org/x/crypto/ssh/terminal"
 )

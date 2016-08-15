@@ -20,9 +20,9 @@ import (
 
 	"github.com/vmware/photon-controller-cli/photon/utils"
 
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
+	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
 type VM_NetworkIPs struct {

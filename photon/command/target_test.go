@@ -15,7 +15,7 @@ import (
 
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
 
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
+	"github.com/codegangsta/cli"
 )
 
 func TestSetEndpoint(t *testing.T) {

@@ -11,7 +11,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
+	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/command"
 	"github.com/vmware/photon-controller-cli/photon/utils"

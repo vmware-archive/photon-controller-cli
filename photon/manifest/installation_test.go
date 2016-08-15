@@ -12,8 +12,8 @@ package manifest_test
 import (
 	. "github.com/vmware/photon-controller-cli/photon/manifest"
 
-	. "github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/onsi/ginkgo"
-	. "github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"io/ioutil"
 	"os"
 )
