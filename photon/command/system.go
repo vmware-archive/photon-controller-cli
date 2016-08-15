@@ -21,10 +21,10 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/codegangsta/cli"
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
+	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/manifest"
+	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
 // Create a cli.command object for command "system"

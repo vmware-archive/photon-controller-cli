@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vmware/photon-controller-cli/Godeps/_workspace/src/github.com/vmware/photon-controller-go-sdk/photon"
+	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
 // Get limitsList from -limits/-l string flag

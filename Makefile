@@ -1,9 +1,8 @@
 # Makefile to help building go components
 
-GO=godep go
 COMMAND_NAME=photon
 LDFLAGS="-X main.githash=`git rev-parse --short HEAD` -X main.commandName=$(COMMAND_NAME)"
-GOBUILD=$(GO) build -ldflags $(LDFLAGS)
+GOBUILD=go build -ldflags $(LDFLAGS)
 
 all: test build binaries
 
@@ -41,8 +40,8 @@ tools:
 	go get -u github.com/tools/godep
 
 test: tools
-	errcheck ./...
-	$(GO) vet ./...
+	errcheck ./photon/...
+	go vet `go list ./... | grep -v '/vendor/'`
 	golint
 	! gofmt -l photon 2>&1 | read || (gofmt -d photon; echo "ERROR: Fix gofmt errors. Run 'gofmt -w photon'"; exit 1)
-	$(GO) test -v ./...
+	go test -v ./...
