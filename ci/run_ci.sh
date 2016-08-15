@@ -3,7 +3,7 @@
 # Terminate script on error
 set -e
 
-export GOPATH=$WORKSPACE:$WORKSPACE/Godeps/_workspace
+export GOPATH=$WORKSPACE
 export PATH=$PATH:$WORKSPACE/bin
 
 # $WORKSPACE will be the root of the git repo that is pulled in by Jenkins.
@@ -20,4 +20,3 @@ make all
 
 rm -rf $WORKSPACE/bin
 mv bin $WORKSPACE/.
-
