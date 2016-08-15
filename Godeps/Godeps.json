@@ -143,13 +143,13 @@
 		},
 		{
 			"ImportPath": "github.com/vmware/photon-controller-go-sdk/photon",
-			"Comment": "PROMOTED-233",
-			"Rev": "82f68086afa91da3de59b6023b8ffb9882af959b"
+			"Comment": "PROMOTED-249",
+			"Rev": "4bc8f06032ef80967f91e5e39955421d668c0b1d"
 		},
 		{
 			"ImportPath": "github.com/vmware/photon-controller-go-sdk/photon/lightwave",
-			"Comment": "PROMOTED-233",
-			"Rev": "82f68086afa91da3de59b6023b8ffb9882af959b"
+			"Comment": "PROMOTED-249",
+			"Rev": "4bc8f06032ef80967f91e5e39955421d668c0b1d"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/ssh/terminal",

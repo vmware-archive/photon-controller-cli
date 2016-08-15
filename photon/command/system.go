@@ -436,12 +436,14 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		SecurityGroups: dcMap.Deployment.AuthSecurityGroups,
 	}
 	networkConfiguration := &photon.NetworkConfigurationCreateSpec{
-		Enabled:       dcMap.Deployment.SdnEnabled,
-		Address:       dcMap.Deployment.NetworkManagerAddress,
-		Username:      dcMap.Deployment.NetworkManagerUsername,
-		Password:      dcMap.Deployment.NetworkManagerPassword,
-		NetworkZoneId: dcMap.Deployment.NetworkZoneId,
-		TopRouterId:   dcMap.Deployment.NetworkTopRouterId,
+		Enabled:         dcMap.Deployment.SdnEnabled,
+		Address:         dcMap.Deployment.NetworkManagerAddress,
+		Username:        dcMap.Deployment.NetworkManagerUsername,
+		Password:        dcMap.Deployment.NetworkManagerPassword,
+		NetworkZoneId:   dcMap.Deployment.NetworkZoneId,
+		TopRouterId:     dcMap.Deployment.NetworkTopRouterId,
+		IpRange:         dcMap.Deployment.NetworkIpRange,
+		FloatingIpRange: dcMap.Deployment.NetworkFloatingIpRange,
 	}
 	statsInfo := &photon.StatsInfo{
 		Enabled:       dcMap.Deployment.StatsEnabled,
