@@ -170,6 +170,89 @@ deployment:
 					})
 				})
 			})
+
+			Describe("network_configuration", func() {
+				Context("sdn is not enabled", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+  sdn_enabled: false
+`
+					})
+
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.SdnEnabled).To(BeFalse())
+					})
+				})
+
+				Context("sdn is enabled", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+  sdn_enabled: true
+  network_manager_address: 192.168.1.1
+  network_manager_username: username
+  network_manager_password: password
+  network_zone_id: tz1
+  network_top_router_id: router1
+  network_ip_range: 192.168.2.0/25
+  network_floating_ip_range: 10.136.4.0/25
+`
+					})
+
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.SdnEnabled).To(BeTrue())
+						Expect(inst.Deployment.NetworkManagerAddress).To(BeEquivalentTo("192.168.1.1"))
+						Expect(inst.Deployment.NetworkManagerUsername).To(BeEquivalentTo("username"))
+						Expect(inst.Deployment.NetworkManagerPassword).To(BeEquivalentTo("password"))
+						Expect(inst.Deployment.NetworkZoneId).To(BeEquivalentTo("tz1"))
+						Expect(inst.Deployment.NetworkTopRouterId).To(BeEquivalentTo("router1"))
+						Expect(inst.Deployment.NetworkIpRange).To(BeEquivalentTo("192.168.2.0/25"))
+						Expect(inst.Deployment.NetworkFloatingIpRange).To(BeEquivalentTo("10.136.4.0/25"))
+					})
+				})
+
+				Context("when the value of sdn_enabled is a value other than 'true' or 'false'", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+  sdn_enabled: other_value
+`
+					})
+
+					It("fails to load file", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(MatchError(
+							"yaml: unmarshal errors:\n  line 3: cannot unmarshal !!str `other_v...` into bool"))
+
+						Expect(inst).To(BeNil())
+					})
+				})
+
+				Context("when value is not provided", func() {
+					BeforeEach(func() {
+						fileContent = `---
+deployment:
+`
+					})
+
+					It("loads successfully", func() {
+						inst, err := LoadInstallation(file.Name())
+						Expect(err).To(BeNil())
+
+						Expect(inst).ToNot(BeNil())
+						Expect(inst.Deployment.SdnEnabled).To(BeFalse())
+					})
+				})
+			})
 		})
 	})
 })
