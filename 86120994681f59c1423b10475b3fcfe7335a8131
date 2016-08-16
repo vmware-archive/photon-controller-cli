@@ -1,0 +1,7 @@
+Verified+1: Gerrit-Jenkins
+Code-Review+2: Gokcen Iskender <giskender@vmware.com>
+Submitted-by: Varnika Goyal <goyalv@vmware.com>
+Submitted-at: Tue, 16 Aug 2016 15:12:22 -0700
+Reviewed-on: https://review.ec.eng.vmware.com/14955
+Project: photon-controller-cli
+Branch: refs/heads/v1.0.0
