@@ -36,8 +36,8 @@ import (
 //      suspend;      Usage: vm suspend <id>
 //      resume;       Usage: vm resume <id>
 //      restart;      Usage: vm restart <id>
-//      attach-disk;  Usage: vm attach-disk <id> [<options>]
-//      detach-disk;  Usage: vm detach-disk <id> [<options>]
+//      attach-disk;  Usage: vm attach-disk <vm-id> [<options>]
+//      detach-disk;  Usage: vm detach-disk <vm-id> [<options>]
 //      attach-iso;   Usage: vm attach-iso <id> [<options>]
 //      detach-iso;   Usage: vm detach-iso <id> [<options>]
 //      set-metadata; Usage: vm set-metadata <id> [<options>]
@@ -213,8 +213,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "attach-disk",
-				Usage: "attach disk to VM",
+				Name:      "attach-disk",
+				Usage:     "attach disk to VM",
+				ArgsUsage: "vm-id",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "disk, d",
@@ -229,8 +230,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "detach-disk",
-				Usage: "detach disk from VM",
+				Name:      "detach-disk",
+				Usage:     "detach disk from VM",
+				ArgsUsage: "vm-id",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "disk, d",
@@ -797,7 +799,7 @@ func restartVM(c *cli.Context) error {
 }
 
 func attachDisk(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm attach-disk <id> [<options>]")
+	err := checkArgNum(c.Args(), 1, "vm attach-disk --disk <id> <vm-id>")
 	if err != nil {
 		return err
 	}
@@ -828,7 +830,7 @@ func attachDisk(c *cli.Context) error {
 }
 
 func detachDisk(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm detach-disk <id> [<options>]")
+	err := checkArgNum(c.Args(), 1, "vm detach-disk --disk <id> <vm-id>")
 	if err != nil {
 		return err
 	}
