@@ -118,7 +118,7 @@ func TestCreateDeleteCluster(t *testing.T) {
 	set.String("type", "KUBERNETES", "cluster type")
 	set.String("vm_flavor", "fake_vm_flavor", "vm flavor name")
 	set.String("disk_flavor", "fake_disk_flavor", "disk flavor name")
-	set.Int("slave_count", 50, "slave count")
+	set.Int("worker_count", 50, "worker count")
 	set.String("dns", "1.1.1.1", "VM network DNS")
 	set.String("gateway", "1.1.1.2", "VM network gateway")
 	set.String("netmask", "0.0.0.255", "VM network netmask")
@@ -175,11 +175,11 @@ func TestCreateDeleteCluster(t *testing.T) {
 
 func TestShowCluster(t *testing.T) {
 	cluster := &photon.Cluster{
-		Name:       "fake_cluster_name",
-		State:      "ERROR",
-		ID:         "fake_cluster_id",
-		Type:       "KUBERNETES",
-		SlaveCount: 50,
+		Name:        "fake_cluster_name",
+		State:       "ERROR",
+		ID:          "fake_cluster_id",
+		Type:        "KUBERNETES",
+		WorkerCount: 50,
 	}
 	clusterResponse, err := json.Marshal(cluster)
 	if err != nil {
@@ -313,11 +313,11 @@ func TestListClusters(t *testing.T) {
 	firstClustersPage := MockClustersPage{
 		Items: []photon.Cluster{
 			{
-				Name:       "fake_cluster_name",
-				State:      "READY",
-				ID:         "fake_cluster_id",
-				Type:       "KUBERNETES",
-				SlaveCount: 50,
+				Name:        "fake_cluster_name",
+				State:       "READY",
+				ID:          "fake_cluster_id",
+				Type:        "KUBERNETES",
+				WorkerCount: 50,
 			},
 		},
 		NextPageLink:     "/fake-next-page-link",
