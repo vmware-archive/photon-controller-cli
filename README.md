@@ -42,7 +42,7 @@ When there are changes in SDK, wait for them promoted to **_master_** branch on 
 Follow the steps below:
 
     1. go get -u github.com/vmware/photon-controller-go-sdk/photon
-    2. godep update github.com/vmware/photon-controller-go-sdk/...
+    2. govendor update github.com/vmware/photon-controller-go-sdk/...
 
 Before comitting the change, carefully inspect the changes to Godeps, for example with git diff or SourceTree.
 
