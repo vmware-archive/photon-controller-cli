@@ -74,6 +74,10 @@ func GetClusterCommand() cli.Command {
 						Name:  "slave_count, s",
 						Usage: "Slave count",
 					},
+					cli.IntFlag{
+						Name:  "worker_count, wc",
+						Usage: "Worker count",
+					},
 					cli.StringFlag{
 						Name:  "dns",
 						Usage: "VM network DNS server IP address",
@@ -119,8 +123,12 @@ func GetClusterCommand() cli.Command {
 						Usage: "Static IP address with which to create etcd node 3 (required for Kubernetes and Swarm clusters)",
 					},
 					cli.IntFlag{
-						Name:  "batchSize",
+						Name:  "batch",
 						Usage: "Batch size for expanding slave nodes",
+					},
+					cli.IntFlag{
+						Name:  "batch_size_worker",
+						Usage: "Batch size for expanding worker nodes",
 					},
 					cli.BoolFlag{
 						Name:  "wait-for-ready",
@@ -209,6 +217,19 @@ func GetClusterCommand() cli.Command {
 	return command
 }
 
+// a function returns the bigger of value of the two inputs
+func max(num1, num2 int) int {
+	/* local variable declaration */
+	var result int
+
+	if num1 > num2 {
+		result = num1
+	} else {
+		result = num2
+	}
+	return result
+}
+
 // Sends a "create cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
 func createCluster(c *cli.Context, w io.Writer) error {
@@ -225,6 +246,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	disk_flavor := c.String("disk_flavor")
 	network_id := c.String("network_id")
 	slave_count := c.Int("slave_count")
+	worker_count := max(c.Int("worker_count"), slave_count)
 	dns := c.String("dns")
 	gateway := c.String("gateway")
 	netmask := c.String("netmask")
@@ -236,10 +258,12 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	etcd1 := c.String("etcd1")
 	etcd2 := c.String("etcd2")
 	etcd3 := c.String("etcd3")
-	batch_size := c.Int("batchSize")
+	batch_size := c.Int("batch")
+	batch_size_worker := max(c.Int("batch_size_worker"), batch_size)
+
 	wait_for_ready := c.IsSet("wait-for-ready")
 
-	const DEFAULT_SLAVE_COUNT = 1
+	const DEFAULT_WORKER_COUNT = 1
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
@@ -265,14 +289,14 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		if slave_count == 0 {
-			slave_count_string, err := askForInput("Slave count: ", "")
+		if worker_count == 0 {
+			worker_count_string, err := askForInput("Worker count: ", "")
 			if err != nil {
 				return err
 			}
-			slave_count, err = strconv.Atoi(slave_count_string)
+			worker_count, err = strconv.Atoi(worker_count_string)
 			if err != nil {
-				return fmt.Errorf("Please supply a valid slave count")
+				return fmt.Errorf("Please supply a valid worker count")
 			}
 		}
 	}
@@ -281,8 +305,8 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		return fmt.Errorf("Provide a valid cluster name and type")
 	}
 
-	if slave_count == 0 {
-		slave_count = DEFAULT_SLAVE_COUNT
+	if worker_count == 0 {
+		worker_count = DEFAULT_WORKER_COUNT
 	}
 
 	if !utils.IsNonInteractive(c) {
@@ -317,7 +341,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 			if err != nil {
 				return err
 			}
-			container_network, err = askForInput("Kubernetes slave network ID: ", container_network)
+			container_network, err = askForInput("Kubernetes worker network ID: ", container_network)
 			if err != nil {
 				return err
 			}
@@ -406,8 +430,8 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	clusterSpec.VMFlavor = vm_flavor
 	clusterSpec.DiskFlavor = disk_flavor
 	clusterSpec.NetworkID = network_id
-	clusterSpec.SlaveCount = slave_count
-	clusterSpec.BatchSize = batch_size
+	clusterSpec.WorkerCount = worker_count
+	clusterSpec.BatchSizeWorker = batch_size_worker
 	clusterSpec.ExtendedProperties = extended_properties
 
 	if !utils.IsNonInteractive(c) {
@@ -419,9 +443,9 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		if len(clusterSpec.DiskFlavor) != 0 {
 			fmt.Printf("  Disk flavor: %s\n", clusterSpec.DiskFlavor)
 		}
-		fmt.Printf("  Slave count: %d\n", clusterSpec.SlaveCount)
-		if clusterSpec.BatchSize != 0 {
-			fmt.Printf("  Batch size: %d\n", clusterSpec.BatchSize)
+		fmt.Printf("  Worker count: %d\n", clusterSpec.WorkerCount)
+		if clusterSpec.BatchSizeWorker != 0 {
+			fmt.Printf("  Batch size: %d\n", clusterSpec.BatchSizeWorker)
 		}
 		fmt.Printf("\n")
 	}
@@ -491,7 +515,7 @@ func showCluster(c *cli.Context, w io.Writer) error {
 	var master_vms []photon.VM
 	for _, vm := range vms.Items {
 		for _, tag := range vm.Tags {
-			if strings.Count(tag, ":") == 2 && !strings.Contains(strings.ToLower(tag), "slave") {
+			if strings.Count(tag, ":") == 2 && !strings.Contains(strings.ToLower(tag), "worker") {
 				master_vms = append(master_vms, vm)
 				break
 			}
@@ -501,7 +525,7 @@ func showCluster(c *cli.Context, w io.Writer) error {
 	if c.GlobalIsSet("non-interactive") {
 		extendedProperties := strings.Trim(strings.TrimLeft(fmt.Sprint(cluster.ExtendedProperties), "map"), "[]")
 		fmt.Printf("%s\t%s\t%s\t%s\t%d\t%s\n", cluster.ID, cluster.Name, cluster.State, cluster.Type,
-			cluster.SlaveCount, extendedProperties)
+			cluster.WorkerCount, extendedProperties)
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(cluster, w, c)
 	} else {
@@ -509,7 +533,7 @@ func showCluster(c *cli.Context, w io.Writer) error {
 		fmt.Println("  Name:                ", cluster.Name)
 		fmt.Println("  State:               ", cluster.State)
 		fmt.Println("  Type:                ", cluster.Type)
-		fmt.Println("  Slave count:         ", cluster.SlaveCount)
+		fmt.Println("  Worker count:        ", cluster.WorkerCount)
 		fmt.Println("  Extended Properties: ", cluster.ExtendedProperties)
 		fmt.Println()
 	}
@@ -592,18 +616,18 @@ func listVms(c *cli.Context, w io.Writer) error {
 // Sends a "resize cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
 func resizeCluster(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 2, "cluster resize <id> <new slave count> [<options>]")
+	err := checkArgNum(c.Args(), 2, "cluster resize <id> <new worker count> [<options>]")
 	if err != nil {
 		return err
 	}
 
 	cluster_id := c.Args()[0]
-	slave_count_string := c.Args()[1]
-	slave_count, err := strconv.Atoi(slave_count_string)
+	worker_count_string := c.Args()[1]
+	worker_count, err := strconv.Atoi(worker_count_string)
 	wait_for_ready := c.IsSet("wait-for-ready")
 
-	if len(cluster_id) == 0 || err != nil || slave_count <= 0 {
-		return fmt.Errorf("Provide a valid cluster ID and slave count")
+	if len(cluster_id) == 0 || err != nil || worker_count <= 0 {
+		return fmt.Errorf("Provide a valid cluster ID and worker count")
 	}
 
 	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
@@ -612,12 +636,12 @@ func resizeCluster(c *cli.Context, w io.Writer) error {
 	}
 
 	if !utils.IsNonInteractive(c) {
-		fmt.Printf("\nResizing cluster %s to slave count %d\n", cluster_id, slave_count)
+		fmt.Printf("\nResizing cluster %s to worker count %d\n", cluster_id, worker_count)
 	}
 
 	if confirmed(utils.IsNonInteractive(c)) {
 		resizeSpec := photon.ClusterResizeOperation{}
-		resizeSpec.NewSlaveCount = slave_count
+		resizeSpec.NewWorkerCount = worker_count
 		resizeTask, err := client.Esxclient.Clusters.Resize(cluster_id, &resizeSpec)
 		if err != nil {
 			return err
