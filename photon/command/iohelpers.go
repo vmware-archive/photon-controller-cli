@@ -328,7 +328,7 @@ func printClusterList(clusterList []photon.Cluster, w io.Writer, c *cli.Context,
 	if c.GlobalIsSet("non-interactive") {
 		if !summaryView {
 			for _, cluster := range clusterList {
-				fmt.Printf("%s\t%s\t%s\t%s\t%d\n", cluster.ID, cluster.Name, cluster.Type, cluster.State, cluster.SlaveCount)
+				fmt.Printf("%s\t%s\t%s\t%s\t%d\n", cluster.ID, cluster.Name, cluster.Type, cluster.State, cluster.WorkerCount)
 			}
 		}
 	} else if c.GlobalString("output") != "" {
@@ -337,9 +337,9 @@ func printClusterList(clusterList []photon.Cluster, w io.Writer, c *cli.Context,
 		if !summaryView {
 			w := new(tabwriter.Writer)
 			w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-			fmt.Fprintf(w, "ID\tName\tType\tState\tSlave Count\n")
+			fmt.Fprintf(w, "ID\tName\tType\tState\tWorker Count\n")
 			for _, cluster := range clusterList {
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\n", cluster.ID, cluster.Name, cluster.Type, cluster.State, cluster.SlaveCount)
+				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\n", cluster.ID, cluster.Name, cluster.Type, cluster.State, cluster.WorkerCount)
 			}
 			err := w.Flush()
 			if err != nil {

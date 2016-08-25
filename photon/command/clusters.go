@@ -71,10 +71,6 @@ func GetClusterCommand() cli.Command {
 						Usage: "VM network ID",
 					},
 					cli.IntFlag{
-						Name:  "slave_count, s",
-						Usage: "Slave count",
-					},
-					cli.IntFlag{
 						Name:  "worker_count, c",
 						Usage: "Worker count",
 					},
@@ -213,19 +209,6 @@ func GetClusterCommand() cli.Command {
 	return command
 }
 
-// a function returns the bigger of value of the two inputs
-func max(num1, num2 int) int {
-	/* local variable declaration */
-	var result int
-
-	if num1 > num2 {
-		result = num1
-	} else {
-		result = num2
-	}
-	return result
-}
-
 // Sends a "create cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
 func createCluster(c *cli.Context, w io.Writer) error {
@@ -241,8 +224,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	vm_flavor := c.String("vm_flavor")
 	disk_flavor := c.String("disk_flavor")
 	network_id := c.String("network_id")
-	slave_count := c.Int("slave_count")
-	worker_count := max(c.Int("worker_count"), slave_count)
+	worker_count := c.Int("worker_count")
 	dns := c.String("dns")
 	gateway := c.String("gateway")
 	netmask := c.String("netmask")
