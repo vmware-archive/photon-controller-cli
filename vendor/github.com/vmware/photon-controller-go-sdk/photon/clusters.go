@@ -21,6 +21,19 @@ type ClustersAPI struct {
 
 var clusterUrl string = "/clusters/"
 
+const ExtendedPropertyDNS string = "dns"
+const ExtendedPropertyGateway string = "gateway"
+const ExtendedPropertyNetMask string = "netmask"
+const ExtendedPropertyMasterIP string = "master_ip"
+const ExtendedPropertyContainerNetwork string = "container_network"
+const ExtendedPropertyZookeeperIP1 string = "zookeeper_ip1"
+const ExtendedPropertyZookeeperIP2 string = "zookeeper_ip2"
+const ExtendedPropertyZookeeperIP3 string = "zookeeper_ip3"
+const ExtendedPropertyETCDIP1 string = "etcd_ip1"
+const ExtendedPropertyETCDIP2 string = "etcd_ip2"
+const ExtendedPropertyETCDIP3 string = "etcd_ip3"
+const ExtendedPropertySSHKey string = "ssh_key"
+
 // Deletes a cluster with specified ID.
 func (api *ClustersAPI) Delete(id string) (task *Task, err error) {
 	res, err := api.client.restClient.Delete(api.client.Endpoint+clusterUrl+id, api.client.options.TokenOptions.AccessToken)

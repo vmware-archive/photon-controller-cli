@@ -10,6 +10,7 @@
 package command
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -117,6 +118,10 @@ func GetClusterCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "etcd3",
 						Usage: "Static IP address with which to create etcd node 3 (required for Kubernetes and Swarm clusters)",
+					},
+					cli.StringFlag{
+						Name:  "ssh-key",
+						Usage: "The file path of the SSH key",
 					},
 					cli.IntFlag{
 						Name:  "batchSize",
@@ -237,6 +242,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	etcd2 := c.String("etcd2")
 	etcd3 := c.String("etcd3")
 	batch_size := c.Int("batchSize")
+	ssh_key := c.String("ssh-key")
 
 	wait_for_ready := c.IsSet("wait-for-ready")
 
@@ -299,6 +305,10 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		if err != nil {
 			return err
 		}
+		ssh_key, err = askForInput("Cluster ssh key file path (leave blank for none): ", ssh_key)
+		if err != nil {
+			return err
+		}
 	}
 
 	if len(dns) == 0 || len(gateway) == 0 || len(netmask) == 0 {
@@ -306,9 +316,17 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	}
 
 	extended_properties := make(map[string]string)
-	extended_properties["dns"] = dns
-	extended_properties["gateway"] = gateway
-	extended_properties["netmask"] = netmask
+	extended_properties[photon.ExtendedPropertyDNS] = dns
+	extended_properties[photon.ExtendedPropertyGateway] = gateway
+	extended_properties[photon.ExtendedPropertyNetMask] = netmask
+	if len(ssh_key) != 0 {
+		ssh_key, err = readSSHKey(ssh_key)
+		if err != nil {
+			extended_properties[photon.ExtendedPropertySSHKey] = ssh_key
+		} else {
+			return err
+		}
+	}
 
 	cluster_type = strings.ToUpper(cluster_type)
 	switch cluster_type {
@@ -338,13 +356,13 @@ func createCluster(c *cli.Context, w io.Writer) error {
 			}
 		}
 
-		extended_properties["master_ip"] = master_ip
-		extended_properties["container_network"] = container_network
-		extended_properties["etcd_ip1"] = etcd1
+		extended_properties[photon.ExtendedPropertyMasterIP] = master_ip
+		extended_properties[photon.ExtendedPropertyContainerNetwork] = container_network
+		extended_properties[photon.ExtendedPropertyZookeeperIP1] = etcd1
 		if len(etcd2) != 0 {
-			extended_properties["etcd_ip2"] = etcd2
+			extended_properties[photon.ExtendedPropertyETCDIP2] = etcd2
 			if len(etcd3) != 0 {
-				extended_properties["etcd_ip3"] = etcd3
+				extended_properties[photon.ExtendedPropertyETCDIP3] = etcd3
 			}
 		}
 	case "MESOS":
@@ -365,11 +383,11 @@ func createCluster(c *cli.Context, w io.Writer) error {
 			}
 		}
 
-		extended_properties["zookeeper_ip1"] = zookeeper1
+		extended_properties[photon.ExtendedPropertyZookeeperIP1] = zookeeper1
 		if len(zookeeper2) != 0 {
-			extended_properties["zookeeper_ip2"] = zookeeper2
+			extended_properties[photon.ExtendedPropertyZookeeperIP2] = zookeeper2
 			if len(zookeeper3) != 0 {
-				extended_properties["zookeeper_ip3"] = zookeeper3
+				extended_properties[photon.ExtendedPropertyZookeeperIP3] = zookeeper3
 			}
 		}
 	case "SWARM":
@@ -390,11 +408,11 @@ func createCluster(c *cli.Context, w io.Writer) error {
 			}
 		}
 
-		extended_properties["etcd_ip1"] = etcd1
+		extended_properties[photon.ExtendedPropertyETCDIP1] = etcd1
 		if len(etcd2) != 0 {
-			extended_properties["etcd_ip2"] = etcd2
+			extended_properties[photon.ExtendedPropertyETCDIP2] = etcd2
 			if len(etcd3) != 0 {
-				extended_properties["etcd_ip3"] = etcd3
+				extended_properties[photon.ExtendedPropertyETCDIP3] = etcd3
 			}
 		}
 	default:
@@ -737,4 +755,41 @@ func waitForCluster(id string) (cluster *photon.Cluster, err error) {
 	wg.Wait()
 	err = fmt.Errorf("Timed out while waiting for cluster to enter READY state")
 	return
+}
+
+// This is a helper function to for reading the ssh key from a file.
+func readSSHKey(filename string) (result string, err error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		e := file.Close()
+		if e != nil {
+			err = e
+		}
+	}()
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	// Read just the first line because the key file should only by one line long.
+	scanner.Scan()
+	keystring := scanner.Text()
+	keystring = strings.TrimSpace(keystring)
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+	err = validateSSHKey(keystring)
+	if err != nil {
+		return "", err
+	}
+	return keystring, nil
+}
+
+// This is a helper function to validate that a key is a valid ssh key
+func validateSSHKey(key string) error {
+	if len(key) == 0 {
+		return fmt.Errorf("The ssh-key file provided has no content")
+	}
+	// Other validation test can go here if desired in the future
+	return nil
 }
