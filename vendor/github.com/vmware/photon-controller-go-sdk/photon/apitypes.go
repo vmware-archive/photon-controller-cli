@@ -583,9 +583,7 @@ type ClusterCreateSpec struct {
 	VMFlavor           string            `json:"vmFlavor,omitempty"`
 	DiskFlavor         string            `json:"diskFlavor,omitempty"`
 	NetworkID          string            `json:"vmNetworkId,omitempty"`
-	SlaveCount         int               `json:"slaveCount,omitempty"`
-	WorkerCount        int               `json:"workerCount,omitempty"`
-	BatchSize          int               `json:"slaveBatchExpansionSize,omitempty"`
+	WorkerCount        int               `json:"workerCount"`
 	BatchSizeWorker    int               `json:"workerBatchExpansionSize,omitempty"`
 	ExtendedProperties map[string]string `json:"extendedProperties"`
 }
@@ -598,8 +596,7 @@ type Cluster struct {
 	ID                 string            `json:"id"`
 	Type               string            `json:"type"`
 	ProjectID          string            `json:"projectID,omitempty"`
-	SlaveCount         int               `json:"slaveCount,omitempty"`
-	WorkerCount        int               `json:"workerCount,omitempty"`
+	WorkerCount        int               `json:"workerCount"`
 	SelfLink           string            `json:"selfLink,omitempty"`
 	ExtendedProperties map[string]string `json:"extendedProperties"`
 }
@@ -611,8 +608,7 @@ type Clusters struct {
 
 // Represents cluster size that can be resized for cluster
 type ClusterResizeOperation struct {
-	NewSlaveCount  int `json:"newSlaveCount,omitempty"`
-	NewWorkerCount int `json:"newWorkerCount,omitempty"`
+	NewWorkerCount int `json:"newWorkerCount"`
 }
 
 // Represents a security group
