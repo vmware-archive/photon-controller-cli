@@ -382,6 +382,11 @@ type VmDiskOperation struct {
 	Arguments map[string]interface{} `json:"arguments,omitempty"`
 }
 
+// Represents a floating IP operation related to a VM.
+type VmFloatingIpSpec struct {
+	NetworkId string `json:"networkId"`
+}
+
 // Creation spec for flavors.
 type FlavorCreateSpec struct {
 	Cost []QuotaLineItem `json:"cost"`

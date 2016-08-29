@@ -45,6 +45,8 @@ import (
 //      networks;     Usage: vm networks <id>
 //      mks-ticket;   Usage: vm mks-ticket <id>
 //      create-image; Usage: vm create-image <id> [<options>]
+//      aquire-floating-ip; Usage: vm aquare-floating-ip <id> [<options>]
+//      release-floating-ip; Usage: vm release-floating-ip <id> [<options>]
 func GetVMCommand() cli.Command {
 	command := cli.Command{
 		Name:  "vm",
@@ -343,6 +345,38 @@ func GetVMCommand() cli.Command {
 				},
 				Action: func(c *cli.Context) {
 					err := createVmImage(c)
+					if err != nil {
+						log.Fatal(err)
+					}
+				},
+			},
+			{
+				Name:  "aquire-floating-ip",
+				Usage: "aquire a floating IP from a specific network",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "network_id, i",
+						Usage: "Network ID",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := aquireFloatingIp(c)
+					if err != nil {
+						log.Fatal(err)
+					}
+				},
+			},
+			{
+				Name:  "release-floating-ip",
+				Usage: "release a floating IP from a specific network",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "network_id, i",
+						Usage: "Network ID",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := releaseFloatingIp(c)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -1119,6 +1153,82 @@ func createVmImage(c *cli.Context) error {
 	}
 
 	task, err := client.Esxclient.VMs.CreateImage(id, options)
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func aquireFloatingIp(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "vm aquire-floating-ip <id> [<options>]")
+	if err != nil {
+		return err
+	}
+
+	id := c.Args().First()
+	networkId := c.String("network_id")
+
+	if !c.GlobalIsSet("non-interactive") {
+		networkId, err = askForInput("Network ID: ", networkId)
+		if err != nil {
+			return err
+		}
+	}
+
+	options := &photon.VmFloatingIpSpec{
+		NetworkId: networkId,
+	}
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	task, err := client.Esxclient.VMs.AquireFloatingIp(id, options)
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func releaseFloatingIp(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "vm release-floating-ip <id> [<options>]")
+	if err != nil {
+		return err
+	}
+
+	id := c.Args().First()
+	networkId := c.String("network_id")
+
+	if !c.GlobalIsSet("non-interactive") {
+		networkId, err = askForInput("Network ID: ", networkId)
+		if err != nil {
+			return err
+		}
+	}
+
+	options := &photon.VmFloatingIpSpec{
+		NetworkId: networkId,
+	}
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	task, err := client.Esxclient.VMs.ReleaseFloatingIp(id, options)
 	if err != nil {
 		return err
 	}

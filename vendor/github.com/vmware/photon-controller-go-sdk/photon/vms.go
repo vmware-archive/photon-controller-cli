@@ -248,6 +248,44 @@ func (api *VmAPI) GetNetworks(id string) (task *Task, err error) {
 	return
 }
 
+func (api *VmAPI) AquireFloatingIp(id string, spec *VmFloatingIpSpec) (task *Task, err error) {
+	body, err := json.Marshal(spec)
+	if err != nil {
+		return
+	}
+
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+vmUrl+id+"/aquire_floating_ip",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
+func (api *VmAPI) ReleaseFloatingIp(id string, spec *VmFloatingIpSpec) (task *Task, err error) {
+	body, err := json.Marshal(spec)
+	if err != nil {
+		return
+	}
+
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+vmUrl+id+"/release_floating_ip",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
 func (api *VmAPI) GetMKSTicket(id string) (task *Task, err error) {
 	res, err := api.client.restClient.Get(api.client.Endpoint+vmUrl+id+"/mks_ticket", api.client.options.TokenOptions.AccessToken)
 	if err != nil {

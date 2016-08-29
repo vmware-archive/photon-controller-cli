@@ -1159,3 +1159,123 @@ func TestCreateVMImage(t *testing.T) {
 		t.Error("Not expecting error creating VM image: " + err.Error())
 	}
 }
+
+func TestAquireFloatingIp(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "AQUIRE_FLOATING_IP",
+		State:     "QUEUED",
+		ID:        "fake-vm-task-ID",
+		Entity:    photon.Entity{ID: "fake_vm_ID"},
+	}
+	completedTask := &photon.Task{
+		Operation: "AQUIRE_FLOATING_IP",
+		State:     "COMPLETED",
+		ID:        "fake-vm-task-ID",
+		Entity:    photon.Entity{ID: "fake_vm_ID"},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/vms/"+"fake_vm_ID"+"/aquire_floating_ip",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", true, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake_vm_ID"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	set.String("network_id", "fake_network_id", "network id")
+	cxt := cli.NewContext(nil, set, globalCtx)
+
+	err = aquireFloatingIp(cxt)
+	if err != nil {
+		t.Error("Not expecting error creating VM image: " + err.Error())
+	}
+}
+
+func TestReleaseFloatingIp(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "RELEASE_FLOATING_IP",
+		State:     "QUEUED",
+		ID:        "fake-vm-task-ID",
+		Entity:    photon.Entity{ID: "fake_vm_ID"},
+	}
+	completedTask := &photon.Task{
+		Operation: "RELEASE_FLOATING_IP",
+		State:     "COMPLETED",
+		ID:        "fake-vm-task-ID",
+		Entity:    photon.Entity{ID: "fake_vm_ID"},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/vms/"+"fake_vm_ID"+"/release_floating_ip",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", true, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake_vm_ID"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	set.String("network_id", "fake_network_id", "network id")
+	cxt := cli.NewContext(nil, set, globalCtx)
+
+	err = releaseFloatingIp(cxt)
+	if err != nil {
+		t.Error("Not expecting error creating VM image: " + err.Error())
+	}
+}
