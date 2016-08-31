@@ -358,7 +358,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 
 		extended_properties[photon.ExtendedPropertyMasterIP] = master_ip
 		extended_properties[photon.ExtendedPropertyContainerNetwork] = container_network
-		extended_properties[photon.ExtendedPropertyZookeeperIP1] = etcd1
+		extended_properties[photon.ExtendedPropertyETCDIP1] = etcd1
 		if len(etcd2) != 0 {
 			extended_properties[photon.ExtendedPropertyETCDIP2] = etcd2
 			if len(etcd3) != 0 {
