@@ -15,6 +15,8 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -28,6 +30,19 @@ type MockClustersPage struct {
 	Items            []photon.Cluster `json:"items"`
 	NextPageLink     string           `json:"nextPageLink"`
 	PreviousPageLink string           `json:"previousPageLink"`
+}
+
+func TestReadSSHKey(t *testing.T) {
+	absPath, err := filepath.Abs("../../testdata/TestKey.pub")
+	content, err := readSSHKey(absPath)
+	if err != nil {
+		t.Error("ReadSSHKey function failed" + err.Error())
+	}
+	expected := "validSSH Part2 user@somewhere.com"
+	if strings.Compare(content, expected) != 0 {
+		t.Error("expected SSHkey :" + expected + " actual SSHKey read:" + content)
+	}
+
 }
 
 func TestCreateDeleteCluster(t *testing.T) {
@@ -122,6 +137,7 @@ func TestCreateDeleteCluster(t *testing.T) {
 	set.String("dns", "1.1.1.1", "VM network DNS")
 	set.String("gateway", "1.1.1.2", "VM network gateway")
 	set.String("netmask", "0.0.0.255", "VM network netmask")
+	set.String("ssh-key", "../../testdata/TestKey.pub", "ssh key")
 	ctx := cli.NewContext(nil, set, globalCtx)
 
 	err = createCluster(ctx, os.Stdout)

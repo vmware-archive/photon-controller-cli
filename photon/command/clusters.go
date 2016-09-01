@@ -15,6 +15,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -320,8 +321,12 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	extended_properties[photon.ExtendedPropertyGateway] = gateway
 	extended_properties[photon.ExtendedPropertyNetMask] = netmask
 	if len(ssh_key) != 0 {
-		ssh_key, err = readSSHKey(ssh_key)
+		ssh_key, err := filepath.Abs(ssh_key)
 		if err != nil {
+			return err
+		}
+		ssh_key, err = readSSHKey(ssh_key)
+		if err == nil {
 			extended_properties[photon.ExtendedPropertySSHKey] = ssh_key
 		} else {
 			return err
