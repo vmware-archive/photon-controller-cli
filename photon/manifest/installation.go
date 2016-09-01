@@ -46,7 +46,6 @@ type deployment struct {
 	NetworkManagerPassword string `yaml:"network_manager_password"`
 	NetworkZoneId          string `yaml:"network_zone_id"`
 	NetworkTopRouterId     string `yaml:"network_top_router_id"`
-	NetworkEdgeClusterId   string `yaml:"network_edge_cluster_id"`
 	NetworkIpRange         string `yaml:"network_ip_range"`
 	NetworkFloatingIpRange string `yaml:"network_floating_ip_range"`
 }

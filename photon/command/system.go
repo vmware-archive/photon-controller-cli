@@ -442,7 +442,6 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		Password:        dcMap.Deployment.NetworkManagerPassword,
 		NetworkZoneId:   dcMap.Deployment.NetworkZoneId,
 		TopRouterId:     dcMap.Deployment.NetworkTopRouterId,
-		EdgeClusterId:   dcMap.Deployment.NetworkEdgeClusterId,
 		IpRange:         dcMap.Deployment.NetworkIpRange,
 		FloatingIpRange: dcMap.Deployment.NetworkFloatingIpRange,
 	}

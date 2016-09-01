@@ -199,7 +199,6 @@ deployment:
   network_manager_password: password
   network_zone_id: tz1
   network_top_router_id: router1
-  network_edge_cluster_id: cluster1
   network_ip_range: 192.168.2.0/25
   network_floating_ip_range: 10.136.4.0/25
 `
@@ -216,7 +215,6 @@ deployment:
 						Expect(inst.Deployment.NetworkManagerPassword).To(BeEquivalentTo("password"))
 						Expect(inst.Deployment.NetworkZoneId).To(BeEquivalentTo("tz1"))
 						Expect(inst.Deployment.NetworkTopRouterId).To(BeEquivalentTo("router1"))
-						Expect(inst.Deployment.NetworkEdgeClusterId).To(BeEquivalentTo("cluster1"))
 						Expect(inst.Deployment.NetworkIpRange).To(BeEquivalentTo("192.168.2.0/25"))
 						Expect(inst.Deployment.NetworkFloatingIpRange).To(BeEquivalentTo("10.136.4.0/25"))
 					})

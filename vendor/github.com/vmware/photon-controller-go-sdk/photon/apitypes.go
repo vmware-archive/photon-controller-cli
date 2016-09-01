@@ -525,7 +525,6 @@ type NetworkConfigurationCreateSpec struct {
 	Password        string `json:"networkManagerPassword,omitempty"`
 	NetworkZoneId   string `json:"networkZoneId,omitempty"`
 	TopRouterId     string `json:"networkTopRouterId,omitempty"`
-	EdgeClusterId   string `json:"edgeClusterId,omitempty"`
 	IpRange         string `json:"ipRange,omitempty"`
 	FloatingIpRange string `json:"floatingIpRange,omitempty"`
 }
@@ -538,7 +537,6 @@ type NetworkConfiguration struct {
 	Password        string `json:"networkManagerPassword,omitempty"`
 	NetworkZoneId   string `json:"networkZoneId,omitempty"`
 	TopRouterId     string `json:"networkTopRouterId,omitempty"`
-	EdgeClusterId   string `json:"edgeClusterId,omitempty"`
 	IpRange         string `json:"ipRange,omitempty"`
 	FloatingIpRange string `json:"floatingIpRange,omitempty"`
 }
