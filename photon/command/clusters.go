@@ -320,9 +320,9 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	extended_properties[photon.ExtendedPropertyGateway] = gateway
 	extended_properties[photon.ExtendedPropertyNetMask] = netmask
 	if len(ssh_key) != 0 {
-		ssh_key, err = readSSHKey(ssh_key)
-		if err != nil {
-			extended_properties[photon.ExtendedPropertySSHKey] = ssh_key
+		ssh_key_content, err := readSSHKey(ssh_key)
+		if err == nil {
+			extended_properties[photon.ExtendedPropertySSHKey] = ssh_key_content
 		} else {
 			return err
 		}
