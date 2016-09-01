@@ -444,6 +444,7 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		TopRouterId:     dcMap.Deployment.NetworkTopRouterId,
 		IpRange:         dcMap.Deployment.NetworkIpRange,
 		FloatingIpRange: dcMap.Deployment.NetworkFloatingIpRange,
+		DhcpServers:     dcMap.Deployment.NetworkDhcpServers,
 	}
 	statsInfo := &photon.StatsInfo{
 		Enabled:       dcMap.Deployment.StatsEnabled,
