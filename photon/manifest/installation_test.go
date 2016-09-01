@@ -201,6 +201,9 @@ deployment:
   network_top_router_id: router1
   network_ip_range: 192.168.2.0/25
   network_floating_ip_range: 10.136.4.0/25
+  network_dhcp_servers:
+  - 10.20.1.1
+  - 10.30.1.1
 `
 					})
 
@@ -217,6 +220,7 @@ deployment:
 						Expect(inst.Deployment.NetworkTopRouterId).To(BeEquivalentTo("router1"))
 						Expect(inst.Deployment.NetworkIpRange).To(BeEquivalentTo("192.168.2.0/25"))
 						Expect(inst.Deployment.NetworkFloatingIpRange).To(BeEquivalentTo("10.136.4.0/25"))
+						Expect(inst.Deployment.NetworkDhcpServers).To(BeEquivalentTo([]string{"10.20.1.1", "10.30.1.1"}))
 					})
 				})
 

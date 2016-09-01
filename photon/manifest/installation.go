@@ -40,14 +40,15 @@ type deployment struct {
 	AuthTenant         string   `yaml:"oauth_tenant"`
 	AuthSecurityGroups []string `yaml:"oauth_security_groups"`
 
-	SdnEnabled             bool   `yaml:"sdn_enabled"`
-	NetworkManagerAddress  string `yaml:"network_manager_address"`
-	NetworkManagerUsername string `yaml:"network_manager_username"`
-	NetworkManagerPassword string `yaml:"network_manager_password"`
-	NetworkZoneId          string `yaml:"network_zone_id"`
-	NetworkTopRouterId     string `yaml:"network_top_router_id"`
-	NetworkIpRange         string `yaml:"network_ip_range"`
-	NetworkFloatingIpRange string `yaml:"network_floating_ip_range"`
+	SdnEnabled             bool     `yaml:"sdn_enabled"`
+	NetworkManagerAddress  string   `yaml:"network_manager_address"`
+	NetworkManagerUsername string   `yaml:"network_manager_username"`
+	NetworkManagerPassword string   `yaml:"network_manager_password"`
+	NetworkZoneId          string   `yaml:"network_zone_id"`
+	NetworkTopRouterId     string   `yaml:"network_top_router_id"`
+	NetworkIpRange         string   `yaml:"network_ip_range"`
+	NetworkFloatingIpRange string   `yaml:"network_floating_ip_range"`
+	NetworkDhcpServers     []string `yaml:"network_dhcp_servers"`
 }
 
 type host struct {
