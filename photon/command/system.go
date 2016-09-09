@@ -428,6 +428,20 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		}
 	}
 
+	externalIps, err := parseIpRanges(dcMap.Deployment.NetworkExternalIpRange)
+	if err != nil {
+		return "", err
+	}
+
+	if externalIps == nil || len(externalIps) == 0 {
+		return "", errors.New("External IP Range missing in DC Map")
+	}
+
+	ipRangeSpec := &photon.IpRange{
+		Start: externalIps[0],
+		End:   externalIps[len(externalIps)-1],
+	}
+
 	authInfo := &photon.AuthInfo{
 		Enabled:        dcMap.Deployment.AuthEnabled,
 		Tenant:         dcMap.Deployment.AuthTenant,
@@ -443,7 +457,7 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		NetworkZoneId:   dcMap.Deployment.NetworkZoneId,
 		TopRouterId:     dcMap.Deployment.NetworkTopRouterId,
 		IpRange:         dcMap.Deployment.NetworkIpRange,
-		FloatingIpRange: dcMap.Deployment.NetworkFloatingIpRange,
+		ExternalIpRange: ipRangeSpec,
 		DhcpServers:     dcMap.Deployment.NetworkDhcpServers,
 	}
 	statsInfo := &photon.StatsInfo{
@@ -631,6 +645,8 @@ func parseIpRanges(ipRanges string) ([]string, error) {
 			}
 			ipList = append(ipList, ips[0])
 		} else if len(ips) == 2 {
+  		fmt.Printf("ips[0] '%s'\n", ips[0])
+  		fmt.Printf("ips[1] '%s'\n", ips[1])
 			ip0 := net.ParseIP(ips[0]).To4()
 			ip1 := net.ParseIP(ips[1]).To4()
 			if ip0 == nil || ip1 == nil {
