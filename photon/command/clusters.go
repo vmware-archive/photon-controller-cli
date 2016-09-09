@@ -272,7 +272,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		if worker_count == 0 {
+		if worker_count == 0 && cluster_type != "HARBOR" {
 			worker_count_string, err := askForInput("Worker count: ", "")
 			if err != nil {
 				return err
@@ -288,7 +288,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		return fmt.Errorf("Provide a valid cluster name and type")
 	}
 
-	if worker_count == 0 {
+	if worker_count == 0 && cluster_type != "HARBOR" {
 		worker_count = DEFAULT_WORKER_COUNT
 	}
 
@@ -415,6 +415,8 @@ func createCluster(c *cli.Context, w io.Writer) error {
 				extended_properties[photon.ExtendedPropertyETCDIP3] = etcd3
 			}
 		}
+	case "HARBOR":
+		extended_properties[photon.ExtendedPropertyMasterIP] = master_ip
 	default:
 		return fmt.Errorf("Unsupported cluster type: %s", cluster_type)
 	}
@@ -438,7 +440,9 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		if len(clusterSpec.DiskFlavor) != 0 {
 			fmt.Printf("  Disk flavor: %s\n", clusterSpec.DiskFlavor)
 		}
-		fmt.Printf("  Worker count: %d\n", clusterSpec.WorkerCount)
+		if clusterSpec.Type != "HARBOR" {
+			fmt.Printf("  Worker count: %d\n", clusterSpec.WorkerCount)
+		}
 		if clusterSpec.BatchSizeWorker != 0 {
 			fmt.Printf("  Batch size: %d\n", clusterSpec.BatchSizeWorker)
 		}
