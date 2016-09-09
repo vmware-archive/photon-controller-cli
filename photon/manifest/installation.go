@@ -47,7 +47,7 @@ type deployment struct {
 	NetworkZoneId          string   `yaml:"network_zone_id"`
 	NetworkTopRouterId     string   `yaml:"network_top_router_id"`
 	NetworkIpRange         string   `yaml:"network_ip_range"`
-	NetworkFloatingIpRange string   `yaml:"network_floating_ip_range"`
+	NetworkExternalIpRange string   `yaml:"network_external_ip_range"`
 	NetworkDhcpServers     []string `yaml:"network_dhcp_servers"`
 }
 

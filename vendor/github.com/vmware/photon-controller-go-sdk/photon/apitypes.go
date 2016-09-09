@@ -517,6 +517,12 @@ type AuthInfo struct {
 	Username       string   `json:"username,omitempty"`
 }
 
+// Represents ip range
+type IpRange struct {
+	Start string `json:"start,omitempty"`
+	End   string `json:"end,omitempty"`
+}
+
 // Represents creation spec for network configuration.
 type NetworkConfigurationCreateSpec struct {
 	Enabled         bool     `json:"sdnEnabled,omitempty"`
@@ -526,7 +532,7 @@ type NetworkConfigurationCreateSpec struct {
 	NetworkZoneId   string   `json:"networkZoneId,omitempty"`
 	TopRouterId     string   `json:"networkTopRouterId,omitempty"`
 	IpRange         string   `json:"ipRange,omitempty"`
-	FloatingIpRange string   `json:"floatingIpRange,omitempty"`
+	ExternalIpRange *IpRange `json:"externalIpRange,omitempty"`
 	DhcpServers     []string `json:"dhcpServers,omitempty"`
 }
 
@@ -540,6 +546,7 @@ type NetworkConfiguration struct {
 	TopRouterId     string   `json:"networkTopRouterId,omitempty"`
 	IpRange         string   `json:"ipRange,omitempty"`
 	FloatingIpRange string   `json:"floatingIpRange,omitempty"`
+	SnatIp          string   `json:"snatIp,omitempty"`
 	DhcpServers     []string `json:"dhcpServers,omitempty"`
 }
 
