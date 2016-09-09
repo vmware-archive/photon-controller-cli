@@ -1,7 +1,7 @@
-ESXCloud Go Cli
+Photon Go Cli
 ===============
 
-The repo for the ESXCloud go cli.
+The repo for the Photon go cli.
 
 ## Setup
 
@@ -12,10 +12,11 @@ Decide a folder as the GOPATH, e.g. ~/go.
     1. mkdir -p ~/go/src/github.com/vmware/
     2. cd ~/go/src/github.com/vmware/
     3. git clone (this repo from gerrit or github)
-    4. export GOPATH=~/go
-    5. export PATH=$PATH:~/go/bin
-    6. make tools
-    7. godep restore
+    4. cd photon-controller-cli
+    5. export GOPATH=~/go
+    6. export PATH=$PATH:~/go/bin
+    7. make tools
+    8. godep restore
 
 
 ## Build and Test
