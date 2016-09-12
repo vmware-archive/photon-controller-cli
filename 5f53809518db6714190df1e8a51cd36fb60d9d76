@@ -1,0 +1,7 @@
+Code-Review+2: Xuli Liu <xulil@vmware.com>
+Verified+1: Gerrit-Jenkins
+Submitted-by: Yu Sheng <ysheng@vmware.com>
+Submitted-at: Mon, 12 Sep 2016 15:54:42 -0700
+Reviewed-on: https://review.ec.eng.vmware.com/15349
+Project: photon-controller-cli
+Branch: refs/heads/develop
