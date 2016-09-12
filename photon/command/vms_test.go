@@ -173,6 +173,7 @@ func TestShowVM(t *testing.T) {
 		ID:            "fake_vm_ID",
 		Flavor:        "fake_vm_flavor_name",
 		State:         "ERROR",
+		FloatingIp:    "1.2.3.4",
 		SourceImageID: "fake_image_ID",
 		Host:          "fake_host_ip",
 		Datastore:     "fake_datastore_ID",
@@ -1160,15 +1161,15 @@ func TestCreateVMImage(t *testing.T) {
 	}
 }
 
-func TestAquireFloatingIp(t *testing.T) {
+func TestAcquireFloatingIp(t *testing.T) {
 	queuedTask := &photon.Task{
-		Operation: "AQUIRE_FLOATING_IP",
+		Operation: "ACQUIRE_FLOATING_IP",
 		State:     "QUEUED",
 		ID:        "fake-vm-task-ID",
 		Entity:    photon.Entity{ID: "fake_vm_ID"},
 	}
 	completedTask := &photon.Task{
-		Operation: "AQUIRE_FLOATING_IP",
+		Operation: "ACQUIRE_FLOATING_IP",
 		State:     "COMPLETED",
 		ID:        "fake-vm-task-ID",
 		Entity:    photon.Entity{ID: "fake_vm_ID"},
@@ -1176,17 +1177,17 @@ func TestAquireFloatingIp(t *testing.T) {
 
 	response, err := json.Marshal(queuedTask)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected queuedTask")
+		t.Error("Not expecting error serializing expected queuedTask")
 	}
 	taskResponse, err := json.Marshal(completedTask)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected completedTask")
+		t.Error("Not expecting error serializing expected completedTask")
 	}
 
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/aquire_floating_ip",
+		server.URL+"/vms/"+"fake_vm_ID"+"/acquire_floating_ip",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -1214,7 +1215,7 @@ func TestAquireFloatingIp(t *testing.T) {
 	set.String("network_id", "fake_network_id", "network id")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = aquireFloatingIp(cxt)
+	err = acquireFloatingIp(cxt)
 	if err != nil {
 		t.Error("Not expecting error creating VM image: " + err.Error())
 	}
@@ -1236,16 +1237,16 @@ func TestReleaseFloatingIp(t *testing.T) {
 
 	response, err := json.Marshal(queuedTask)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected queuedTask")
+		t.Error("Not expecting error serializing expected queuedTask")
 	}
 	taskResponse, err := json.Marshal(completedTask)
 	if err != nil {
-		t.Error("Not expecting error serializaing expected completedTask")
+		t.Error("Not expecting error serializing expected completedTask")
 	}
 
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
-		"POST",
+		"DELETE",
 		server.URL+"/vms/"+"fake_vm_ID"+"/release_floating_ip",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
@@ -1271,7 +1272,6 @@ func TestReleaseFloatingIp(t *testing.T) {
 	if err != nil {
 		t.Error("Not expecting arguments parsing to fail")
 	}
-	set.String("network_id", "fake_network_id", "network id")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
 	err = releaseFloatingIp(cxt)

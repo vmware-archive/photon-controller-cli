@@ -361,6 +361,7 @@ type VM struct {
 	Name          string            `json:"name"`
 	State         string            `json:"state"`
 	ID            string            `json:"id"`
+	FloatingIp    string            `json:"floatingIp"`
 }
 
 // Represents multiple VMs returned by the API.
@@ -573,6 +574,37 @@ type Subnet struct {
 // Represents multiple subnets returned by the API
 type Subnets struct {
 	Items []Subnet `json:"items"`
+}
+
+// Create spec for virtual subnet
+type VirtualSubnetCreateSpec struct {
+	Name                 string `json:"name"`
+	Description          string `json:"description,omitempty"`
+	RoutingType          string `json:"routingType"`
+	Size                 int    `json:"size"`
+	ReservedStaticIpSize int    `json:"reservedStaticIpSize,omitempty"`
+}
+
+// Represents a virtual network
+type VirtualSubnet struct {
+	ID             string `json:"id"`
+	Name           string `json:"kind"`
+	Description    string `json:"description,omitempty"`
+	State          string `json:"state"`
+	RoutingType    string `json:"routingType"`
+	IsDefault      string `json:"isDefault"`
+	Cidr           string `json:"cidr,omitempty"`
+	LowIpDynamic   string `json:"lowIpDynamic,omitempty"`
+	HighIpDynamic  string `json:"HighIpDynamic,omitempty"`
+	LowIpStatic    string `json:"lowIpStatic,omitempty"`
+	HighIpStatic   string `json:"highIpStatic,omitempty"`
+	ReservedIpList string `json:"reservedIpList"`
+	SelfLink       string `json:"selfLink"`
+}
+
+// Represents multiple virtual subnets returned
+type VirtualSubnets struct {
+	Items []VirtualSubnet `json:"items"`
 }
 
 // Creation spec for Cluster Configuration.
