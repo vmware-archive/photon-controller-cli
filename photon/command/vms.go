@@ -351,8 +351,8 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "aquire-floating-ip",
-				Usage: "aquire a floating IP from a specific network",
+				Name:  "acquire-floating-ip",
+				Usage: "acquire a floating IP from a specific network",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "network_id, i",
@@ -360,7 +360,7 @@ func GetVMCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := aquireFloatingIp(c)
+					err := acquireFloatingIp(c)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -368,13 +368,7 @@ func GetVMCommand() cli.Command {
 			},
 			{
 				Name:  "release-floating-ip",
-				Usage: "release a floating IP from a specific network",
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "network_id, i",
-						Usage: "Network ID",
-					},
-				},
+				Usage: "release the floating IP",
 				Action: func(c *cli.Context) {
 					err := releaseFloatingIp(c)
 					if err != nil {
@@ -572,7 +566,8 @@ func showVM(c *cli.Context) error {
 			iso = append(iso, fmt.Sprintf("%s\t%s\t%s\t%d", i.ID, i.Name, i.Kind, i.Size))
 		}
 		scriptIso := strings.Join(iso, ",")
-		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", vm.ID, vm.Name, vm.State, vm.Flavor, vm.SourceImageID, vm.Host, vm.Datastore, scriptMetadata, scriptTag)
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", vm.ID, vm.Name, vm.State, vm.Flavor,
+			vm.SourceImageID, vm.Host, vm.Datastore, scriptMetadata, scriptTag, vm.FloatingIp)
 		fmt.Printf("%s\n", scriptDisks)
 		fmt.Printf("%s\n", scriptIso)
 
@@ -584,6 +579,7 @@ func showVM(c *cli.Context) error {
 		fmt.Println("VM ID: ", vm.ID)
 		fmt.Println("  Name:        ", vm.Name)
 		fmt.Println("  State:       ", vm.State)
+		fmt.Println("  Floating IP: ", vm.FloatingIp)
 		fmt.Println("  Flavor:      ", vm.Flavor)
 		fmt.Println("  Source Image:", vm.SourceImageID)
 		fmt.Println("  Host:        ", vm.Host)
@@ -1165,8 +1161,8 @@ func createVmImage(c *cli.Context) error {
 	return nil
 }
 
-func aquireFloatingIp(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm aquire-floating-ip <id> [<options>]")
+func acquireFloatingIp(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "vm acquire-floating-ip <id> [<options>]")
 	if err != nil {
 		return err
 	}
@@ -1190,7 +1186,7 @@ func aquireFloatingIp(c *cli.Context) error {
 		return err
 	}
 
-	task, err := client.Esxclient.VMs.AquireFloatingIp(id, options)
+	task, err := client.Esxclient.VMs.AcquireFloatingIp(id, options)
 	if err != nil {
 		return err
 	}
@@ -1210,25 +1206,13 @@ func releaseFloatingIp(c *cli.Context) error {
 	}
 
 	id := c.Args().First()
-	networkId := c.String("network_id")
-
-	if !c.GlobalIsSet("non-interactive") {
-		networkId, err = askForInput("Network ID: ", networkId)
-		if err != nil {
-			return err
-		}
-	}
-
-	options := &photon.VmFloatingIpSpec{
-		NetworkId: networkId,
-	}
 
 	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.VMs.ReleaseFloatingIp(id, options)
+	task, err := client.Esxclient.VMs.ReleaseFloatingIp(id)
 	if err != nil {
 		return err
 	}

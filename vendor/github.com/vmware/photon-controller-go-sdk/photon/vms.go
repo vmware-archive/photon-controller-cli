@@ -248,14 +248,14 @@ func (api *VmAPI) GetNetworks(id string) (task *Task, err error) {
 	return
 }
 
-func (api *VmAPI) AquireFloatingIp(id string, spec *VmFloatingIpSpec) (task *Task, err error) {
+func (api *VmAPI) AcquireFloatingIp(id string, spec *VmFloatingIpSpec) (task *Task, err error) {
 	body, err := json.Marshal(spec)
 	if err != nil {
 		return
 	}
 
 	res, err := api.client.restClient.Post(
-		api.client.Endpoint+vmUrl+id+"/aquire_floating_ip",
+		api.client.Endpoint+vmUrl+id+"/acquire_floating_ip",
 		"application/json",
 		bytes.NewReader(body),
 		api.client.options.TokenOptions.AccessToken)
@@ -267,16 +267,10 @@ func (api *VmAPI) AquireFloatingIp(id string, spec *VmFloatingIpSpec) (task *Tas
 	return
 }
 
-func (api *VmAPI) ReleaseFloatingIp(id string, spec *VmFloatingIpSpec) (task *Task, err error) {
-	body, err := json.Marshal(spec)
-	if err != nil {
-		return
-	}
+func (api *VmAPI) ReleaseFloatingIp(id string) (task *Task, err error) {
 
-	res, err := api.client.restClient.Post(
+	res, err := api.client.restClient.Delete(
 		api.client.Endpoint+vmUrl+id+"/release_floating_ip",
-		"application/json",
-		bytes.NewReader(body),
 		api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
