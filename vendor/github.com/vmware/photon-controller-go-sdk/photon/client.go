@@ -41,6 +41,7 @@ type Client struct {
 	Clusters          *ClustersAPI
 	Auth              *AuthAPI
 	AvailabilityZones *AvailabilityZonesAPI
+	Info              *InfoAPI
 }
 
 // Represents Tokens
@@ -149,6 +150,7 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	c.Clusters = &ClustersAPI{c}
 	c.Auth = &AuthAPI{c}
 	c.AvailabilityZones = &AvailabilityZonesAPI{c}
+	c.Info = &InfoAPI{c}
 	return
 }
 

@@ -700,3 +700,8 @@ type ImageCreateSpec struct {
 	Name            string `json:"name"`
 	ReplicationType string `json:"replicationType"`
 }
+
+// Represents deployment info
+type Info struct {
+	NetworkType string `json:"networkType"`
+}

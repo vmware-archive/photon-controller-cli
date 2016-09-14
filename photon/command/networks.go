@@ -14,14 +14,20 @@ import (
 	"io"
 	"log"
 	"os"
-	"regexp"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/utils"
 
+	"errors"
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+)
+
+const (
+	PHYSICAL         = "PHYSICAL"
+	SOFTWARE_DEFINED = "SOFTWARE_DEFINED"
+	NOT_AVAILABLE    = "NOT_AVAILABLE"
 )
 
 // Creates a cli.Command for networks
@@ -49,11 +55,37 @@ func GetNetworksCommand() cli.Command {
 					},
 					cli.StringFlag{
 						Name:  "portgroups, p",
-						Usage: "PortGroups associated with network",
+						Usage: "PortGroups associated with network (only for physical network)",
+					},
+					cli.StringFlag{
+						Name: "routingType, r",
+						Usage: "Routing type for network (only for software-defined network). Supported values are: " +
+							"'ROUTED' and 'ISOLATED'",
+					},
+					cli.IntFlag{
+						Name:  "size, s",
+						Usage: "Size of the private IP addresses (only for software-defined network)",
+					},
+					cli.IntFlag{
+						Name:  "staticIpSize, f",
+						Usage: "Size of the reserved static IP addresses (only for software-defined network)",
+					},
+					cli.StringFlag{
+						Name:  "projectId, i",
+						Usage: "ID of the project that network belongs to (only for software-defined network)",
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createNetwork(c, os.Stdout)
+					sdnEnabled, err := isSoftwareDefinedNetwork(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+
+					if sdnEnabled {
+						err = createVirtualNetwork(c, os.Stdout)
+					} else {
+						err = createPhysicalNetwork(c, os.Stdout)
+					}
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -110,69 +142,23 @@ func GetNetworksCommand() cli.Command {
 	return command
 }
 
-func createNetwork(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "network create [<options>]")
-	if err != nil {
-		return err
-	}
-
-	name := c.String("name")
-	description := c.String("description")
-	portGroups := c.String("portgroups")
-
-	if !utils.IsNonInteractive(c) {
-		name, err = askForInput("Network name: ", name)
-		if err != nil {
-			return err
-		}
-		description, err = askForInput("Description of network: ", description)
-		if err != nil {
-			return err
-		}
-		portGroups, err = askForInput("PortGroups of network: ", portGroups)
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(name) == 0 {
-		return fmt.Errorf("Please provide network name")
-	}
-	if len(portGroups) == 0 {
-		return fmt.Errorf("Please provide portgroups")
-	}
-
-	portGroupList := regexp.MustCompile(`\s*,\s*`).Split(portGroups, -1)
-	createSpec := &photon.SubnetCreateSpec{
-		Name:        name,
-		Description: description,
-		PortGroups:  portGroupList,
-	}
-
+func isSoftwareDefinedNetwork(c *cli.Context) (sdnEnabled bool, err error) {
 	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
 	if err != nil {
-		return err
+		return
 	}
 
-	task, err := client.Esxclient.Subnets.Create(createSpec)
+	info, err := client.Esxclient.Info.Get()
 	if err != nil {
-		return err
+		return
 	}
 
-	id, err := waitOnTaskOperation(task.ID, c)
-	if err != nil {
-		return err
+	if info.NetworkType == NOT_AVAILABLE {
+		err = errors.New("Network type cannot be determined")
+	} else {
+		sdnEnabled = (info.NetworkType == SOFTWARE_DEFINED)
 	}
-
-	if utils.NeedsFormatting(c) {
-		network, err := client.Esxclient.Subnets.Get(id)
-		if err != nil {
-			return err
-		}
-		utils.FormatObject(network, w, c)
-	}
-
-	return nil
+	return
 }
 
 func deleteNetwork(c *cli.Context) error {
