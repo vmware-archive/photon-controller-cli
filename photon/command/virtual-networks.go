@@ -16,6 +16,8 @@ import (
 	"github.com/vmware/photon-controller-cli/photon/utils"
 	"github.com/vmware/photon-controller-go-sdk/photon"
 	"io"
+	"os"
+	"text/tabwriter"
 )
 
 const (
@@ -61,8 +63,8 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 	if routingType != ROUTED && routingType != ISOLATED {
 		return fmt.Errorf("Please choose the correct routing type for network (ROUTED or ISOLATED)")
 	}
-	if size <= 0 {
-		return fmt.Errorf("Network size must be greater than 0")
+	if size < 8 {
+		return fmt.Errorf("Network size must be at least 8")
 	}
 
 	createSpec := &photon.VirtualSubnetCreateSpec{
@@ -94,6 +96,100 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 			return err
 		}
 		utils.FormatObject(network, w, c)
+	}
+
+	return nil
+}
+
+func listVirtualNetworks(c *cli.Context, w io.Writer) error {
+	err := checkArgNum(c.Args(), 0, "network list [<options>]")
+	if err != nil {
+		return err
+	}
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	if err != nil {
+		return err
+	}
+
+	name := c.String("name")
+	options := &photon.VirtualSubnetGetOptions{
+		Name: name,
+	}
+
+	projectId := c.String("projectId")
+	if len(projectId) == 0 {
+		return fmt.Errorf("Please provide project ID")
+	}
+
+	networks, err := client.Esxclient.VirtualSubnets.GetAll(projectId, options)
+	if err != nil {
+		return err
+	}
+
+	if c.GlobalIsSet("non-interactive") {
+		for _, network := range networks.Items {
+			fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State,
+				network.Description, network.RoutingType, network.IsDefault, network.Cidr, network.LowIpDynamic,
+				network.HighIpDynamic, network.LowIpStatic, network.HighIpStatic, network.ReservedIpList)
+		}
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObjects(networks.Items, w, c)
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+		fmt.Fprintf(w, "ID\tName\tState\tDescriptions\tRoutingType\tIsDefault\tCIDR\tLowDynamicIP\tHighDynamicIP"+
+			"\tLowStaticIP\tHighStaticIP\tReservedIpList\n")
+		for _, network := range networks.Items {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State,
+				network.Description, network.RoutingType, network.IsDefault, network.Cidr, network.LowIpDynamic,
+				network.HighIpDynamic, network.LowIpStatic, network.HighIpStatic, network.ReservedIpList)
+		}
+		err = w.Flush()
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Total: %d\n", len(networks.Items))
+	}
+
+	return nil
+}
+
+func showVirtualNetwork(c *cli.Context, w io.Writer) error {
+	err := checkArgNum(c.Args(), 1, "network show <id>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	if err != nil {
+		return err
+	}
+
+	network, err := client.Esxclient.VirtualSubnets.Get(id)
+	if err != nil {
+		return err
+	}
+
+	if c.GlobalIsSet("non-interactive") {
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State,
+			network.Description, network.RoutingType, network.IsDefault, network.Cidr, network.LowIpDynamic,
+			network.HighIpDynamic, network.LowIpStatic, network.HighIpStatic, network.ReservedIpList)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(network, w, c)
+	} else {
+		fmt.Printf("Network ID: %s\n", network.ID)
+		fmt.Printf("  Name:             %s\n", network.Name)
+		fmt.Printf("  State:            %s\n", network.State)
+		fmt.Printf("  Description:      %s\n", network.Description)
+		fmt.Printf("  Routing Type:     %s\n", network.RoutingType)
+		fmt.Printf("  Is Default:       %s\n", network.IsDefault)
+		fmt.Printf("  CIDR:             %s\n", network.Cidr)
+		fmt.Printf("  Start Dynamic IP: %s\n", network.LowIpDynamic)
+		fmt.Printf("  End Dynamic IP:   %s\n", network.HighIpDynamic)
+		fmt.Printf("  Start Static IP:  %s\n", network.LowIpStatic)
+		fmt.Printf("  End Static IP:    %s\n", network.HighIpStatic)
+		fmt.Printf("  Reserved IP List: %s\n", network.ReservedIpList)
 	}
 
 	return nil

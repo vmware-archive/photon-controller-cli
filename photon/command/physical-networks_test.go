@@ -93,6 +93,9 @@ func TestCreateDeletePhysicalSubnet(t *testing.T) {
 		State:     "COMPLETED",
 		Entity:    photon.Entity{ID: "network-ID"},
 	}
+	info := &photon.Info{
+		NetworkType: PHYSICAL,
+	}
 
 	response, err = json.Marshal(queuedTask)
 	if err != nil {
@@ -101,6 +104,10 @@ func TestCreateDeletePhysicalSubnet(t *testing.T) {
 	taskresponse, err = json.Marshal(completedTask)
 	if err != nil {
 		t.Error("Not expecting error serializing expected completedTask")
+	}
+	infoString, err := json.Marshal(info)
+	if err != nil {
+		t.Error("Not expecting error when serializing expected info")
 	}
 
 	mocks.RegisterResponder(
@@ -111,6 +118,10 @@ func TestCreateDeletePhysicalSubnet(t *testing.T) {
 		"GET",
 		server.URL+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/info",
+		mocks.CreateResponder(200, string(infoString[:])))
 
 	set = flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{queuedTask.Entity.ID})
@@ -124,7 +135,7 @@ func TestCreateDeletePhysicalSubnet(t *testing.T) {
 	}
 }
 
-func TestListNetworks(t *testing.T) {
+func TestListPhysicalNetworks(t *testing.T) {
 	server := mocks.NewTestServer()
 	defer server.Close()
 
@@ -186,7 +197,7 @@ func TestListNetworks(t *testing.T) {
 	cxt := cli.NewContext(nil, commandFlags, globalCxt)
 	var output bytes.Buffer
 
-	err = listNetworks(cxt, &output)
+	err = listPhysicalNetworks(cxt, &output)
 	if err != nil {
 		t.Error("Error listing networks: " + err.Error())
 	}
@@ -208,7 +219,7 @@ func TestListNetworks(t *testing.T) {
 	}
 }
 
-func TestShowNetworks(t *testing.T) {
+func TestShowPhysicalNetwork(t *testing.T) {
 	expectedStruct := photon.Subnet{
 		ID:         "network_id",
 		Name:       "network_name",
@@ -235,13 +246,13 @@ func TestShowNetworks(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{expectedStruct.ID})
 	cxt := cli.NewContext(nil, set, nil)
-	err = showNetwork(cxt, os.Stdout)
+	err = showPhysicalNetwork(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Error showing networks: " + err.Error())
 	}
 }
 
-func TestSetDefaultNetwork(t *testing.T) {
+func TestSetDefaultPhysicalNetwork(t *testing.T) {
 	completedTask := &photon.Task{
 		Operation: "SET_DEFAULT_NETWORK",
 		State:     "COMPLETED",
@@ -253,6 +264,15 @@ func TestSetDefaultNetwork(t *testing.T) {
 		t.Error("Not expecting error serializing expected completedTask")
 	}
 
+	info := &photon.Info{
+		NetworkType: PHYSICAL,
+	}
+
+	infoString, err := json.Marshal(info)
+	if err != nil {
+		t.Error("Not expecting error when serializing expected info")
+	}
+
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
@@ -262,6 +282,10 @@ func TestSetDefaultNetwork(t *testing.T) {
 		"GET",
 		server.URL+"/tasks/"+completedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/info",
+		mocks.CreateResponder(200, string(infoString[:])))
 	defer server.Close()
 
 	mocks.Activate(true)

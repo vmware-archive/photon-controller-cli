@@ -91,9 +91,9 @@ func TestCheckNetworkTypeNotDefined(t *testing.T) {
 
 	cxt := cli.NewContext(nil, nil, globalCtx)
 
-	expectedErrMsg := "Network type cannot be determined"
+	expectedErrMsg := "Network type is missing"
 	_, err = isSoftwareDefinedNetwork(cxt)
 	if err == nil || err.Error() != expectedErrMsg {
-		t.Error("Error should have happened due to undetermined network type")
+		t.Error("Error should have happened due to missing network type")
 	}
 }
