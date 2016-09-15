@@ -1117,9 +1117,10 @@ func createVmImage(c *cli.Context) error {
 	name := c.String("name")
 	replicationType := c.String("image_replication")
 
-	defaultName := "image-from-vm-" + id
-	defaultReplication := "EAGER"
 	if !c.GlobalIsSet("non-interactive") {
+		defaultName := "image-from-vm-" + id
+		defaultReplication := "EAGER"
+
 		name, err = askForInput("Image name (default: "+defaultName+"): ", name)
 		if err != nil {
 			return err
@@ -1129,13 +1130,13 @@ func createVmImage(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-	}
 
-	if len(name) == 0 {
-		name = defaultName
-	}
-	if len(replicationType) == 0 {
-		replicationType = defaultReplication
+		if len(name) == 0 {
+			name = defaultName
+		}
+		if len(replicationType) == 0 {
+			replicationType = defaultReplication
+		}
 	}
 
 	options := &photon.ImageCreateSpec{
