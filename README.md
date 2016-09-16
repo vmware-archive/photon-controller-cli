@@ -5,7 +5,7 @@ The repo for the Photon go cli.
 
 ## Setup
 
-The project requires go version 1.5+. You can download and install go from: https://golang.org/dl/
+The project requires go version 1.6+. You can download and install go from: https://golang.org/dl/
 
 Decide a folder as the GOPATH, e.g. ~/go.
 
