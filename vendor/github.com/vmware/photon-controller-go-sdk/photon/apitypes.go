@@ -546,7 +546,7 @@ type NetworkConfiguration struct {
 	NetworkZoneId   string   `json:"networkZoneId,omitempty"`
 	TopRouterId     string   `json:"networkTopRouterId,omitempty"`
 	IpRange         string   `json:"ipRange,omitempty"`
-	FloatingIpRange string   `json:"floatingIpRange,omitempty"`
+	FloatingIpRange *IpRange `json:"floatingIpRange,omitempty"`
 	SnatIp          string   `json:"snatIp,omitempty"`
 	DhcpServers     []string `json:"dhcpServers,omitempty"`
 }
