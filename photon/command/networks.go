@@ -61,11 +61,11 @@ func GetNetworksCommand() cli.Command {
 						Usage: "Routing type for network (only for software-defined network). Supported values are: " +
 							"'ROUTED' and 'ISOLATED'",
 					},
-					cli.IntFlag{
+					cli.StringFlag{
 						Name:  "size, s",
 						Usage: "Size of the private IP addresses (only for software-defined network)",
 					},
-					cli.IntFlag{
+					cli.StringFlag{
 						Name:  "staticIpSize, f",
 						Usage: "Size of the reserved static IP addresses (only for software-defined network)",
 					},

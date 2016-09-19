@@ -35,8 +35,8 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 	name := c.String("name")
 	description := c.String("description")
 	routingType := c.String("routingType")
-	size := c.Int("size")
-	staticIpSize := c.Int("staticIpSize")
+	sizeStr := c.String("size")
+	staticIpSizeStr := c.String("staticIpSize")
 	projectId := c.String("projectId")
 
 	if !utils.IsNonInteractive(c) {
@@ -56,22 +56,12 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		sizeStr := ""
 		sizeStr, err = askForInput("Size of IP pool of the network (must be power of 2, at least 8): ", sizeStr)
 		if err != nil {
 			return err
 		}
-		size, err = strconv.Atoi(sizeStr)
-		if err != nil {
-			return err
-		}
-		staticIpSizeStr := ""
 		staticIpSizeStr, err = askForInput("Size of the static IP pool (must be less than size of IP pool): ",
 			staticIpSizeStr)
-		if err != nil {
-			return err
-		}
-		staticIpSize, err = strconv.Atoi(staticIpSizeStr)
 		if err != nil {
 			return err
 		}
@@ -83,8 +73,16 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 	if routingType != ROUTED && routingType != ISOLATED {
 		return fmt.Errorf("Please choose the correct routing type for network (ROUTED or ISOLATED)")
 	}
+	size, err := strconv.Atoi(sizeStr)
+	if err != nil {
+		return err
+	}
 	if size < 8 {
 		return fmt.Errorf("Network size must be at least 8")
+	}
+	staticIpSize, err := strconv.Atoi(staticIpSizeStr)
+	if err != nil {
+		return err
 	}
 
 	createSpec := &photon.VirtualSubnetCreateSpec{
