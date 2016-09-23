@@ -44,6 +44,18 @@ func TestReadSSHKey(t *testing.T) {
 
 }
 
+func TestReadCACert(t *testing.T) {
+	testPath := "../../testdata/TestCA.crt"
+	content, err := readCACert(testPath)
+	if err != nil {
+		t.Error("ReadCACert function failed" + err.Error())
+	}
+	expected := "-----BEGIN CERTIFICATE-----\nMIIFmzCCA4OgAwIBAgIJAIAZmLcInJMeMA0GCSqGSIb3DQEBCwUAMGQxCzAJBgNV\n-----END CERTIFICATE-----"
+	if strings.Compare(content, expected) != 0 {
+		t.Error("expected CACert :" + expected + " actual CACert read:" + content)
+	}
+}
+
 func TestCreateDeleteCluster(t *testing.T) {
 	tenantStruct := photon.Tenants{
 		Items: []photon.Tenant{

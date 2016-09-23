@@ -13,6 +13,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -122,6 +123,10 @@ func GetClusterCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "ssh-key",
 						Usage: "The file path of the SSH key",
+					},
+					cli.StringFlag{
+						Name:  "ca-cert",
+						Usage: "The file path of the file containing the CA certificate for a docker registry (optional)",
 					},
 					cli.IntFlag{
 						Name:  "batchSize",
@@ -243,6 +248,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	etcd3 := c.String("etcd3")
 	batch_size := c.Int("batchSize")
 	ssh_key := c.String("ssh-key")
+	ca_cert := c.String("ca-cert")
 
 	wait_for_ready := c.IsSet("wait-for-ready")
 
@@ -323,6 +329,15 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		ssh_key_content, err := readSSHKey(ssh_key)
 		if err == nil {
 			extended_properties[photon.ExtendedPropertySSHKey] = ssh_key_content
+		} else {
+			return err
+		}
+	}
+
+	if len(ca_cert) != 0 {
+		ca_cert_content, err := readCACert(ca_cert)
+		if err == nil {
+			extended_properties[photon.ExtendedPropertyCACert] = ca_cert_content
 		} else {
 			return err
 		}
@@ -761,7 +776,7 @@ func waitForCluster(id string) (cluster *photon.Cluster, err error) {
 	return
 }
 
-// This is a helper function to for reading the ssh key from a file.
+// This is a helper function for reading the ssh key from a file.
 func readSSHKey(filename string) (result string, err error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -795,5 +810,30 @@ func validateSSHKey(key string) error {
 		return fmt.Errorf("The ssh-key file provided has no content")
 	}
 	// Other validation test can go here if desired in the future
+	return nil
+}
+
+// This is a helper function for reading the CA Cert from a file.
+func readCACert(filename string) (result string, err error) {
+	certData, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+	cert := string(certData)
+	cert = strings.TrimSpace(cert)
+	err = validateCert(cert)
+	if err != nil {
+		return "", err
+	}
+	return cert, nil
+}
+
+// This is helper function to validate that a string is a valid certificate
+func validateCert(cert string) error {
+	beginCert := "-----BEGIN CERTIFICATE-----"
+	endCert := "-----END CERTIFICATE-----"
+	if !strings.Contains(cert, beginCert) || !strings.Contains(cert, endCert) {
+		return fmt.Errorf("The certificate provided does not have a valid format.")
+	}
 	return nil
 }

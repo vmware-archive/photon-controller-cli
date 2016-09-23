@@ -33,6 +33,7 @@ const ExtendedPropertyETCDIP1 string = "etcd_ip1"
 const ExtendedPropertyETCDIP2 string = "etcd_ip2"
 const ExtendedPropertyETCDIP3 string = "etcd_ip3"
 const ExtendedPropertySSHKey string = "ssh_key"
+const ExtendedPropertyCACert string = "ca_cert"
 
 // Deletes a cluster with specified ID.
 func (api *ClustersAPI) Delete(id string) (task *Task, err error) {
