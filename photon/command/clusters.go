@@ -249,6 +249,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	batch_size := c.Int("batchSize")
 	ssh_key := c.String("ssh-key")
 	ca_cert := c.String("ca-cert")
+	admin_password := c.String("admin-password")
 
 	wait_for_ready := c.IsSet("wait-for-ready")
 
@@ -431,7 +432,18 @@ func createCluster(c *cli.Context, w io.Writer) error {
 			}
 		}
 	case "HARBOR":
+		if !utils.IsNonInteractive(c) {
+			master_ip, err = askForInput("Harbor master static IP address: ", master_ip)
+			if err != nil {
+				return err
+			}
+			admin_password, err = askForInput("Harbor registry admin password: ", admin_password)
+			if err != nil {
+				return err
+			}
+		}
 		extended_properties[photon.ExtendedPropertyMasterIP] = master_ip
+		extended_properties[photon.ExtendedPropertyAdminPassword] = admin_password
 	default:
 		return fmt.Errorf("Unsupported cluster type: %s", cluster_type)
 	}
