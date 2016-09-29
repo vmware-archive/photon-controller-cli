@@ -26,6 +26,8 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Creates a cli.Command for clusters
@@ -448,9 +450,14 @@ func createCluster(c *cli.Context, w io.Writer) error {
 			if err != nil {
 				return err
 			}
-			admin_password, err = askForInput("Harbor registry admin password: ", admin_password)
-			if err != nil {
-				return err
+			if len(admin_password) == 0 {
+				fmt.Printf("Harbor registry admin password: ")
+				bytePassword, err := terminal.ReadPassword(0)
+				if err != nil {
+					return err
+				}
+				admin_password = string(bytePassword)
+				fmt.Printf("\n")
 			}
 		}
 		extended_properties[photon.ExtendedPropertyMasterIP] = master_ip

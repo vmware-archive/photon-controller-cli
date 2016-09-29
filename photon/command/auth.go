@@ -26,6 +26,8 @@ import (
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/configuration"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Create a cli.command object for command "auth"
@@ -162,9 +164,14 @@ func getApiTokens(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		password, err = askForInput("Password: ", password)
-		if err != nil {
-			return err
+		if len(password) == 0 {
+			fmt.Printf("Password: ")
+			bytePassword, err := terminal.ReadPassword(0)
+			if err != nil {
+				return err
+			}
+			password = string(bytePassword)
+			fmt.Printf("\n")
 		}
 	}
 

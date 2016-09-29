@@ -24,6 +24,8 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Creates a cli.Command for host
@@ -215,9 +217,14 @@ func createHost(c *cli.Context, w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		password, err = askForInput("Password: ", password)
-		if err != nil {
-			return err
+		if len(password) == 0 {
+			fmt.Printf("Password: ")
+			bytePassword, err := terminal.ReadPassword(0)
+			if err != nil {
+				return err
+			}
+			password = string(bytePassword)
+			fmt.Printf("\n")
 		}
 		address, err = askForInput("Host Address: ", address)
 		if err != nil {
