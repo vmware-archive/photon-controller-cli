@@ -29,12 +29,13 @@ import (
 )
 
 // Creates a cli.Command for clusters
-// Subcommands: create;   Usage: cluster create [<options>]
-//              show;     Usage: cluster show <id>
-//              list;     Usage: cluster list [<options>]
-//              list_vms; Usage: cluster list_vms <id>
-//              resize;   Usage: cluster resize <id> <new worker count> [<options>]
-//              delete;   Usage: cluster delete <id>
+// Subcommands: create;              Usage: cluster create [<options>]
+//              show;                Usage: cluster show <id>
+//              list;                Usage: cluster list [<options>]
+//              list_vms;            Usage: cluster list_vms <id>
+//              resize;              Usage: cluster resize <id> <new worker count> [<options>]
+//              delete;              Usage: cluster delete <id>
+//              trigger_maintenance; Usage: cluster trigger_maintenance <id>
 func GetClusterCommand() cli.Command {
 	command := cli.Command{
 		Name:  "cluster",
@@ -209,6 +210,16 @@ func GetClusterCommand() cli.Command {
 				Usage: "Delete a cluster",
 				Action: func(c *cli.Context) {
 					err := deleteCluster(c)
+					if err != nil {
+						log.Fatal(err)
+					}
+				},
+			},
+			{
+				Name:  "trigger_maintenance",
+				Usage: "Start a background process to recreate failed VMs in a cluster",
+				Action: func(c *cli.Context) {
+					err := triggerMaintenance(c)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -736,6 +747,42 @@ func deleteCluster(c *cli.Context) error {
 		}
 	} else {
 		fmt.Println("Cancelled")
+	}
+
+	return nil
+}
+
+// Sends a cluster trigger_maintenance request to the API client based on the cli.Context.
+// Returns an error if one occurred.
+func triggerMaintenance(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 1, "cluster trigger_maintenance <id>")
+	if err != nil {
+		return nil
+	}
+
+	clusterId := c.Args().First()
+
+	if len(clusterId) == 0 {
+		return fmt.Errorf("Please provide a valid cluster ID")
+	}
+
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	if err != nil {
+		return err
+	}
+
+	if !utils.IsNonInteractive(c) {
+		fmt.Printf("Maintenance triggered for cluster %s\n", clusterId)
+	}
+
+	task, err := client.Esxclient.Clusters.TriggerMaintenance(clusterId)
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
 	}
 
 	return nil

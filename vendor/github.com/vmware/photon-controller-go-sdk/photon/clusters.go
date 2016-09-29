@@ -63,7 +63,7 @@ func (api *ClustersAPI) Get(id string) (cluster *Cluster, err error) {
 	return &result, nil
 }
 
-// Gets vms for clusters with the specified ID
+// Gets vms for cluster with the specified ID.
 func (api *ClustersAPI) GetVMs(id string) (result *VMs, err error) {
 	uri := api.client.Endpoint + clusterUrl + id + "/vms"
 	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions.AccessToken)
@@ -76,7 +76,7 @@ func (api *ClustersAPI) GetVMs(id string) (result *VMs, err error) {
 	return
 }
 
-// Resize a cluster to specified count
+// Resize a cluster to specified count.
 func (api *ClustersAPI) Resize(id string, resize *ClusterResizeOperation) (task *Task, err error) {
 	body, err := json.Marshal(resize)
 	if err != nil {
@@ -84,6 +84,22 @@ func (api *ClustersAPI) Resize(id string, resize *ClusterResizeOperation) (task 
 	}
 	res, err := api.client.restClient.Post(
 		api.client.Endpoint+clusterUrl+id+"/resize",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
+// Start a background process to recreate failed VMs in a cluster with the specified ID.
+func (api *ClustersAPI) TriggerMaintenance(id string) (task *Task, err error) {
+	body := []byte{}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+clusterUrl+id+"/trigger_maintenance",
 		"application/json",
 		bytes.NewReader(body),
 		api.client.options.TokenOptions.AccessToken)

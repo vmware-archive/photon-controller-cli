@@ -587,3 +587,47 @@ func TestListClusterVms(t *testing.T) {
 		t.Errorf("List cluster vms didn't produce a JSON field named 'id': %s", err)
 	}
 }
+
+func TestClusterTriggerMaintenance(t *testing.T) {
+	// Start mock server
+	server := mocks.NewTestServer()
+	defer server.Close()
+
+	// Create mock response
+	completedTask := &photon.Task{
+		Operation: "TRIGGER_CLUSTER_MAINTENANCE",
+		State:     "COMPLETED",
+		ID:        "fake_cluster_task_id",
+		Entity:    photon.Entity{ID: "fake_cluster_id"},
+	}
+	completedTaskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected completed task")
+	}
+
+	// Register mock response with mock server
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/clusters/fake_cluster_id/trigger_maintenance",
+		mocks.CreateResponder(200, string(completedTaskResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/fake_cluster_task_id",
+		mocks.CreateResponder(200, string(completedTaskResponse[:])))
+	mocks.Activate(true)
+
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	err = commandFlags.Parse([]string{"fake_cluster_id"})
+	if err != nil {
+		t.Error(err)
+	}
+	ctx := cli.NewContext(nil, commandFlags, nil)
+
+	err = triggerMaintenance(ctx)
+	if err != nil {
+		t.Error("Not expecting error for cluster trigger maintenance: " + err.Error())
+	}
+}
