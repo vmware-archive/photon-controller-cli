@@ -171,12 +171,12 @@
 			"revisionTime": "2016-07-18T19:04:35Z"
 		},
 		{
-			"checksumSHA1": "A90X0yxXQbKu0TAIC/b3HmJqtrE=",
+			"checksumSHA1": "FoqAtmrLAs1dW/8nSJeypo4HxO8=",
 			"path": "github.com/vmware/photon-controller-go-sdk/photon",
-			"revision": "4bc8f06032ef80967f91e5e39955421d668c0b1d",
-			"revisionTime": "2016-08-10T21:18:58Z",
-			"version": "=PROMOTED-249",
-			"versionExact": "PROMOTED-249"
+			"revision": "7f0fce25df2dc0d2ce548d694fa4a204e8b6da06",
+			"revisionTime": "2016-10-05T21:55:28Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "Z101ABR7sr4fHVtP4PBvI++Xixo=",

@@ -785,7 +785,7 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 		return err
 	}
 	initializeMigrationSpec := photon.InitializeMigrationOperation{}
-	initializeMigrationSpec.SourceLoadBalancerAddress = sourceAddress
+	initializeMigrationSpec.SourceNodeGroupReference = sourceAddress
 
 	// Initialize deployment migration
 	initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(&initializeMigrationSpec, deployment.ID)
@@ -824,7 +824,7 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 		return err
 	}
 	finalizeMigrationSpec := photon.FinalizeMigrationOperation{}
-	finalizeMigrationSpec.SourceLoadBalancerAddress = sourceAddress
+	finalizeMigrationSpec.SourceNodeGroupReference = sourceAddress
 
 	// Finalize deployment migration
 	finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(&finalizeMigrationSpec, deployment.ID)

@@ -486,12 +486,12 @@ type Deployments struct {
 
 // Represents source load balacer address to migrate deployment
 type InitializeMigrationOperation struct {
-	SourceLoadBalancerAddress string `json:"sourceLoadBalancerAddress"`
+	SourceNodeGroupReference string `json:"sourceNodeGroupReference"`
 }
 
 // Represents source load balacer address to finish migration of deployment
 type FinalizeMigrationOperation struct {
-	SourceLoadBalancerAddress string `json:"sourceLoadBalancerAddress"`
+	SourceNodeGroupReference string `json:"sourceNodeGroupReference"`
 }
 
 // Represents stats information

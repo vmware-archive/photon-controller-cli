@@ -316,7 +316,7 @@ func deploymentMigrationPrepareDeprecated(c *cli.Context) error {
 		return err
 	}
 	initializeMigrationSpec := photon.InitializeMigrationOperation{}
-	initializeMigrationSpec.SourceLoadBalancerAddress = sourceAddress
+	initializeMigrationSpec.SourceNodeGroupReference = sourceAddress
 
 	// Initialize deployment migration
 	for _, deployment := range deployments.Items {
@@ -353,7 +353,7 @@ func deploymentMigrationFinalizeDeprecated(c *cli.Context) error {
 		return err
 	}
 	finalizeMigrationSpec := photon.FinalizeMigrationOperation{}
-	finalizeMigrationSpec.SourceLoadBalancerAddress = sourceAddress
+	finalizeMigrationSpec.SourceNodeGroupReference = sourceAddress
 
 	// Finalize deployment migration
 	for _, deployment := range deployments.Items {
