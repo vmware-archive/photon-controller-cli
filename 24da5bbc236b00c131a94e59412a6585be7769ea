@@ -1,0 +1,8 @@
+Code-Review+2: Gokcen Iskender <giskender@vmware.com>
+Code-Review+1: Mark Peek <markpeek@vmware.com>
+Verified+1: Gerrit-Jenkins
+Submitted-by: Kenneth Jung <jungk@vmware.com>
+Submitted-at: Wed, 05 Oct 2016 22:18:49 -0700
+Reviewed-on: https://review.ec.eng.vmware.com/15681
+Project: photon-controller-cli
+Branch: refs/heads/v1.0.0
