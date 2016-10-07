@@ -148,8 +148,9 @@ func GetClusterCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show information about a cluster",
+				Name:      "show",
+				Usage:     "Show information about a cluster",
+				ArgsUsage: "cluster-id",
 				Action: func(c *cli.Context) {
 					err := showCluster(c, os.Stdout)
 					if err != nil {
@@ -182,8 +183,9 @@ func GetClusterCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list_vms",
-				Usage: "List the VMs associated with a cluster",
+				Name:      "list_vms",
+				Usage:     "List the VMs associated with a cluster",
+				ArgsUsage: "cluster-id",
 				Action: func(c *cli.Context) {
 					err := listVms(c, os.Stdout)
 					if err != nil {
@@ -192,8 +194,9 @@ func GetClusterCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "resize",
-				Usage: "Resize a cluster",
+				Name:      "resize",
+				Usage:     "Resize a cluster",
+				ArgsUsage: "cluster-id new-worker-count",
 				Flags: []cli.Flag{
 					cli.BoolFlag{
 						Name:  "wait-for-ready",
@@ -208,8 +211,9 @@ func GetClusterCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "delete",
-				Usage: "Delete a cluster",
+				Name:      "delete",
+				Usage:     "Delete a cluster",
+				ArgsUsage: "cluster-id",
 				Action: func(c *cli.Context) {
 					err := deleteCluster(c)
 					if err != nil {
@@ -218,8 +222,9 @@ func GetClusterCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "trigger_maintenance",
-				Usage: "Start a background process to recreate failed VMs in a cluster",
+				Name:      "trigger_maintenance",
+				Usage:     "Start a background process to recreate failed VMs in a cluster",
+				ArgsUsage: "cluster-id",
 				Action: func(c *cli.Context) {
 					err := triggerMaintenance(c)
 					if err != nil {
