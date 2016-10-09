@@ -171,18 +171,18 @@
 			"revisionTime": "2016-07-18T19:04:35Z"
 		},
 		{
-			"checksumSHA1": "F4vqz16KwElu2FjeZXDDvBz1P9Q=",
+			"checksumSHA1": "J/hya4yByFTSZAoVr1G/bAXUAQ4=",
 			"path": "github.com/vmware/photon-controller-go-sdk/photon",
-			"revision": "bc29e2e23448a073ef99f08d334e5180858fe491",
-			"revisionTime": "2016-09-28T00:50:35Z",
+			"revision": "2505c6add5037cbb748de6135071323d68a073e8",
+			"revisionTime": "2016-10-06T06:07:25Z",
 			"version": "=PROMOTED-249",
 			"versionExact": "PROMOTED-249"
 		},
 		{
 			"checksumSHA1": "Z101ABR7sr4fHVtP4PBvI++Xixo=",
 			"path": "github.com/vmware/photon-controller-go-sdk/photon/lightwave",
-			"revision": "bc29e2e23448a073ef99f08d334e5180858fe491",
-			"revisionTime": "2016-09-28T00:50:35Z",
+			"revision": "2505c6add5037cbb748de6135071323d68a073e8",
+			"revisionTime": "2016-10-06T06:07:25Z",
 			"version": "=PROMOTED-249",
 			"versionExact": "PROMOTED-249"
 		},

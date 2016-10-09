@@ -13,14 +13,18 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"fmt"
+	"io"
 	"log"
 	"net/url"
+	"os"
 
 	"github.com/codegangsta/cli"
 
 	"crypto/x509"
+
 	"github.com/vmware/photon-controller-cli/photon/client"
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -57,6 +61,16 @@ func GetTargetCommand() cli.Command {
 				Usage: "Show current target endpoint",
 				Action: func(c *cli.Context) {
 					err := showEndpoint(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:  "info",
+				Usage: "Display information about the Photon Controller that is the current target",
+				Action: func(c *cli.Context) {
+					err := showInfo(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -155,6 +169,30 @@ func showEndpoint(c *cli.Context) error {
 	} else {
 		fmt.Printf("Current API target is '%s'\n", config.CloudTarget)
 	}
+	return nil
+}
+
+// Shows information about Photon Controller: version, etc.
+func showInfo(c *cli.Context, w io.Writer) error {
+	err := checkArgNum(c.Args(), 0, "target show")
+	if err != nil {
+		return err
+	}
+
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	if err != nil {
+		return err
+	}
+
+	info, err := client.Esxclient.Info.Get()
+
+	if utils.NeedsFormatting(c) {
+		utils.FormatObject(info, w, c)
+	} else {
+		fmt.Printf("Version: '%s'\n", info.FullVersion)
+		fmt.Printf("Network Type: '%s'\n", info.NetworkType)
+	}
+
 	return nil
 }
 

@@ -703,5 +703,8 @@ type ImageCreateSpec struct {
 
 // Represents deployment info
 type Info struct {
-	NetworkType string `json:"networkType"`
+	BaseVersion   string `json:"baseVersion"`
+	FullVersion   string `json:"fullVersion"`
+	GitCommitHash string `json:"gitCommitHash"`
+	NetworkType   string `json:"networkType"`
 }

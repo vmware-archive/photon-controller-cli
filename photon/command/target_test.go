@@ -10,10 +10,17 @@
 package command
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/vmware/photon-controller-cli/photon/client"
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
+	"github.com/vmware/photon-controller-cli/photon/mocks"
+	"github.com/vmware/photon-controller-go-sdk/photon"
 
 	"github.com/codegangsta/cli"
 )
@@ -123,6 +130,60 @@ func TestTargetShow(t *testing.T) {
 	err = cf.SaveConfig(configOri)
 	if err != nil {
 		t.Error("Not expecting error when saving config file")
+	}
+}
+
+func TestTargetInfo(t *testing.T) {
+	server := mocks.NewTestServer()
+	defer server.Close()
+
+	// We first test that with exactly one deployment, we work as expected.
+	// This is the expected case in a real installation
+	err := mockInfo(t, server)
+	if err != nil {
+		t.Error("Failed to mock info: " + err.Error())
+	}
+	mocks.Activate(true)
+
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
+	if err != nil {
+		t.Error(err)
+	}
+	globalCtx := cli.NewContext(nil, globalFlags, nil)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	err = commandFlags.Parse([]string{})
+	if err != nil {
+		t.Error(err)
+	}
+	cxt := cli.NewContext(nil, commandFlags, globalCtx)
+
+	var output bytes.Buffer
+	err = showInfo(cxt, &output)
+	if err != nil {
+		t.Error("showInfo ailed unexpectedly: " + err.Error())
+	}
+
+	// Verify we have the fields we expect
+	err = checkRegExp(`\"baseVersion\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("Show info produce a JSON field named 'baseVersion': %s", err)
+	}
+	err = checkRegExp(`\"fullVersion\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("Show info produce a JSON field named 'fullVersion': %s", err)
+	}
+	err = checkRegExp(`\"gitCommitHash\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("Show info produce a JSON field named 'gitCommitHash': %s", err)
+	}
+	err = checkRegExp(`\"networkType\":\s*\".*\"`, output)
+	if err != nil {
+		t.Errorf("Show info produce a JSON field named 'networkType': %s", err)
 	}
 }
 
@@ -257,4 +318,25 @@ func TestLogout(t *testing.T) {
 	if err != nil {
 		t.Error("Not expecting error when saving config file")
 	}
+}
+
+func mockInfo(t *testing.T, server *httptest.Server) error {
+
+	info := photon.Info{
+		BaseVersion:   "1.1.0",
+		FullVersion:   "1.1.0-12345abcde",
+		GitCommitHash: "12345abcde",
+		NetworkType:   "PHYSICAL",
+	}
+
+	response, err := json.Marshal(info)
+	if err != nil {
+		return err
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/info",
+		mocks.CreateResponder(200, string(response[:])))
+	return nil
 }
