@@ -236,6 +236,10 @@ func destroy(c *cli.Context) error {
 
 	deployments, err := client.Esxclient.Deployments.GetAll()
 
+	if deployments == nil {
+		return fmt.Errorf("There is no deployment to destroy")
+	}
+
 	// Destroy deployment
 	for _, deployment := range deployments.Items {
 		err = doDestroy(deployment.ID)
