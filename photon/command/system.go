@@ -409,6 +409,7 @@ func showMigrationStatusDeprecated(c *cli.Context) error {
 func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID string, err error) {
 	err = validateDeploymentArguments(
 		dcMap.Deployment.ImageDatastores, dcMap.Deployment.AuthEnabled,
+		dcMap.Deployment.AuthEndpoint, dcMap.Deployment.AuthPort,
 		dcMap.Deployment.AuthTenant, dcMap.Deployment.AuthUsername, dcMap.Deployment.AuthPassword,
 		dcMap.Deployment.AuthSecurityGroups, dcMap.Deployment.SdnEnabled,
 		dcMap.Deployment.NetworkManagerAddress, dcMap.Deployment.NetworkManagerUsername,
@@ -430,6 +431,8 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 
 	authInfo := &photon.AuthInfo{
 		Enabled:        dcMap.Deployment.AuthEnabled,
+		Endpoint:       dcMap.Deployment.AuthEndpoint,
+		Port:           dcMap.Deployment.AuthPort,
 		Tenant:         dcMap.Deployment.AuthTenant,
 		Username:       dcMap.Deployment.AuthUsername,
 		Password:       dcMap.Deployment.AuthPassword,

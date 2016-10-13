@@ -995,9 +995,9 @@ func removeDuplicates(a []string) []string {
 	return result
 }
 
-func validateDeploymentArguments(imageDatastoreNames []string, enableAuth bool, oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups []string,
-	enableVirtualNetwork bool, networkManagerAddress string, networkManagerUsername string, networkManagerPassword string,
-	enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
+func validateDeploymentArguments(imageDatastoreNames []string, enableAuth bool, authEndpoint string, authPort int, oauthTenant string,
+	oauthUsername string, oauthPassword string, oauthSecurityGroups []string, enableVirtualNetwork bool, networkManagerAddress string,
+	networkManagerUsername string, networkManagerPassword string, enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
 	if len(imageDatastoreNames) == 0 {
 		return fmt.Errorf("Image datastore names cannot be nil.")
 	}
