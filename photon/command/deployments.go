@@ -783,7 +783,7 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 		return err
 	}
 	initializeMigrationSpec := photon.InitializeMigrationOperation{}
-	initializeMigrationSpec.SourceLoadBalancerAddress = sourceAddress
+	initializeMigrationSpec.SourceNodeGroupReference = sourceAddress
 
 	// Initialize deployment migration
 	initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(&initializeMigrationSpec, deployment.ID)
@@ -822,7 +822,7 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 		return err
 	}
 	finalizeMigrationSpec := photon.FinalizeMigrationOperation{}
-	finalizeMigrationSpec.SourceLoadBalancerAddress = sourceAddress
+	finalizeMigrationSpec.SourceNodeGroupReference = sourceAddress
 
 	// Finalize deployment migration
 	finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(&finalizeMigrationSpec, deployment.ID)
@@ -993,9 +993,9 @@ func removeDuplicates(a []string) []string {
 	return result
 }
 
-func validateDeploymentArguments(imageDatastoreNames []string, enableAuth bool, oauthTenant string, oauthUsername string, oauthPassword string, oauthSecurityGroups []string,
-	enableVirtualNetwork bool, networkManagerAddress string, networkManagerUsername string, networkManagerPassword string,
-	enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
+func validateDeploymentArguments(imageDatastoreNames []string, enableAuth bool, authEndpoint string, authPort int, oauthTenant string,
+	oauthUsername string, oauthPassword string, oauthSecurityGroups []string, enableVirtualNetwork bool, networkManagerAddress string,
+	networkManagerUsername string, networkManagerPassword string, enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
 	if len(imageDatastoreNames) == 0 {
 		return fmt.Errorf("Image datastore names cannot be nil.")
 	}
