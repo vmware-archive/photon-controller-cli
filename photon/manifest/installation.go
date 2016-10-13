@@ -35,6 +35,8 @@ type deployment struct {
 	StatsPort          int    `yaml:"stats_port"`
 
 	AuthEnabled        bool     `yaml:"auth_enabled"`
+	AuthEndpoint       string   `yaml:"auth_endpoint"`
+	AuthPort           int      `yaml:"auth_port"`
 	AuthUsername       string   `yaml:"oauth_username"`
 	AuthPassword       string   `yaml:"oauth_password"`
 	AuthTenant         string   `yaml:"oauth_tenant"`
