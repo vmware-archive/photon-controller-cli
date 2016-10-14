@@ -10,7 +10,7 @@
 package command
 
 import (
-	"bufio"
+	     "bufio"
 	"fmt"
 	"io"
 	"io/ioutil"
