@@ -47,6 +47,12 @@ func GetClusterCommand() cli.Command {
 				Name:      "create",
 				Usage:     "Create a new cluster",
 				ArgsUsage: " ",
+				Description: "Create a new Kubernetes cluster or Harbor Docker registry. \n\n" +
+					"   Non-interactive mode Example: \n" +
+					"   photon cluster create -n k8-cluster -k KUBERNETES --dns 10.0.0.1 \\ \n" +
+					"     --gateway 192.0.2.1 --netmask 255.255.255.0 --master-ip 192.0.2.20 \\ \n" +
+					"     --container-network 10.2.0.0/16 --etcd1 192.0.2.21 \\ \n" +
+					"     -c 1 -v cluster-vm -d small-disk --ssh-key ~/.ssh/id_dsa.pub",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "tenant, t",
@@ -150,8 +156,13 @@ func GetClusterCommand() cli.Command {
 			},
 			{
 				Name:      "show",
-				Usage:     "Show information about a cluster",
+				Usage:     "Show information about a cluster. ",
 				ArgsUsage: "cluster-id",
+				Description: "List the cluster's name, state, type, workerCount \n" +
+					"   and all the extended properties. Also, list the master and \n" +
+					"   etcd VM information about this cluster. For each VM, list the \n" +
+					"   vm's ID, name and IP. \n\n" +
+					"   Example: photon cluster show 9b159e92-9495-49a4-af58-53ad4764f616",
 				Action: func(c *cli.Context) {
 					err := showCluster(c, os.Stdout)
 					if err != nil {
@@ -163,6 +174,9 @@ func GetClusterCommand() cli.Command {
 				Name:      "list",
 				Usage:     "List clusters",
 				ArgsUsage: " ",
+				Description: "List all clusters in the current project. Attributes include \n" +
+					"   ID, Name, Type, State and Worker Count \n\n" +
+					"   Example: photon cluster list",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "tenant, t",
@@ -185,9 +199,10 @@ func GetClusterCommand() cli.Command {
 				},
 			},
 			{
-				Name:      "list_vms",
-				Usage:     "List the VMs associated with a cluster",
-				ArgsUsage: "cluster-id",
+				Name:        "list_vms",
+				Usage:       "List the VMs associated with a cluster",
+				ArgsUsage:   "cluster-id",
+				Description: "Example: photon cluster list_vms 9b159e92-9495-49a4-af58-53ad4764f616",
 				Action: func(c *cli.Context) {
 					err := listVms(c, os.Stdout)
 					if err != nil {
@@ -199,6 +214,11 @@ func GetClusterCommand() cli.Command {
 				Name:      "resize",
 				Usage:     "Resize a cluster",
 				ArgsUsage: "cluster-id new-worker-count",
+				Description: "Resize the cluster worker size to be the desired size. \n" +
+					"   Note: 1.  The cluster's worker size can only be scaled up. \n" +
+					"   2. The cluster is resized by batches with the batchSize parameter \n" +
+					"   that was specified when the cluster was created. \n\n" +
+					"   Example: photon cluster resize 9b159e92-9495-49a4-af58-53ad4764f616 5 ",
 				Flags: []cli.Flag{
 					cli.BoolFlag{
 						Name:  "wait-for-ready",
@@ -216,6 +236,10 @@ func GetClusterCommand() cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a cluster",
 				ArgsUsage: "cluster-id",
+				Description: "This call deletes the specified cluster if there are still \n" +
+					"   remaining VMs belong to the specified cluster. The remaining VMs \n" +
+					"   will be stopped and deleted. \n\n" +
+					"   Example: photon cluster delete 9b159e92-9495-49a4-af58-53ad4764f616",
 				Action: func(c *cli.Context) {
 					err := deleteCluster(c)
 					if err != nil {
@@ -224,9 +248,10 @@ func GetClusterCommand() cli.Command {
 				},
 			},
 			{
-				Name:      "trigger_maintenance",
-				Usage:     "Start a background process to recreate failed VMs in a cluster",
-				ArgsUsage: "cluster-id",
+				Name:        "trigger_maintenance",
+				Usage:       "Start a background process to recreate failed VMs in a cluster",
+				ArgsUsage:   "cluster-id",
+				Description: "Example: photon cluster trigger_maintenance 9b159e92-9495-49a4-af58-53ad4764f616",
 				Action: func(c *cli.Context) {
 					err := triggerMaintenance(c)
 					if err != nil {
