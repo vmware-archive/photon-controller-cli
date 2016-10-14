@@ -16,6 +16,13 @@ mkdir -p $PACKAGESRC
 cp -r ${REPOFILES[*]} $PACKAGESRC/
 pushd $PACKAGESRC
 
+# Fail if there is any go fmt error.
+if [[ -n "$(gofmt -l photon)" ]]; then
+	echo Fix gofmt errors
+	gofmt -d photon
+	exit 1
+fi
+
 make all
 
 rm -rf $WORKSPACE/bin
