@@ -44,5 +44,5 @@ test: tools
 	errcheck ./photon/...
 	go vet `go list ./... | grep -v '/vendor/'`
 	golint
-	! gofmt -l photon 2>&1 | read || (gofmt -d photon; echo "ERROR: Fix gofmt errors. Run 'gofmt -w photon'"; exit 1)
+	if [[ -n "$(gofmt -l photon)" ]]; then echo Fix gofmt errors; gofmt -d photon; exit 1; fi
 	go test -v ./...
