@@ -28,6 +28,11 @@ import (
 	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
+type ClusterVM struct {
+	ClusterVM photon.VM `json:"vm"`
+	IPAddress string    `json:"ipAddress"`
+}
+
 // Prompt for input if name is empty
 // Read each line as string and remove all spaces
 func askForInput(msg string, name string) (string, error) {
@@ -355,18 +360,11 @@ func printClusterList(clusterList []photon.Cluster, w io.Writer, c *cli.Context,
 	return nil
 }
 
-func printClusterVMs(vms []photon.VM, isScripting bool) error {
-	w := new(tabwriter.Writer)
-	if isScripting {
-		fmt.Printf("%d\n", len(vms))
-	} else {
-		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w, "VM ID\tVM Name\tVM IP\n")
-	}
-
+func printClusterVMs(vms []photon.VM, w io.Writer, c *cli.Context) (err error) {
+	clusterVMs := []ClusterVM{}
 	for _, vm := range vms {
 		ipAddr := "-"
-		networks, err := getVMNetworks(vm.ID, isScripting)
+		networks, err := getVMNetworks(vm.ID, c)
 		if err != nil {
 			continue
 		}
@@ -380,14 +378,30 @@ func printClusterVMs(vms []photon.VM, isScripting bool) error {
 				break
 			}
 		}
-		if isScripting {
-			fmt.Printf("%s\t%s\t%s\n", vm.ID, vm.Name, ipAddr)
-		} else {
-			fmt.Fprintf(w, "%s\t%s\t%s\n", vm.ID, vm.Name, ipAddr)
+		clusterVM := ClusterVM{
+			vm,
+			ipAddr,
 		}
+		clusterVMs = append(clusterVMs, clusterVM)
+
 	}
 
-	if !isScripting {
+	if c.GlobalIsSet("non-interactive") {
+		fmt.Printf("%d\n", len(vms))
+		for _, clusterVM := range clusterVMs {
+			fmt.Printf("%s\t%s\t%s\n", clusterVM.ClusterVM.ID,
+				clusterVM.ClusterVM.Name, clusterVM.IPAddress)
+		}
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObjects(clusterVMs, w, c)
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+		fmt.Fprintf(w, "VM ID\tVM Name\tVM IP\n")
+		for _, clusterVM := range clusterVMs {
+			fmt.Fprintf(w, "%s\t%s\t%s\n", clusterVM.ClusterVM.ID,
+				clusterVM.ClusterVM.Name, clusterVM.IPAddress)
+		}
 		err := w.Flush()
 		if err != nil {
 			return err
@@ -396,13 +410,13 @@ func printClusterVMs(vms []photon.VM, isScripting bool) error {
 	return nil
 }
 
-func getVMNetworks(id string, isScripting bool) (networks []interface{}, err error) {
+func getVMNetworks(id string, c *cli.Context) (networks []interface{}, err error) {
 	task, err := client.Esxclient.VMs.GetNetworks(id)
 	if err != nil {
 		return nil, err
 	}
 
-	if isScripting {
+	if utils.IsNonInteractive(c) {
 		task, err = client.Esxclient.Tasks.Wait(task.ID)
 		if err != nil {
 			return nil, err

@@ -310,7 +310,7 @@ func showDeployment(c *cli.Context) error {
 	var data []VM_NetworkIPs
 
 	for _, vm := range vms.Items {
-		networks, err := getVMNetworks(vm.ID, c.GlobalIsSet("non-interactive"))
+		networks, err := getVMNetworks(vm.ID, c)
 		if err != nil {
 			return err
 		}

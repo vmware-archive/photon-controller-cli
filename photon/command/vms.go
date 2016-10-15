@@ -545,7 +545,7 @@ func showVM(c *cli.Context) error {
 	}
 	var networks []interface{}
 	if vm.State != "ERROR" {
-		networks, err = getVMNetworks(id, c.GlobalIsSet("non-interactive"))
+		networks, err = getVMNetworks(id, c)
 		if err != nil {
 			return err
 		}
@@ -1025,7 +1025,7 @@ func listVMNetworks(c *cli.Context) error {
 		return err
 	}
 
-	networks, err := getVMNetworks(id, c.GlobalIsSet("non-interactive"))
+	networks, err := getVMNetworks(id, c)
 	if err != nil {
 		return err
 	}
