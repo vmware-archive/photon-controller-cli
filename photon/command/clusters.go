@@ -589,7 +589,7 @@ func showCluster(c *cli.Context, w io.Writer) error {
 		fmt.Println()
 	}
 
-	err = printClusterVMs(master_vms, c.GlobalIsSet("non-interactive"))
+	err = printClusterVMs(master_vms, w, c)
 	if err != nil {
 		return err
 	}
