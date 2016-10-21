@@ -68,7 +68,7 @@ func GetClusterCommand() cli.Command {
 					},
 					cli.StringFlag{
 						Name:  "type, k",
-						Usage: "Cluster type (accepted values are KUBERNETES, MESOS, or SWARM)",
+						Usage: "Cluster type (KUBERNETES or HARBOR)",
 					},
 					cli.StringFlag{
 						Name:  "vm_flavor, v",
@@ -107,28 +107,16 @@ func GetClusterCommand() cli.Command {
 						Usage: "CIDR representation of the container network, e.g. '10.2.0.0/16' (required for Kubernetes clusters)",
 					},
 					cli.StringFlag{
-						Name:  "zookeeper1",
-						Usage: "Static IP address with which to create Zookeeper node 1 (required for Mesos clusters)",
-					},
-					cli.StringFlag{
-						Name:  "zookeeper2",
-						Usage: "Static IP address with which to create Zookeeper node 2 (required for Mesos clusters)",
-					},
-					cli.StringFlag{
-						Name:  "zookeeper3",
-						Usage: "Static IP address with which to create Zookeeper node 3 (required for Mesos clusters)",
-					},
-					cli.StringFlag{
 						Name:  "etcd1",
-						Usage: "Static IP address with which to create etcd node 1 (required for Kubernetes and Swarm clusters)",
+						Usage: "Static IP address with which to create etcd node 1 (required for Kubernetes)",
 					},
 					cli.StringFlag{
 						Name:  "etcd2",
-						Usage: "Static IP address with which to create etcd node 2 (required for Kubernetes and Swarm clusters)",
+						Usage: "Static IP address with which to create etcd node 2",
 					},
 					cli.StringFlag{
 						Name:  "etcd3",
-						Usage: "Static IP address with which to create etcd node 3 (required for Kubernetes and Swarm clusters)",
+						Usage: "Static IP address with which to create etcd node 3",
 					},
 					cli.StringFlag{
 						Name:  "ssh-key",
@@ -289,9 +277,6 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	netmask := c.String("netmask")
 	master_ip := c.String("master-ip")
 	container_network := c.String("container-network")
-	zookeeper1 := c.String("zookeeper1")
-	zookeeper2 := c.String("zookeeper2")
-	zookeeper3 := c.String("zookeeper3")
 	etcd1 := c.String("etcd1")
 	etcd2 := c.String("etcd2")
 	etcd3 := c.String("etcd3")
@@ -423,56 +408,6 @@ func createCluster(c *cli.Context, w io.Writer) error {
 
 		extended_properties[photon.ExtendedPropertyMasterIP] = master_ip
 		extended_properties[photon.ExtendedPropertyContainerNetwork] = container_network
-		extended_properties[photon.ExtendedPropertyETCDIP1] = etcd1
-		if len(etcd2) != 0 {
-			extended_properties[photon.ExtendedPropertyETCDIP2] = etcd2
-			if len(etcd3) != 0 {
-				extended_properties[photon.ExtendedPropertyETCDIP3] = etcd3
-			}
-		}
-	case "MESOS":
-		if !utils.IsNonInteractive(c) {
-			zookeeper1, err = askForInput("Zookeeper server 1 static IP address: ", zookeeper1)
-			if err != nil {
-				return err
-			}
-			zookeeper2, err = askForInput("Zookeeper server 2 static IP address (leave blank for none): ", zookeeper2)
-			if err != nil {
-				return err
-			}
-			if len(zookeeper2) != 0 {
-				zookeeper3, err = askForInput("Zookeeper server 3 static IP address (leave blank for none): ", zookeeper3)
-				if err != nil {
-					return err
-				}
-			}
-		}
-
-		extended_properties[photon.ExtendedPropertyZookeeperIP1] = zookeeper1
-		if len(zookeeper2) != 0 {
-			extended_properties[photon.ExtendedPropertyZookeeperIP2] = zookeeper2
-			if len(zookeeper3) != 0 {
-				extended_properties[photon.ExtendedPropertyZookeeperIP3] = zookeeper3
-			}
-		}
-	case "SWARM":
-		if !utils.IsNonInteractive(c) {
-			etcd1, err = askForInput("etcd server 1 static IP address: ", etcd1)
-			if err != nil {
-				return err
-			}
-			etcd2, err = askForInput("etcd server 2 static IP address (leave blank for none): ", etcd2)
-			if err != nil {
-				return err
-			}
-			if len(etcd2) != 0 {
-				etcd3, err = askForInput("etcd server 3 static IP address (leave blank for none): ", etcd3)
-				if err != nil {
-					return err
-				}
-			}
-		}
-
 		extended_properties[photon.ExtendedPropertyETCDIP1] = etcd1
 		if len(etcd2) != 0 {
 			extended_properties[photon.ExtendedPropertyETCDIP2] = etcd2
