@@ -138,6 +138,10 @@ func GetClusterCommand() cli.Command {
 						Name:  "ca-cert",
 						Usage: "The file path of the file containing the CA certificate for a docker registry (optional)",
 					},
+					cli.StringFlag{
+						Name:  "admin-password",
+						Usage: "The Harbor registry admin password (optional)",
+					},
 					cli.IntFlag{
 						Name:  "batchSize",
 						Usage: "Batch size for expanding worker nodes",
