@@ -587,19 +587,19 @@ type VirtualSubnetCreateSpec struct {
 
 // Represents a virtual network
 type VirtualSubnet struct {
-	ID             string `json:"id"`
-	Name           string `json:"kind"`
-	Description    string `json:"description,omitempty"`
-	State          string `json:"state"`
-	RoutingType    string `json:"routingType"`
-	IsDefault      string `json:"isDefault"`
-	Cidr           string `json:"cidr,omitempty"`
-	LowIpDynamic   string `json:"lowIpDynamic,omitempty"`
-	HighIpDynamic  string `json:"HighIpDynamic,omitempty"`
-	LowIpStatic    string `json:"lowIpStatic,omitempty"`
-	HighIpStatic   string `json:"highIpStatic,omitempty"`
-	ReservedIpList string `json:"reservedIpList"`
-	SelfLink       string `json:"selfLink"`
+	ID             string   `json:"id"`
+	Name           string   `json:"name"`
+	Description    string   `json:"description,omitempty"`
+	State          string   `json:"state"`
+	RoutingType    string   `json:"routingType"`
+	IsDefault      string   `json:"isDefault"`
+	Cidr           string   `json:"cidr,omitempty"`
+	LowIpDynamic   string   `json:"lowIpDynamic,omitempty"`
+	HighIpDynamic  string   `json:"highIpDynamic,omitempty"`
+	LowIpStatic    string   `json:"lowIpStatic,omitempty"`
+	HighIpStatic   string   `json:"highIpStatic,omitempty"`
+	ReservedIpList []string `json:"reservedIpList"`
+	SelfLink       string   `json:"selfLink"`
 }
 
 // Represents multiple virtual subnets returned
@@ -642,6 +642,7 @@ type Cluster struct {
 	ProjectID          string            `json:"projectID,omitempty"`
 	WorkerCount        int               `json:"workerCount"`
 	SelfLink           string            `json:"selfLink,omitempty"`
+	ErrorReason        string            `json:"errorReason,omitempty"`
 	ExtendedProperties map[string]string `json:"extendedProperties"`
 }
 

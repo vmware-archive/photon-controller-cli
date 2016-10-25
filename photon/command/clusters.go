@@ -135,7 +135,7 @@ func GetClusterCommand() cli.Command {
 						Usage: "The file path of the SSH key",
 					},
 					cli.StringFlag{
-						Name:  "ca-cert",
+						Name:  "registry-ca-cert",
 						Usage: "The file path of the file containing the CA certificate for a docker registry (optional)",
 					},
 					cli.StringFlag{
@@ -297,7 +297,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	etcd3 := c.String("etcd3")
 	batch_size := c.Int("batchSize")
 	ssh_key := c.String("ssh-key")
-	ca_cert := c.String("ca-cert")
+	ca_cert := c.String("registry-ca-cert")
 	admin_password := c.String("admin-password")
 
 	wait_for_ready := c.IsSet("wait-for-ready")
@@ -387,7 +387,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	if len(ca_cert) != 0 {
 		ca_cert_content, err := readCACert(ca_cert)
 		if err == nil {
-			extended_properties[photon.ExtendedPropertyCACert] = ca_cert_content
+			extended_properties[photon.ExtendedPropertyRegistryCACert] = ca_cert_content
 		} else {
 			return err
 		}
