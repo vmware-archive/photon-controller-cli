@@ -631,3 +631,59 @@ func TestClusterTriggerMaintenance(t *testing.T) {
 		t.Error("Not expecting error for cluster trigger maintenance: " + err.Error())
 	}
 }
+
+func TestClusterCertToFile(t *testing.T) {
+	cluster := &photon.Cluster{
+		Name:        "fake_cluster_name",
+		State:       "ERROR",
+		ID:          "fake_cluster_id",
+		Type:        "KUBERNETES",
+		WorkerCount: 50,
+		ExtendedProperties: map[string]string{
+			photon.ExtendedPropertyRegistryCACert: "-----BEGIN CERTIFICATE-----\nMIIFmzCCA4OgAwIBAgIJAIAZmLcInJMeMA0GCSqGSIb3DQEBCwUAMGQxCzAJBgNV\n-----END CERTIFICATE-----",
+		},
+	}
+	clusterResponse, err := json.Marshal(cluster)
+	if err != nil {
+		t.Error("Not expecting error serializing expected cluster")
+	}
+
+	server = mocks.NewTestServer()
+	defer server.Close()
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/clusters/"+cluster.ID,
+		mocks.CreateResponder(200, string(clusterResponse[:])))
+
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	err = commandFlags.Parse([]string{"fake_cluster_id", "test.cert"})
+	if err != nil {
+		t.Error(err)
+	}
+	ctx := cli.NewContext(nil, commandFlags, nil)
+
+	err = certToFile(ctx)
+	if err != nil {
+		t.Error("Not expecting error for cluster trigger maintenance: " + err.Error())
+	}
+
+	content, err := readCACert("test.cert")
+
+	if err != nil {
+		t.Error("ReadCACert function failed" + err.Error())
+	}
+	expected := "-----BEGIN CERTIFICATE-----\nMIIFmzCCA4OgAwIBAgIJAIAZmLcInJMeMA0GCSqGSIb3DQEBCwUAMGQxCzAJBgNV\n-----END CERTIFICATE-----"
+	if strings.Compare(content, expected) != 0 {
+		t.Error("expected CACert :" + expected + " actual CACert read:" + content)
+	}
+
+	err = os.Remove("test.cert")
+
+	if err != nil {
+		t.Error("Error deleting test.cert file")
+	}
+}

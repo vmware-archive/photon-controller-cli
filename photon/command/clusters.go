@@ -37,7 +37,8 @@ import (
 //              list_vms;            Usage: cluster list_vms <id>
 //              resize;              Usage: cluster resize <id> <new worker count> [<options>]
 //              delete;              Usage: cluster delete <id>
-//              trigger_maintenance; Usage: cluster trigger_maintenance <id>
+//              trigger-maintenance; Usage: cluster trigger-maintenance <id>
+//              cert-to-file;        Usage: cluster cert-to-file <id> <file_path>
 func GetClusterCommand() cli.Command {
 	command := cli.Command{
 		Name:  "cluster",
@@ -240,12 +241,29 @@ func GetClusterCommand() cli.Command {
 				},
 			},
 			{
-				Name:        "trigger_maintenance",
+				Name:        "trigger-maintenance",
 				Usage:       "Start a background process to recreate failed VMs in a cluster",
 				ArgsUsage:   "cluster-id",
-				Description: "Example: photon cluster trigger_maintenance 9b159e92-9495-49a4-af58-53ad4764f616",
+				Description: "Example: photon cluster trigger-maintenance 9b159e92-9495-49a4-af58-53ad4764f616",
 				Action: func(c *cli.Context) {
 					err := triggerMaintenance(c)
+					if err != nil {
+						log.Fatal(err)
+					}
+				},
+			},
+			{
+				Name:      "cert-to-file",
+				Usage:     "Save the CA Certificate to a file with the specified path if the certificate exists",
+				ArgsUsage: "cluster-id file_path",
+				Description: "If a cluster has a CA certificate, this extracts it and saves \n" +
+					"   it to a file. If the specified file path doesn't exist, it will create \n" +
+					"   a new file with the specified pathThis is useful when using using Harbor, \n" +
+					"   which uses a self-signed CA certificate. You can extract the CA certificate \n" +
+					"   with this command, and use it as input when creating a Kubernetes cluster. \n\n" +
+					"   Example: photon cluster cert-to-_file 9b159e92-9495-49a4-af58-53ad4764f616 ./user/cert",
+				Action: func(c *cli.Context) {
+					err := certToFile(c)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -741,7 +759,7 @@ func deleteCluster(c *cli.Context) error {
 // Sends a cluster trigger_maintenance request to the API client based on the cli.Context.
 // Returns an error if one occurred.
 func triggerMaintenance(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "cluster trigger_maintenance <id>")
+	err := checkArgNum(c.Args(), 1, "cluster trigger-maintenance <id>")
 	if err != nil {
 		return nil
 	}
@@ -881,4 +899,48 @@ func validateCert(cert string) error {
 		return fmt.Errorf("The certificate provided does not have a valid format.")
 	}
 	return nil
+}
+
+func certToFile(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 2, "cluster cert-to-file <id> <file_path>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+	filePath := c.Args()[1]
+
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	if err != nil {
+		return err
+	}
+
+	cluster, err := client.Esxclient.Clusters.Get(id)
+	if err != nil {
+		return err
+	}
+
+	cert := ""
+
+	// Case: Kubernetes
+	if cluster.ExtendedProperties["registry_ca_cert"] != "" {
+		cert = cluster.ExtendedProperties["registry_ca_cert"]
+		err := ioutil.WriteFile(filePath, []byte(cert), 0644)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// Case: Harbor
+	if cluster.ExtendedProperties["ca_cert"] != "" {
+		cert = cluster.ExtendedProperties["ca_cert"]
+		err := ioutil.WriteFile(filePath, []byte(cert), 0644)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// Extended Property doesn't contain either registry_ca_cert or ca_cert
+	return fmt.Errorf("There is no certificate associated with this cluster")
 }
