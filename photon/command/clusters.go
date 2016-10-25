@@ -38,6 +38,7 @@ import (
 //              resize;              Usage: cluster resize <id> <new worker count> [<options>]
 //              delete;              Usage: cluster delete <id>
 //              trigger_maintenance; Usage: cluster trigger_maintenance <id>
+//              cert_to_file;        Usage: cluster cert_to_file <id> <file_path>
 func GetClusterCommand() cli.Command {
 	command := cli.Command{
 		Name:  "cluster",
@@ -254,6 +255,19 @@ func GetClusterCommand() cli.Command {
 				Description: "Example: photon cluster trigger_maintenance 9b159e92-9495-49a4-af58-53ad4764f616",
 				Action: func(c *cli.Context) {
 					err := triggerMaintenance(c)
+					if err != nil {
+						log.Fatal(err)
+					}
+				},
+			},
+			{
+				Name:      "cert_to_file",
+				Usage:     "Save the ca_cert to a file with the specified path if there exists a cert",
+				ArgsUsage: "cluster-id file_path",
+				Description: "If the file doesn't exisit, it will creat a new file with the specified path \n" +
+					"   Example: photon cluster cert_to_file 9b159e92-9495-49a4-af58-53ad4764f616 ./user/cert",
+				Action: func(c *cli.Context) {
+					err := certToFile(c)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -934,4 +948,50 @@ func validateCert(cert string) error {
 		return fmt.Errorf("The certificate provided does not have a valid format.")
 	}
 	return nil
+}
+
+func certToFile(c *cli.Context) error {
+	err := checkArgNum(c.Args(), 2, "cluster cert_to_file <id> <file_path>")
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+	filePath := c.Args()[1]
+
+	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	if err != nil {
+		return err
+	}
+
+	cluster, err := client.Esxclient.Clusters.Get(id)
+	if err != nil {
+		return err
+	}
+
+	cert := ""
+
+	// Case: Kubernetes
+	if cluster.ExtendedProperties["registry_ca_cert"] != "" {
+		cert = cluster.ExtendedProperties["registry_ca_cert"]
+		err := ioutil.WriteFile(filePath, []byte(cert), 0644)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("REGISTRY_CA_CERT copied to file %s", filePath)
+		return nil
+	}
+
+	// Case: Harbor
+	if cluster.ExtendedProperties["ca_cert"] != "" {
+		cert = cluster.ExtendedProperties["ca_cert"]
+		err := ioutil.WriteFile(filePath, []byte(cert), 0644)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("CA_CERT copied to file %s", filePath)
+		return nil
+	}
+
+	// Extended Property doesn't contain either registry_ca_cert or ca_cert
+	return fmt.Errorf("There is no certificate associated with this cluster")
 }
