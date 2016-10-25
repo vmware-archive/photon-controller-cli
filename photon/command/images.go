@@ -14,6 +14,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"text/tabwriter"
@@ -118,34 +119,34 @@ func createImage(c *cli.Context, w io.Writer) error {
 	if len(c.Args()) > 1 {
 		return fmt.Errorf("Unknown argument: %v", c.Args()[1:])
 	}
-	path := c.Args().First()
+	filePath := c.Args().First()
 	name := c.String("name")
 	replicationType := c.String("image_replication")
 
 	if !utils.IsNonInteractive(c) {
 		var err error
-		path, err = askForInput("Image path: ", path)
+		filePath, err = askForInput("Image path: ", filePath)
 		if err != nil {
 			return err
 		}
 	}
 
-	if len(path) == 0 {
+	if len(filePath) == 0 {
 		return fmt.Errorf("Please provide image path")
 	}
 
-	path, err := filepath.Abs(path)
+	filePath, err := filepath.Abs(filePath)
 	if err != nil {
 		return err
 	}
 
-	_, err = os.Stat(path)
+	_, err = os.Stat(filePath)
 	if err != nil {
 		return fmt.Errorf("No such image file at that path")
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		defaultName := path
+		defaultName := path.Base(filePath)
 		name, err = askForInput("Image name (default: "+defaultName+"): ", name)
 		if err != nil {
 			return err
@@ -165,7 +166,7 @@ func createImage(c *cli.Context, w io.Writer) error {
 		}
 	}
 
-	file, err := os.Open(path)
+	file, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}

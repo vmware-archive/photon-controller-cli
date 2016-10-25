@@ -16,7 +16,6 @@ Decide a folder as the GOPATH, e.g. ~/go.
     5. export GOPATH=~/go
     6. export PATH=$PATH:~/go/bin
     7. make tools
-    8. godep restore
 
 
 ## Build and Test
