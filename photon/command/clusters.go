@@ -539,8 +539,13 @@ func showCluster(c *cli.Context, w io.Writer) error {
 
 	if c.GlobalIsSet("non-interactive") {
 		extendedProperties := strings.Trim(strings.TrimLeft(fmt.Sprint(cluster.ExtendedProperties), "map"), "[]")
-		fmt.Printf("%s\t%s\t%s\t%s\t%d\t%s\n", cluster.ID, cluster.Name, cluster.State, cluster.Type,
-			cluster.WorkerCount, extendedProperties)
+		if cluster.ErrorReason != "" {
+			fmt.Printf("%s\t%s\t%s\t%s\t%d\t%s\t%s\n", cluster.ID, cluster.Name, cluster.State, cluster.Type,
+				cluster.WorkerCount, cluster.ErrorReason, extendedProperties)
+		} else {
+			fmt.Printf("%s\t%s\t%s\t%s\t%d\t%s\n", cluster.ID, cluster.Name, cluster.State, cluster.Type,
+				cluster.WorkerCount, extendedProperties)
+		}
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(cluster, w, c)
 	} else {
@@ -549,6 +554,9 @@ func showCluster(c *cli.Context, w io.Writer) error {
 		fmt.Println("  State:               ", cluster.State)
 		fmt.Println("  Type:                ", cluster.Type)
 		fmt.Println("  Worker count:        ", cluster.WorkerCount)
+		if cluster.ErrorReason != "" {
+			fmt.Println("  Error Reason:        ", cluster.ErrorReason)
+		}
 		fmt.Println("  Extended Properties: ", cluster.ExtendedProperties)
 		fmt.Println()
 	}
