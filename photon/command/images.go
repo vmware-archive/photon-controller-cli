@@ -123,7 +123,7 @@ func createImage(c *cli.Context, w io.Writer) error {
 	name := c.String("name")
 	replicationType := c.String("image_replication")
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		var err error
 		filePath, err = askForInput("Image path: ", filePath)
 		if err != nil {
@@ -171,7 +171,7 @@ func createImage(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -217,8 +217,8 @@ func deleteImage(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	if confirmed(utils.IsNonInteractive(c)) {
-		client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	if confirmed(c.GlobalIsSet("non-interactive")) {
+		client.Esxclient, err = client.GetClient(c)
 		if err != nil {
 			return err
 		}
@@ -245,7 +245,7 @@ func listImages(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -288,7 +288,7 @@ func listImages(c *cli.Context, w io.Writer) error {
 func showImage(c *cli.Context, w io.Writer) error {
 	id := c.Args().First()
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		var err error
 		id, err = askForInput("Image id: ", id)
 		if err != nil {
@@ -301,7 +301,7 @@ func showImage(c *cli.Context, w io.Writer) error {
 	}
 
 	var err error
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -352,7 +352,7 @@ func getImageTasks(c *cli.Context) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}

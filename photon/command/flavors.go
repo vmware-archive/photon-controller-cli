@@ -134,7 +134,7 @@ func createFlavor(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		name, err = askForInput("Flavor name: ", name)
 		if err != nil {
 			return err
@@ -163,7 +163,7 @@ func createFlavor(c *cli.Context, w io.Writer) error {
 		Cost: costList,
 	}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("Creating flavor: '%s', Kind: '%s'\n\n", name, kind)
 		fmt.Printf("Please make sure limits below are correct: \n")
 		for i, l := range costList {
@@ -171,9 +171,9 @@ func createFlavor(c *cli.Context, w io.Writer) error {
 		}
 	}
 
-	if confirmed(utils.IsNonInteractive(c)) {
+	if confirmed(c.GlobalIsSet("non-interactive")) {
 		var err error
-		client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+		client.Esxclient, err = client.GetClient(c)
 		if err != nil {
 			return err
 		}
@@ -208,7 +208,7 @@ func deleteFlavor(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func listFlavors(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -281,7 +281,7 @@ func showFlavor(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -324,7 +324,7 @@ func getFlavorTasks(c *cli.Context, w io.Writer) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}

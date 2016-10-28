@@ -39,7 +39,7 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 	staticIpSizeStr := c.String("staticIpSize")
 	projectId := c.String("projectId")
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		name, err = askForInput("Network name: ", name)
 		if err != nil {
 			return err
@@ -93,7 +93,7 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 		ReservedStaticIpSize: staticIpSize,
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func listVirtualNetworks(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func showVirtualNetwork(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}

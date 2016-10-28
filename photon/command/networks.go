@@ -165,7 +165,7 @@ func GetNetworksCommand() cli.Command {
 }
 
 func isSoftwareDefinedNetwork(c *cli.Context) (sdnEnabled bool, err error) {
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return
 	}
@@ -190,7 +190,7 @@ func deleteNetwork(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func setDefaultNetwork(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -250,7 +250,7 @@ func setDefaultNetwork(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	if confirmed(utils.IsNonInteractive(c)) {
+	if confirmed(c.GlobalIsSet("non-interactive")) {
 		id, err := waitOnTaskOperation(task.ID, c)
 		if err != nil {
 			return err

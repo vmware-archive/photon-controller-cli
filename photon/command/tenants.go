@@ -145,7 +145,7 @@ func createTenant(c *cli.Context, w io.Writer) error {
 	name := c.Args().First()
 	securityGroups := c.String("security-groups")
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		var err error
 		name, err = askForInput("Tenant name: ", name)
 		if err != nil {
@@ -173,7 +173,7 @@ func createTenant(c *cli.Context, w io.Writer) error {
 	}
 
 	var err error
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func listTenants(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -248,7 +248,7 @@ func deleteTenant(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -278,7 +278,7 @@ func showTenant(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -318,7 +318,7 @@ func setTenant(c *cli.Context) error {
 	}
 	name := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -345,7 +345,7 @@ func setTenant(c *cli.Context) error {
 		return err
 	}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("Tenant set to '%s'\n", name)
 	}
 	return nil
@@ -390,7 +390,7 @@ func getTenantTasks(c *cli.Context, w io.Writer) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -422,7 +422,7 @@ func setSecurityGroups(c *cli.Context) error {
 		Items: items,
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}

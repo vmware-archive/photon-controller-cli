@@ -138,7 +138,7 @@ func setEndpoint(c *cli.Context) error {
 		return err
 	}
 
-	err = configureServerCerts(endpoint, noCertCheck, c.GlobalIsSet("non-interactive"))
+	err = configureServerCerts(endpoint, noCertCheck, c)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func showInfo(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -236,7 +236,7 @@ func login(c *cli.Context) error {
 		config.Token = token
 
 	} else {
-		client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+		client.Esxclient, err = client.GetClient(c)
 		if err != nil {
 			return err
 		}
@@ -282,7 +282,7 @@ func logout(c *cli.Context) error {
 	return nil
 }
 
-func configureServerCerts(endpoint string, noChertCheck bool, isNonInterractive bool) (err error) {
+func configureServerCerts(endpoint string, noChertCheck bool, c *cli.Context) (err error) {
 	if noChertCheck {
 		return
 	}
@@ -299,13 +299,13 @@ func configureServerCerts(endpoint string, noChertCheck bool, isNonInterractive 
 	// noCertCheck == false -> User wants server cert validation
 	// bTrusted = true -> Server cert is trusted
 	if u.Scheme == "https" {
-		err = setupApiServerCert(u.Host, isNonInterractive)
+		err = setupApiServerCert(u.Host, c.GlobalIsSet("non-interactive"))
 		if err != nil {
 			return
 		}
 	}
 
-	client.Esxclient, err = client.GetClient(isNonInterractive)
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return
 	}
@@ -325,7 +325,7 @@ func configureServerCerts(endpoint string, noChertCheck bool, isNonInterractive 
 	}
 
 	host := fmt.Sprintf("%s:%v", authInfo.Endpoint, authInfo.Port)
-	err = setupLightWaveCerts(host, isNonInterractive)
+	err = setupLightWaveCerts(host, c.GlobalIsSet("non-interactive"))
 	if err != nil {
 		return
 	}

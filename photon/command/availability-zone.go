@@ -110,7 +110,7 @@ func createAvailabilityZone(c *cli.Context, w io.Writer) error {
 	}
 	name := c.String("name")
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		var err error
 		name, err = askForInput("AvailabilityZone name: ", name)
 		if err != nil {
@@ -126,7 +126,7 @@ func createAvailabilityZone(c *cli.Context, w io.Writer) error {
 		Name: name,
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func showAvailabilityZone(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -190,7 +190,7 @@ func listAvailabilityZones(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func deleteAvailabilityZone(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -263,7 +263,7 @@ func getAvailabilityZoneTasks(c *cli.Context, w io.Writer) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}

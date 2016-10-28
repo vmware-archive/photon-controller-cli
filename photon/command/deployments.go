@@ -18,8 +18,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/vmware/photon-controller-cli/photon/utils"
-
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-go-sdk/photon"
@@ -254,7 +252,7 @@ func listDeployments(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -292,7 +290,7 @@ func showDeployment(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -451,7 +449,7 @@ func listDeploymentHosts(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -476,7 +474,7 @@ func listDeploymentVms(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -520,7 +518,7 @@ func updateImageDatastores(c *cli.Context) error {
 		Items: regexp.MustCompile(`\s*,\s*`).Split(datastores, -1),
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -541,7 +539,7 @@ func pauseSystem(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -566,7 +564,7 @@ func pauseBackgroundTasks(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -591,7 +589,7 @@ func resumeSystem(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -622,7 +620,7 @@ func setDeploymentSecurityGroups(c *cli.Context) error {
 		deploymentId = c.Args()[0]
 		groups = c.Args()[1]
 	} else if len(c.Args()) == 1 {
-		deploymentId, err = getDefaultDeploymentId()
+		deploymentId, err = getDefaultDeploymentId(c)
 		if err != nil {
 			return err
 		}
@@ -636,7 +634,7 @@ func setDeploymentSecurityGroups(c *cli.Context) error {
 		Items: items,
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -688,7 +686,7 @@ func enableClusterType(c *cli.Context) error {
 	}
 
 	if confirmed(c.GlobalIsSet("non-interactive")) {
-		client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+		client.Esxclient, err = client.GetClient(c)
 		if err != nil {
 			return err
 		}
@@ -738,7 +736,7 @@ func disableClusterType(c *cli.Context) error {
 	}
 
 	if confirmed(c.GlobalIsSet("non-interactive")) {
-		client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+		client.Esxclient, err = client.GetClient(c)
 		if err != nil {
 			return err
 		}
@@ -775,7 +773,7 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 		return fmt.Errorf("Please provide the API endpoint of the old control plane")
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -814,7 +812,7 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 		return fmt.Errorf("Please provide the API endpoint of the old control plane")
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -847,7 +845,7 @@ func showMigrationStatus(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -890,12 +888,12 @@ func getDeploymentId(c *cli.Context) (id string, err error) {
 		return
 	}
 
-	return getDefaultDeploymentId()
+	return getDefaultDeploymentId(c)
 }
 
 // If there is exactly one deployment, return its id, otherwise return an error
-func getDefaultDeploymentId() (id string, err error) {
-	client.Esxclient, err = client.GetClient(true)
+func getDefaultDeploymentId(c *cli.Context) (id string, err error) {
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return
 	}

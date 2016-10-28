@@ -180,7 +180,7 @@ func createProject(c *cli.Context, w io.Writer) error {
 	percent := c.Float64("percent")
 	securityGroups := c.String("security-groups")
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func createProject(c *cli.Context, w io.Writer) error {
 			{Key: "subdivide.percent", Value: percent, Unit: "COUNT"}}
 	}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		name, err = askForInput("Project name: ", name)
 		if err != nil {
 			return err
@@ -224,7 +224,7 @@ func createProject(c *cli.Context, w io.Writer) error {
 	projectSpec.Name = name
 	projectSpec.ResourceTicket = photon.ResourceTicketReservation{Name: rtName, Limits: limitsList}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("\nTenant name: %s\n", tenant.Name)
 		fmt.Printf("Resource ticket name: %s\n", rtName)
 		fmt.Printf("Creating project name: %s\n\n", name)
@@ -233,7 +233,7 @@ func createProject(c *cli.Context, w io.Writer) error {
 			fmt.Printf("%d: %s, %g, %s\n", i+1, l.Key, l.Value, l.Unit)
 		}
 	}
-	if confirmed(utils.IsNonInteractive(c)) {
+	if confirmed(c.GlobalIsSet("non-interactive")) {
 		if len(securityGroups) > 0 {
 			projectSpec.SecurityGroups = regexp.MustCompile(`\s*,\s*`).Split(securityGroups, -1)
 		}
@@ -270,7 +270,7 @@ func deleteProject(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -300,7 +300,7 @@ func showProject(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -388,7 +388,7 @@ func setProject(c *cli.Context) error {
 	}
 	name := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -413,7 +413,7 @@ func setProject(c *cli.Context) error {
 		return err
 	}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("Project set to '%s'\n", name)
 	}
 
@@ -428,7 +428,7 @@ func listProjects(c *cli.Context, w io.Writer) error {
 	}
 	tenantName := c.String("tenant")
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -491,7 +491,7 @@ func getProjectTasks(c *cli.Context, w io.Writer) error {
 	state := c.String("state")
 	kind := c.String("kind")
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -524,7 +524,7 @@ func setSecurityGroupsForProject(c *cli.Context) error {
 	securityGroups := &photon.SecurityGroupsSpec{
 		Items: regexp.MustCompile(`\s*,\s*`).Split(c.Args()[1], -1),
 	}
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}

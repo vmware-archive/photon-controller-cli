@@ -159,7 +159,7 @@ func createDisk(c *cli.Context) error {
 	projectName := c.String("project")
 	tags := c.String("tags")
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func deleteDisk(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -269,7 +269,7 @@ func showDisk(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -316,7 +316,7 @@ func listDisks(c *cli.Context) error {
 		Name: name,
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -377,7 +377,7 @@ func getDiskTasks(c *cli.Context) error {
 	id := c.Args().First()
 	state := c.String("state")
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}

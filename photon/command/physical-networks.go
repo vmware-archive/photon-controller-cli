@@ -31,7 +31,7 @@ func createPhysicalNetwork(c *cli.Context, w io.Writer) error {
 	description := c.String("description")
 	portGroups := c.String("portgroups")
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		name, err = askForInput("Network name: ", name)
 		if err != nil {
 			return err
@@ -59,7 +59,7 @@ func createPhysicalNetwork(c *cli.Context, w io.Writer) error {
 		Description: description,
 		PortGroups:  portGroupList,
 	}
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func listPhysicalNetworks(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func showPhysicalNetwork(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}

@@ -416,7 +416,7 @@ func getVMNetworks(id string, c *cli.Context) (networks []interface{}, err error
 		return nil, err
 	}
 
-	if utils.IsNonInteractive(c) {
+	if c.GlobalIsSet("non-interactive") {
 		task, err = client.Esxclient.Tasks.Wait(task.ID)
 		if err != nil {
 			return nil, err

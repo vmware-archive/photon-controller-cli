@@ -125,7 +125,7 @@ func createResourceTicket(c *cli.Context, w io.Writer) error {
 	name := c.String("name")
 	limits := c.String("limits")
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func createResourceTicket(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		name, err = askForInput("Resource ticket name: ", name)
 		if err != nil {
 			return err
@@ -155,7 +155,7 @@ func createResourceTicket(c *cli.Context, w io.Writer) error {
 	rtSpec.Name = name
 	rtSpec.Limits = limitsList
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("\nTenant name: %s\n", tenant.Name)
 		fmt.Printf("Creating resource ticket name: %s\n\n", name)
 		fmt.Println("Please make sure limits below are correct:")
@@ -164,7 +164,7 @@ func createResourceTicket(c *cli.Context, w io.Writer) error {
 		}
 	}
 
-	if confirmed(utils.IsNonInteractive(c)) {
+	if confirmed(c.GlobalIsSet("non-interactive")) {
 		createTask, err := client.Esxclient.Tenants.CreateResourceTicket(tenant.ID, &rtSpec)
 		if err != nil {
 			return err
@@ -202,7 +202,7 @@ func showResourceTicket(c *cli.Context, w io.Writer) error {
 	name := c.Args().First()
 	tenantName := c.String("tenant")
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func listResourceTickets(c *cli.Context, w io.Writer) error {
 	}
 	tenantName := c.String("tenant")
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -303,7 +303,7 @@ func getResourceTicketTasks(c *cli.Context, w io.Writer) error {
 	tenantName := c.String("tenant")
 	state := c.String("state")
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}

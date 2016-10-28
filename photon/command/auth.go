@@ -97,7 +97,7 @@ func show(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func getApiTokens(c *cli.Context) error {
 		return fmt.Errorf("Please provide username/password")
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}

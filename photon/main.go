@@ -42,11 +42,15 @@ func BuildApp() *cli.App {
 		},
 		cli.StringFlag{
 			Name:  "log-file, l",
-			Usage: "writes logging information into a logfile at the specified path",
+			Usage: "write logging information into a logfile at the specified path",
 		},
 		cli.StringFlag{
 			Name:  "output, o",
-			Usage: "Select output format",
+			Usage: "select output format",
+		},
+		cli.BoolFlag{
+			Name:  "detail, d",
+			Usage: "print the current target, user, tenant and project",
 		},
 	}
 	app.Commands = []cli.Command{

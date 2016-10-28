@@ -98,7 +98,7 @@ func listTasks(c *cli.Context) error {
 	entityKind := c.String("entityKind")
 	state := c.String("state")
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func showTask(c *cli.Context) error {
 	}
 	id := c.Args()[0]
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func monitorTask(c *cli.Context) error {
 	}
 	id := c.Args()[0]
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}

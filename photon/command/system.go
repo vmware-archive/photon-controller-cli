@@ -122,7 +122,7 @@ func getStatus(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(false)
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func deploy(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(false)
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func addHosts(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(false)
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func destroy(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(false)
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -313,7 +313,7 @@ func deploymentMigrationPrepareDeprecated(c *cli.Context) error {
 		return err
 	}
 	sourceAddress := c.Args().First()
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -350,7 +350,7 @@ func deploymentMigrationFinalizeDeprecated(c *cli.Context) error {
 		return err
 	}
 	sourceAddress := c.Args().First()
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -384,7 +384,7 @@ func showMigrationStatusDeprecated(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
