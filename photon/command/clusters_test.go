@@ -687,3 +687,22 @@ func TestClusterCertToFile(t *testing.T) {
 		t.Error("Error deleting test.cert file")
 	}
 }
+
+func TestValidateHarborPassword(t *testing.T) {
+	string1 := "Harbor123"
+	if validateHarborPassword(string1) == false {
+		t.Error("expected: true and result was false")
+	}
+	string2 := "1234567"
+	if validateHarborPassword(string2) == true {
+		t.Error("expected: false and result was true")
+	}
+	string3 := "abcHHH "
+	if validateHarborPassword(string3) == true {
+		t.Error("expected: false and result was true")
+	}
+	string4 := "harbor2134"
+	if validateHarborPassword(string4) == true {
+		t.Error("expected: false and result was true")
+	}
+}

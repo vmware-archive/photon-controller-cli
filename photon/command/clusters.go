@@ -28,6 +28,7 @@ import (
 	"github.com/vmware/photon-controller-go-sdk/photon"
 
 	"golang.org/x/crypto/ssh/terminal"
+	"unicode"
 )
 
 // Creates a cli.Command for clusters
@@ -128,8 +129,12 @@ func GetClusterCommand() cli.Command {
 						Usage: "The file path of the file containing the CA certificate for a docker registry (optional)",
 					},
 					cli.StringFlag{
-						Name:  "admin-password",
-						Usage: "The Harbor registry admin password (optional)",
+						Name: "admin-password",
+						Usage: "The Harbor registry admin password (optional). The password " +
+							"needs to have at least 7 characters with 1 lowercase " +
+							"letter, 1 capital letter and 1 numeric character. If not " +
+							"specified, the default user name is admin and the password is " +
+							"Harbor12345 ",
 					},
 					cli.IntFlag{
 						Name:  "batchSize",
@@ -303,6 +308,14 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	ca_cert := c.String("registry-ca-cert")
 	admin_password := c.String("admin-password")
 
+	if admin_password != "" {
+		result := validateHarborPassword(admin_password)
+		if result != true {
+			return fmt.Errorf("The Harbor password is invalid. It should have at least 7 characters " +
+				"with 1 lowercase letter, 1 capital letter and 1 numeric character.")
+		}
+	}
+
 	wait_for_ready := c.IsSet("wait-for-ready")
 
 	const DEFAULT_WORKER_COUNT = 1
@@ -446,6 +459,13 @@ func createCluster(c *cli.Context, w io.Writer) error {
 					return err
 				}
 				admin_password = string(bytePassword)
+
+				result := validateHarborPassword(admin_password)
+				if result != true {
+					return fmt.Errorf("The Harbor password is invalid. It should have at least 7 " +
+						"characters with 1 lowercase letter, 1 capital letter and 1 numeric " +
+						"character.")
+				}
 				fmt.Printf("\n")
 			}
 		}
@@ -943,4 +963,30 @@ func certToFile(c *cli.Context) error {
 
 	// Extended Property doesn't contain either registry_ca_cert or ca_cert
 	return fmt.Errorf("There is no certificate associated with this cluster")
+}
+
+func validateHarborPassword(password string) bool {
+	correct := true
+	number := false
+	upper := false
+	lower := false
+	count := 0
+	for _, letter := range password {
+		switch {
+		case unicode.IsNumber(letter):
+			number = true
+			count++
+		case unicode.IsUpper(letter):
+			upper = true
+			count++
+		case unicode.IsLower(letter):
+			lower = true
+			count++
+		case letter == ' ':
+			correct = false
+		default:
+			count++
+		}
+	}
+	return correct && number && upper && lower && (count >= 7)
 }
