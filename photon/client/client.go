@@ -62,8 +62,8 @@ func NewClient(config *cf.Configuration) (*photon.Client, error) {
 
 // Returns the photon client, if not set, it will read a config file.
 func GetClient(isScripting bool) (*photon.Client, error) {
+	var err error
 	if Esxclient == nil {
-		var err error
 		Esxclient, err = get()
 		if err != nil {
 			return nil, err
@@ -71,10 +71,43 @@ func GetClient(isScripting bool) (*photon.Client, error) {
 	}
 
 	if !isScripting {
-		fmt.Printf("Using target '%s'\n", Esxclient.Endpoint)
+		err = printDetail()
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return Esxclient, nil
+}
+
+func printDetail() error {
+	config, err := cf.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	if config != nil {
+		fmt.Printf("Target: '%s'\n", Esxclient.Endpoint)
+
+		if config.Tenant == nil {
+			fmt.Printf("Tenant: <not-set> \n")
+		} else {
+			fmt.Printf("Tenant: '%s'\n", config.Tenant.Name)
+		}
+
+		if config.Project == nil {
+			fmt.Printf("Project: <not-set> \n")
+		} else {
+			fmt.Printf("Project: '%s'\n", config.Project.Name)
+		}
+
+		if config.Token != "" {
+			fmt.Printf("User '%s'\n", config.Token)
+		}
+	}
+	fmt.Printf("\n")
+	return nil
 }
 
 // Read from local config file and create a new photon client using target

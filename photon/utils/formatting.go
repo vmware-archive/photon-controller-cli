@@ -43,18 +43,26 @@ func ValidateArgs(c *cli.Context) error {
 	if c.GlobalString("output") != "" && c.GlobalString("output") != "json" {
 		return fmt.Errorf("output type must be 'json'")
 	}
+	if c.GlobalBool("detail") == true && c.GlobalString("output") != "" {
+		return fmt.Errorf("--detail and --output are mutually exclusive")
+	}
+	if c.GlobalBool("detail") == true && c.GlobalBool("non-interactive") == true {
+		return fmt.Errorf("--detail and --non-interactive are mutually exclusive")
+	}
 	return nil
 }
 
 // Tells the caller if we should assume the user wants non-interactive mode
-// interactive mode means two things:
+// interactive mode means three things:
 // 1. The user may be prompted for input parameters that are not provided
 // 2. The user gets fancy, human-readable output
 // The user can disable this with non-interactive mode
 // It's assumed that if the user wants custom output (e.g. JSON), they may be
 // using this in a script, so it should be non-interactive
+// 3. If the -detail flag not set, we don't want to print the tenant and
+// project info, Thus, defaulting it into non-interactive
 func IsNonInteractive(c *cli.Context) bool {
-	return c.GlobalString("output") != "" || c.GlobalIsSet("non-interactive")
+	return (c.GlobalString("output") != "" || c.GlobalIsSet("non-interactive") || !c.GlobalIsSet("detail") == true)
 }
 
 // Tells the caller if the user has requested custom formatting
