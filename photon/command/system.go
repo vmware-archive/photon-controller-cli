@@ -313,7 +313,7 @@ func deploymentMigrationPrepareDeprecated(c *cli.Context) error {
 		return err
 	}
 	sourceAddress := c.Args().First()
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 	if err != nil {
 		return err
 	}
@@ -350,7 +350,7 @@ func deploymentMigrationFinalizeDeprecated(c *cli.Context) error {
 		return err
 	}
 	sourceAddress := c.Args().First()
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 	if err != nil {
 		return err
 	}
@@ -384,7 +384,7 @@ func showMigrationStatusDeprecated(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 	if err != nil {
 		return err
 	}

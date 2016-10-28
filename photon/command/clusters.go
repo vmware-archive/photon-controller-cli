@@ -289,7 +289,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 
 	const DEFAULT_WORKER_COUNT = 1
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 	if err != nil {
 		return err
 	}
@@ -304,7 +304,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		name, err = askForInput("Cluster name: ", name)
 		if err != nil {
 			return err
@@ -333,7 +333,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		worker_count = DEFAULT_WORKER_COUNT
 	}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		dns, err = askForInput("Cluster DNS server: ", dns)
 		if err != nil {
 			return err
@@ -381,7 +381,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	cluster_type = strings.ToUpper(cluster_type)
 	switch cluster_type {
 	case "KUBERNETES":
-		if !utils.IsNonInteractive(c) {
+		if !c.GlobalIsSet("non-interactive") {
 			master_ip, err = askForInput("Kubernetes master static IP address: ", master_ip)
 			if err != nil {
 				return err
@@ -416,7 +416,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 			}
 		}
 	case "HARBOR":
-		if !utils.IsNonInteractive(c) {
+		if !c.GlobalIsSet("non-interactive") {
 			master_ip, err = askForInput("Harbor master static IP address: ", master_ip)
 			if err != nil {
 				return err
@@ -447,7 +447,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	clusterSpec.BatchSizeWorker = batch_size
 	clusterSpec.ExtendedProperties = extended_properties
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("\n")
 		fmt.Printf("Creating cluster: %s (%s)\n", clusterSpec.Name, clusterSpec.Type)
 		if len(clusterSpec.VMFlavor) != 0 {
@@ -465,7 +465,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		fmt.Printf("\n")
 	}
 
-	if confirmed(utils.IsNonInteractive(c)) {
+	if confirmed(c.GlobalIsSet("non-interactive")) {
 		createTask, err := client.Esxclient.Projects.CreateCluster(project.ID, &clusterSpec)
 		if err != nil {
 			return err
@@ -512,7 +512,7 @@ func showCluster(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 	if err != nil {
 		return err
 	}
@@ -581,7 +581,7 @@ func listClusters(c *cli.Context, w io.Writer) error {
 	projectName := c.String("project")
 	summaryView := c.IsSet("summary")
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 	if err != nil {
 		return err
 	}
@@ -618,7 +618,7 @@ func listVms(c *cli.Context, w io.Writer) error {
 	}
 	cluster_id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 	if err != nil {
 		return err
 	}
@@ -653,16 +653,16 @@ func resizeCluster(c *cli.Context, w io.Writer) error {
 		return fmt.Errorf("Provide a valid cluster ID and worker count")
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 	if err != nil {
 		return err
 	}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("\nResizing cluster %s to worker count %d\n", cluster_id, worker_count)
 	}
 
-	if confirmed(utils.IsNonInteractive(c)) {
+	if confirmed(c.GlobalIsSet("non-interactive")) {
 		resizeSpec := photon.ClusterResizeOperation{}
 		resizeSpec.NewWorkerCount = worker_count
 		resizeTask, err := client.Esxclient.Clusters.Resize(cluster_id, &resizeSpec)
@@ -712,16 +712,16 @@ func deleteCluster(c *cli.Context) error {
 		return fmt.Errorf("Please provide a valid cluster ID")
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 	if err != nil {
 		return err
 	}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("\nDeleting cluster %s\n", cluster_id)
 	}
 
-	if confirmed(utils.IsNonInteractive(c)) {
+	if confirmed(c.GlobalIsSet("non-interactive")) {
 		deleteTask, err := client.Esxclient.Clusters.Delete(cluster_id)
 		if err != nil {
 			return err
@@ -752,12 +752,12 @@ func triggerMaintenance(c *cli.Context) error {
 		return fmt.Errorf("Please provide a valid cluster ID")
 	}
 
-	client.Esxclient, err = client.GetClient(utils.IsNonInteractive(c))
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 	if err != nil {
 		return err
 	}
 
-	if !utils.IsNonInteractive(c) {
+	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("Maintenance triggered for cluster %s\n", clusterId)
 	}
 
