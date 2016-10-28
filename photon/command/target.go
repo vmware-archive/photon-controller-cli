@@ -179,7 +179,7 @@ func showInfo(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+	client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 	if err != nil {
 		return err
 	}
@@ -236,7 +236,7 @@ func login(c *cli.Context) error {
 		config.Token = token
 
 	} else {
-		client.Esxclient, err = client.GetClient(c.GlobalIsSet("non-interactive"))
+		client.Esxclient, err = client.GetClient(c.GlobalIsSet("detail"))
 		if err != nil {
 			return err
 		}
