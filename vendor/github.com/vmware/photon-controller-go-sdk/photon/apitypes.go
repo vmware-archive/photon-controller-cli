@@ -532,6 +532,8 @@ type NetworkConfigurationCreateSpec struct {
 	Password        string   `json:"networkManagerPassword,omitempty"`
 	NetworkZoneId   string   `json:"networkZoneId,omitempty"`
 	TopRouterId     string   `json:"networkTopRouterId,omitempty"`
+	EdgeIpPoolId    string   `json:"networkEdgeIpPoolId,omitempty"`
+	HostUplinkPnic  string   `json:"networkHostUplinkPnic,omitempty"`
 	IpRange         string   `json:"ipRange,omitempty"`
 	ExternalIpRange *IpRange `json:"externalIpRange,omitempty"`
 	DhcpServers     []string `json:"dhcpServers,omitempty"`
@@ -545,6 +547,8 @@ type NetworkConfiguration struct {
 	Password        string   `json:"networkManagerPassword,omitempty"`
 	NetworkZoneId   string   `json:"networkZoneId,omitempty"`
 	TopRouterId     string   `json:"networkTopRouterId,omitempty"`
+	EdgeIpPoolId    string   `json:"networkEdgeIpPoolId,omitempty"`
+	HostUplinkPnic  string   `json:"networkHostUplinkPnic,omitempty"`
 	IpRange         string   `json:"ipRange,omitempty"`
 	FloatingIpRange *IpRange `json:"floatingIpRange,omitempty"`
 	SnatIp          string   `json:"snatIp,omitempty"`

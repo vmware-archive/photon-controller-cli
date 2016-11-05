@@ -199,6 +199,8 @@ deployment:
   network_manager_password: password
   network_zone_id: tz1
   network_top_router_id: router1
+  network_edge_ip_pool_id: edgeippool1
+  network_host_uplink_pnic: hostuplinkpnic
   network_ip_range: 192.168.2.0/25
   network_external_ip_range: 10.136.4.10-10.136.4.20
   network_dhcp_servers:
@@ -218,6 +220,8 @@ deployment:
 						Expect(inst.Deployment.NetworkManagerPassword).To(BeEquivalentTo("password"))
 						Expect(inst.Deployment.NetworkZoneId).To(BeEquivalentTo("tz1"))
 						Expect(inst.Deployment.NetworkTopRouterId).To(BeEquivalentTo("router1"))
+						Expect(inst.Deployment.NetworkEdgeIpPoolId).To(BeEquivalentTo("edgeippool1"))
+						Expect(inst.Deployment.NetworkHostUplinkPnic).To(BeEquivalentTo("hostuplinkpnic"))
 						Expect(inst.Deployment.NetworkIpRange).To(BeEquivalentTo("192.168.2.0/25"))
 						Expect(inst.Deployment.NetworkExternalIpRange).To(BeEquivalentTo("10.136.4.10-10.136.4.20"))
 						Expect(inst.Deployment.NetworkDhcpServers).To(BeEquivalentTo([]string{"10.20.1.1", "10.30.1.1"}))
