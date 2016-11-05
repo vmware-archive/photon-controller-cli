@@ -468,6 +468,8 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		Password:        dcMap.Deployment.NetworkManagerPassword,
 		NetworkZoneId:   dcMap.Deployment.NetworkZoneId,
 		TopRouterId:     dcMap.Deployment.NetworkTopRouterId,
+		EdgeIpPoolId:    dcMap.Deployment.NetworkEdgeIpPoolId,
+		HostUplinkPnic:  dcMap.Deployment.NetworkHostUplinkPnic,
 		IpRange:         dcMap.Deployment.NetworkIpRange,
 		ExternalIpRange: ipRangeSpec,
 		DhcpServers:     dcMap.Deployment.NetworkDhcpServers,
