@@ -596,7 +596,7 @@ type VirtualSubnet struct {
 	Description    string   `json:"description,omitempty"`
 	State          string   `json:"state"`
 	RoutingType    string   `json:"routingType"`
-	IsDefault      string   `json:"isDefault"`
+	IsDefault      bool     `json:"isDefault"`
 	Cidr           string   `json:"cidr,omitempty"`
 	LowIpDynamic   string   `json:"lowIpDynamic,omitempty"`
 	HighIpDynamic  string   `json:"highIpDynamic,omitempty"`
