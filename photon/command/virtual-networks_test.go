@@ -161,7 +161,7 @@ func TestListVirtualNetworks(t *testing.T) {
 			{
 				ID:            "network_id",
 				Name:          "network_name",
-				IsDefault:     "false",
+				IsDefault:     false,
 				State:         "READY",
 				RoutingType:   "ROUTED",
 				Cidr:          "192.168.0.0/24",
@@ -245,7 +245,7 @@ func TestShowVirtuallNetwork(t *testing.T) {
 	expectedVirtualSubnet := photon.VirtualSubnet{
 		ID:            "network_id",
 		Name:          "network_name",
-		IsDefault:     "false",
+		IsDefault:     false,
 		State:         "READY",
 		RoutingType:   "ROUTED",
 		Cidr:          "192.168.0.0/24",

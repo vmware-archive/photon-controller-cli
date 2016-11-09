@@ -146,7 +146,7 @@ func listVirtualNetworks(c *cli.Context, w io.Writer) error {
 
 	if c.GlobalIsSet("non-interactive") {
 		for _, network := range networks.Items {
-			fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State,
+			fmt.Printf("%s\t%s\t%s\t%s\t%s\t%t\t%s\t%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State,
 				network.Description, network.RoutingType, network.IsDefault, network.Cidr, network.LowIpDynamic,
 				network.HighIpDynamic, network.LowIpStatic, network.HighIpStatic, network.ReservedIpList)
 		}
@@ -158,7 +158,7 @@ func listVirtualNetworks(c *cli.Context, w io.Writer) error {
 		fmt.Fprintf(w, "ID\tName\tState\tDescriptions\tRoutingType\tIsDefault\tCIDR\tLowDynamicIP\tHighDynamicIP"+
 			"\tLowStaticIP\tHighStaticIP\tReservedIpList\n")
 		for _, network := range networks.Items {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State,
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%t\t%s\t%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State,
 				network.Description, network.RoutingType, network.IsDefault, network.Cidr, network.LowIpDynamic,
 				network.HighIpDynamic, network.LowIpStatic, network.HighIpStatic, network.ReservedIpList)
 		}
