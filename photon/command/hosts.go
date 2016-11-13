@@ -375,14 +375,14 @@ func showHost(c *cli.Context, w io.Writer) error {
 		scriptTag := strings.Replace(tag, " ", ",", -1)
 		metadata := strings.Trim(strings.TrimLeft(fmt.Sprint(host.Metadata), "map"), "[]")
 		scriptMetadata := strings.Replace(metadata, " ", ",", -1)
-		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", host.ID, host.Username, host.Password, host.Address,
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", host.ID, host.Username, host.Address,
 			scriptTag, host.State, scriptMetadata, host.AvailabilityZone, host.EsxVersion)
 	} else if utils.NeedsFormatting(c) {
+		host.Password = ""
 		utils.FormatObject(host, w, c)
 	} else {
 		fmt.Println("Host ID: ", host.ID)
 		fmt.Println("  Username:          ", host.Username)
-		fmt.Println("  Password:          ", host.Password)
 		fmt.Println("  IP:                ", host.Address)
 		fmt.Println("  Tags:              ", host.Tags)
 		fmt.Println("  State:             ", host.State)
