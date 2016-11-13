@@ -334,8 +334,8 @@ func showDeployment(c *cli.Context) error {
 			deployment.NTPEndpoint, deployment.LoadBalancerEnabled,
 			deployment.LoadBalancerAddress)
 
-		fmt.Printf("%t\t%s\t%s\t%s\t%s\t%d\t%s\n", deployment.Auth.Enabled, deployment.Auth.Username,
-			deployment.Auth.Password, deployment.Auth.Endpoint, deployment.Auth.Tenant, deployment.Auth.Port, securityGroups)
+		fmt.Printf("%t\t%s\t%s\t%d\t%s\n", deployment.Auth.Enabled, deployment.Auth.Endpoint,
+			deployment.Auth.Tenant, deployment.Auth.Port, securityGroups)
 
 	} else {
 		syslogEndpoint := deployment.SyslogEndpoint
@@ -363,8 +363,6 @@ func showDeployment(c *cli.Context) error {
 		fmt.Printf("\n  Auth:\n")
 		fmt.Printf("    Enabled:                   %t\n", deployment.Auth.Enabled)
 		if deployment.Auth.Enabled {
-			fmt.Printf("    UserName:                  %s\n", deployment.Auth.Username)
-			fmt.Printf("    Password:                  %s\n", deployment.Auth.Password)
 			fmt.Printf("    Endpoint:                  %s\n", deployment.Auth.Endpoint)
 			fmt.Printf("    Tenant:                    %s\n", deployment.Auth.Tenant)
 			fmt.Printf("    Port:                      %d\n", deployment.Auth.Port)
