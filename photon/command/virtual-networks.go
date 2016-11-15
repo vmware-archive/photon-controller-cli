@@ -98,7 +98,17 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	task, err := client.Esxclient.VirtualSubnets.Create(projectId, createSpec)
+	tenant, err := verifyTenant("")
+	if err != nil {
+		return err
+	}
+
+	project, err := verifyProject(tenant.ID, "")
+	if err != nil {
+		return err
+	}
+
+	task, err := client.Esxclient.VirtualSubnets.Create(project.ID, createSpec)
 	if err != nil {
 		return err
 	}
@@ -134,12 +144,17 @@ func listVirtualNetworks(c *cli.Context, w io.Writer) error {
 		Name: name,
 	}
 
-	projectId := c.String("projectId")
-	if len(projectId) == 0 {
-		return fmt.Errorf("Please provide project ID")
+	tenant, err := verifyTenant("")
+	if err != nil {
+		return err
 	}
 
-	networks, err := client.Esxclient.VirtualSubnets.GetAll(projectId, options)
+	project, err := verifyProject(tenant.ID, "")
+	if err != nil {
+		return err
+	}
+
+	networks, err := client.Esxclient.VirtualSubnets.GetAll(project.ID, options)
 	if err != nil {
 		return err
 	}

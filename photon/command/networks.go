@@ -69,10 +69,6 @@ func GetNetworksCommand() cli.Command {
 						Name:  "staticIpSize, f",
 						Usage: "Size of the reserved static IP addresses (only for software-defined network)",
 					},
-					cli.StringFlag{
-						Name:  "projectId, i",
-						Usage: "ID of the project that network belongs to (only for software-defined network)",
-					},
 				},
 				Action: func(c *cli.Context) {
 					sdnEnabled, err := isSoftwareDefinedNetwork(c)
@@ -107,11 +103,6 @@ func GetNetworksCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "name, n",
 						Usage: "Optionally filter by name",
-					},
-					cli.StringFlag{
-						Name: "projectId, i",
-						Usage: "ID of the project that networks to be listed belong to (only for software-defined " +
-							"network)",
 					},
 				},
 				Action: func(c *cli.Context) {
