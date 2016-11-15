@@ -39,6 +39,20 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 	staticIpSizeStr := c.String("staticIpSize")
 	projectId := c.String("projectId")
 
+	if len(projectId) == 0 {
+		tenant, err := verifyTenant("")
+		if err != nil {
+			return err
+		}
+
+		project, err := verifyProject(tenant.ID, "")
+		if err != nil {
+			return err
+		}
+
+		projectId = project.ID
+	}
+
 	if !c.GlobalIsSet("non-interactive") {
 		name, err = askForInput("Network name: ", name)
 		if err != nil {
@@ -136,7 +150,17 @@ func listVirtualNetworks(c *cli.Context, w io.Writer) error {
 
 	projectId := c.String("projectId")
 	if len(projectId) == 0 {
-		return fmt.Errorf("Please provide project ID")
+		tenant, err := verifyTenant("")
+		if err != nil {
+			return err
+		}
+
+		project, err := verifyProject(tenant.ID, "")
+		if err != nil {
+			return err
+		}
+
+		projectId = project.ID
 	}
 
 	networks, err := client.Esxclient.VirtualSubnets.GetAll(projectId, options)
