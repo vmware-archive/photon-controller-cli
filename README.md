@@ -37,12 +37,13 @@ To run and verify the CLI:
 
 ## Pick up Changes from SDK
 
-When there are changes in SDK, wait for them promoted to **_master_** branch on **_github.com_**.
-
 Follow the steps below:
 
-    1. go get -u github.com/vmware/photon-controller-go-sdk/photon
-    2. govendor update github.com/vmware/photon-controller-go-sdk/...
+You are currently in the v1.1.0 branch
+    1. govendor fetch github.com/vmware/photon-controller-go-sdk/photon@v1.1.0
+    2. govendor fetch github.com/vmware/photon-controller-go-sdk/photon/lightwave@v1.1.0
+    3. govendor update github.com/vmware/photon-controller-go-sdk/...
+
 
 Before comitting the change, carefully inspect the changes to Godeps, for example with git diff or SourceTree.
 
