@@ -1171,13 +1171,6 @@ func acquireFloatingIp(c *cli.Context) error {
 	id := c.Args().First()
 	networkId := c.String("network_id")
 
-	if !c.GlobalIsSet("non-interactive") {
-		networkId, err = askForInput("Network ID: ", networkId)
-		if err != nil {
-			return err
-		}
-	}
-
 	options := &photon.VmFloatingIpSpec{
 		NetworkId: networkId,
 	}
