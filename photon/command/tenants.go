@@ -31,7 +31,7 @@ import (
 //              delete; Usage: tenant delete <id>
 //              show;   Usage: tenant show <id>
 //              list;   Usage: tenant list
-//              set;    Usage: tenant set <name>
+//              set;    Usage: tenant set <name | id>
 //              get;    Usage: tenant get
 //              tasks;  Usage: tenant tasks <id> [<options>]
 func GetTenantsCommand() cli.Command {
@@ -87,7 +87,7 @@ func GetTenantsCommand() cli.Command {
 			},
 			{
 				Name:  "set",
-				Usage: "Select tenant to work with",
+				Usage: "Select tenant to work with. Specify either ID or name",
 				Action: func(c *cli.Context) {
 					err := setTenant(c)
 					if err != nil {
@@ -323,8 +323,9 @@ func setTenant(c *cli.Context) error {
 		return err
 	}
 
-	// Ensure tenant exists
-	id, err := findTenantID(name)
+  // Find the info about a tenant based on the string given. It could be either an ID or name.
+  // Assume the string given is name first, if not found, try with id
+	id, name, err := findTenantIDorName(name)
 	if len(id) == 0 || err != nil {
 		return err
 	}

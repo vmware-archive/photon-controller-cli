@@ -502,6 +502,41 @@ func clearConfigTenant(id string) error {
 	return nil
 }
 
+// Find the info about a tenant based on the string given. It could be either an ID or name.
+// Assume the string given is name first, if not found, try with id
+func findTenantIDorName(identity string) (string,string, error) {
+	tenants, err := client.Esxclient.Tenants.GetAll()
+	if err != nil {
+		return "","", err
+	}
+	var found bool
+	var id string
+	var name string
+	for _, tenant := range tenants.Items {
+		if tenant.Name == identity {
+			found = true
+			id = tenant.ID
+			name = identity
+			break
+		}
+	}
+	if !found {
+		for _, tenant := range tenants.Items {
+			if tenant.ID == identity {
+				found = true
+				id = identity
+				name = tenant.Name
+				break
+			}
+		}
+	}
+	if !found {
+		return "","", fmt.Errorf("Tenant '%s' not found", identity)
+	}
+
+	return id, name, nil
+}
+
 // Finds the id of the tenant based on name, returns empty string with an error if it is not found
 func findTenantID(name string) (string, error) {
 	tenants, err := client.Esxclient.Tenants.GetAll()
@@ -600,6 +635,36 @@ func findProject(tenantID string, name string) (*photon.ProjectCompact, error) {
 	}
 
 	return &pList[0], nil
+}
+
+// Finds the project based on tenant id and project name, returns nil with an error if it is not found
+func findProjectByInfo(tenantID string, identity string) (*photon.ProjectCompact, error) {
+	tickets, err := client.Esxclient.Tenants.GetProjects(tenantID, &photon.ProjectGetOptions{Name: identity})
+	if err != nil {
+		return nil, err
+	}
+
+	pList := tickets.Items
+
+	if len(pList) > 1 {
+		return nil, fmt.Errorf("Error: Found more than 1 projects named '%s'", identity)
+	}
+
+	if len(pList) == 1 {
+		return &pList[0], nil
+	}
+
+	project, err := client.Esxclient.Projects.Get(identity)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if project == nil {
+		return nil, fmt.Errorf("Error: Cannot find project with name/id '%s'", identity)
+	}
+
+	return project, nil
 }
 
 // Verifies and gets project name and id for commands specifying project
