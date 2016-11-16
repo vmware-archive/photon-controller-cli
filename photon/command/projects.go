@@ -107,7 +107,7 @@ func GetProjectsCommand() cli.Command {
 			},
 			{
 				Name:  "set",
-				Usage: "Set project in config file",
+				Usage: "Select the project to work with. Specify either ID or name",
 				Action: func(c *cli.Context) {
 					err := setProject(c)
 					if err != nil {
@@ -402,7 +402,7 @@ func setProject(c *cli.Context) error {
 		return fmt.Errorf("Error: Set tenant first using 'tenant set <name>' or '-t <name>' option")
 	}
 
-	project, err := findProject(config.Tenant.ID, name)
+	project, err := findProjectByInfo(config.Tenant.ID, name)
 	if err != nil {
 		return err
 	}
