@@ -42,6 +42,7 @@ func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 //              list-vms;   Usage: deployment list-vms [<id>]
 
 //              update-image-datastores;        Usage: deployment update-image-datastores [<id> <options>]
+//              sync-hosts-config;              Usage: deployment sync-hosts-config [<id>]
 
 //              pause;                          Usage: deployment pause [<id>]
 //              pause-background-tasks;         Usage: deployment pause-background-tasks [<id>]
@@ -147,6 +148,17 @@ func GetDeploymentsCommand() cli.Command {
 				},
 				Action: func(c *cli.Context) {
 					err := updateImageDatastores(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "sync-hosts-config",
+				Usage:     "Synchronizes hosts configurations",
+				ArgsUsage: " ",
+				Action: func(c *cli.Context) {
+					err := syncHostsConfig(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -497,7 +509,6 @@ func updateImageDatastores(c *cli.Context) error {
 		return err
 	}
 
-	id = c.Args().First()
 	datastores := c.String("datastores")
 
 	if !c.GlobalIsSet("non-interactive") {
@@ -526,7 +537,36 @@ func updateImageDatastores(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("Image datastores of deployment %s is finished\n", task.Entity.ID)
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Synchronizes hosts configurations
+func syncHostsConfig(c *cli.Context) error {
+	id, err := getDeploymentId(c)
+	if err != nil {
+		return err
+	}
+
+	client.Esxclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	task, err := client.Esxclient.Deployments.SyncHostsConfig(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -221,15 +221,24 @@ func TestListDeploymentVms(t *testing.T) {
 
 func TestUpdateImageDatastores(t *testing.T) {
 	deploymentId := "deployment1"
+	queuedTask := &photon.Task{
+		Operation: "UPDATE_IMAGE_DATASTORES",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: "1"},
+	}
 	completedTask := photon.Task{
 		ID:        "task1",
 		Operation: "UPDATE_IMAGE_DATASTORES",
 		State:     "COMPLETED",
 		Entity:    photon.Entity{ID: deploymentId},
 	}
-	response, err := json.Marshal(completedTask)
+	response, err := json.Marshal(queuedTask)
 	if err != nil {
 		t.Error("Not expecting error when serializing tasks")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected completedTask")
 	}
 
 	server := mocks.NewTestServer()
@@ -237,6 +246,10 @@ func TestUpdateImageDatastores(t *testing.T) {
 		"POST",
 		server.URL+"/deployments/"+deploymentId+"/set_image_datastores",
 		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
 	mocks.Activate(true)
@@ -254,6 +267,56 @@ func TestUpdateImageDatastores(t *testing.T) {
 	err = updateImageDatastores(ctx)
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestSyncHostsConfig(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "SYNC_HOSTS_CONFIG",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+	completedTask := &photon.Task{
+		Operation: "SYNC_HOSTS_CONFIG",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: "1"},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/deployments/"+queuedTask.Entity.ID+"/sync_hosts_config",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{queuedTask.Entity.ID})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = syncHostsConfig(cxt)
+	if err != nil {
+		t.Error(err)
+		t.Error("Not expecting syncHostsConfig to fail")
 	}
 }
 

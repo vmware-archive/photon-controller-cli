@@ -207,6 +207,22 @@ func (api *DeploymentsAPI) SetImageDatastores(id string, imageDatastores *ImageD
 	return
 }
 
+// Synchronizes hosts configurations
+func (api *DeploymentsAPI) SyncHostsConfig(id string) (task *Task, err error) {
+	res, err := api.client.restClient.Post(
+		api.getEntityUrl(id)+"/sync_hosts_config",
+		"application/json",
+		bytes.NewBuffer([]byte("")),
+		api.client.options.TokenOptions.AccessToken)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+
+	task, err = getTask(getError(res))
+	return
+}
+
 // Pause system with specified deployment ID.
 func (api *DeploymentsAPI) PauseSystem(id string) (task *Task, err error) {
 	res, err := api.client.restClient.Post(
