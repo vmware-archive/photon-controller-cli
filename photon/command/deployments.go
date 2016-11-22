@@ -153,6 +153,16 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
+				Name:  "sync-hosts-config",
+				Usage: "Synchronizes hosts configurations",
+				Action: func(c *cli.Context) {
+					err := syncHostsConfig(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
 				Name:  "pause",
 				Usage: "Pause system under the deployment",
 				Action: func(c *cli.Context) {
@@ -497,7 +507,6 @@ func updateImageDatastores(c *cli.Context) error {
 		return err
 	}
 
-	id = c.Args().First()
 	datastores := c.String("datastores")
 
 	if !c.GlobalIsSet("non-interactive") {
@@ -526,7 +535,36 @@ func updateImageDatastores(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("Image datastores of deployment %s is finished\n", task.Entity.ID)
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Synchronizes hosts configurations
+func syncHostsConfig(c *cli.Context) error {
+	id, err := getDeploymentId(c)
+	if err != nil {
+		return err
+	}
+
+	client.Esxclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	task, err := client.Esxclient.Deployments.SyncHostsConfig(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
