@@ -91,6 +91,14 @@ func TestCreateResourceTicket(t *testing.T) {
 		"GET",
 		server.URL+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants/fake_tenant_Name",
+		mocks.CreateResponder(500, string(tenantResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants?name=fake_tenant_Name",
+		mocks.CreateResponder(200, string(tenantResponse[:])))
 	defer server.Close()
 
 	mocks.Activate(true)
