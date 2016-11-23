@@ -601,22 +601,30 @@ func findResourceTicket(tenantID string, name string) (*photon.ResourceTicket, e
 	return &rtList[0], nil
 }
 
-// Finds the project based on tenant id and project name, returns nil with an error if it is not found
-func findProject(tenantID string, name string) (*photon.ProjectCompact, error) {
-	tickets, err := client.Esxclient.Tenants.GetProjects(tenantID, &photon.ProjectGetOptions{Name: name})
-	if err != nil {
-		return nil, err
-	}
-	pList := tickets.Items
-
-	if len(pList) < 1 {
-		return nil, fmt.Errorf("Error: Cannot find project named '%s'", name)
-	}
-	if len(pList) > 1 {
-		return nil, fmt.Errorf("Error: Found more than 1 projects named '%s'", name)
+// Find the project based on tenant id and project name, returns nil with an error if it is not found
+func findProject(tenantID string, identity string) (*photon.ProjectCompact, error) {
+	project, err := client.Esxclient.Projects.Get(identity)
+	if err == nil {
+		return project, nil
 	}
 
-	return &pList[0], nil
+	if tenantID != "" {
+		tickets, err := client.Esxclient.Tenants.GetProjects(tenantID, &photon.ProjectGetOptions{Name: identity})
+		if err != nil {
+			return nil, err
+		}
+		pList := tickets.Items
+
+		if len(pList) == 1 {
+			return &pList[0], nil
+		}
+
+		if len(pList) > 1 {
+			return nil, fmt.Errorf("Error: Found more than 1 projects with name '%s'", identity)
+		}
+	}
+
+	return project, fmt.Errorf("Cannot find project with name or id %s.", identity)
 }
 
 // Verifies and gets project name and id for commands specifying project

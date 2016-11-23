@@ -28,7 +28,7 @@ import (
 
 // Creates a cli.Command for tenant
 // Subcommands: create; Usage: tenant create <name>
-//              delete; Usage: tenant delete <id>
+//              delete; Usage: tenant delete <id | name>
 //              show;   Usage: tenant show <id>
 //              list;   Usage: tenant list
 //              set;    Usage: tenant set <name>
@@ -258,17 +258,23 @@ func listTenants(c *cli.Context, w io.Writer) error {
 // Returns an error if one occurred
 func deleteTenant(c *cli.Context) error {
 	err := checkArgCount(c, 1)
+
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
+	identity := c.Args().First()
+
+	fmt.Printf(identity)
 
 	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deleteTask, err := client.Esxclient.Tenants.Delete(id)
+	tenant, err := client.Esxclient.Tenants.Get(identity)
+	fmt.Printf(tenant.ID)
+
+	deleteTask, err := client.Esxclient.Tenants.Delete(tenant.ID)
 	if err != nil {
 		return err
 	}
@@ -278,7 +284,7 @@ func deleteTenant(c *cli.Context) error {
 		return err
 	}
 
-	err = clearConfigTenant(id)
+	err = clearConfigTenant(tenant.ID)
 	if err != nil {
 		return err
 	}
@@ -291,14 +297,14 @@ func showTenant(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
+	identity := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	tenant, err := client.Esxclient.Tenants.Get(id)
+	tenant, err := client.Esxclient.Tenants.Get(identity)
 	if err != nil {
 		return err
 	}
@@ -331,16 +337,15 @@ func setTenant(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	name := c.Args().First()
+	identity := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	// Ensure tenant exists
-	id, err := findTenantID(name)
-	if len(id) == 0 || err != nil {
+	tenant, err := client.Esxclient.Tenants.Get(identity)
+	if err != nil {
 		return err
 	}
 
@@ -349,7 +354,7 @@ func setTenant(c *cli.Context) error {
 		return err
 	}
 
-	config.Tenant = &cf.TenantConfiguration{Name: name, ID: id}
+	config.Tenant = &cf.TenantConfiguration{Name: tenant.Name, ID: tenant.ID}
 	err = cf.SaveConfig(config)
 	if err != nil {
 		return err
@@ -361,7 +366,7 @@ func setTenant(c *cli.Context) error {
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		fmt.Printf("Tenant set to '%s'\n", name)
+		fmt.Printf("Tenant set to '%s'\n", identity)
 	}
 	return nil
 }
