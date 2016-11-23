@@ -217,6 +217,23 @@ func checkArgNum(args []string, num int, usage string) error {
 	return nil
 }
 
+func checkArgCount(c *cli.Context, num int) error {
+	args := c.Args()
+	if len(args) < num {
+		if c.App != nil { // may be nill during tests, can cause panic
+			cli.ShowSubcommandHelp(c)
+		}
+		return fmt.Errorf("Insufficient arguments: expected %d, provided %d", num, len(args))
+	}
+	if len(args) > num {
+		if c.App != nil { // may be nill during tests, can cause panic
+			cli.ShowSubcommandHelp(c)
+		}
+		return fmt.Errorf("Unknown arguments: %v", args[num:])
+	}
+	return nil
+}
+
 // Prompt for input if disksList is empty
 func askForVMDiskList(disksList []photon.AttachedDisk) ([]photon.AttachedDisk, error) {
 	if len(disksList) == 0 {

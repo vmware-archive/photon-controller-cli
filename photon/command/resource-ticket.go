@@ -34,8 +34,15 @@ func GetResourceTicketCommand() cli.Command {
 		Usage: "options for resource-ticket",
 		Subcommands: []cli.Command{
 			{
-				Name:  "create",
-				Usage: "Create a new resource-ticket",
+				Name:      "create",
+				Usage:     "Create a new resource-ticket",
+				ArgsUsage: " ",
+				Description: "Create a new resource ticket for a tenant.\n" +
+					"   Only system administrators can create new resource tickets.\n" +
+					"   A flavor is defined by a set of maximum resource costs. Each usage has a type (e.g. vm.memory),\n" +
+					"   a numnber (e.g. 1) and a unit (GB, MB, KB, B, or COUNT). You must specify at least one cost\n" +
+					"   Example ticket with 1000 GB of RAM and 500 vCPUs:\n" +
+					"      photon resource-ticket create --name ticket1 --tenant tenant1 --limits 'vm.memory 1000 GB, vm.cpu 500 COUNT'",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -58,8 +65,9 @@ func GetResourceTicketCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show resource-ticket info with specified name",
+				Name:      "show",
+				Usage:     "Show resource-ticket info with specified name",
+				ArgsUsage: "<resource-ticket-name>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "tenant, t",
@@ -74,8 +82,9 @@ func GetResourceTicketCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list",
-				Usage: "List all resource tickets",
+				Name:      "list",
+				Usage:     "List all resource tickets",
+				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "tenant, t",
@@ -90,8 +99,9 @@ func GetResourceTicketCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "tasks",
-				Usage: "List all tasks related to the resource ticket",
+				Name:      "tasks",
+				Usage:     "List all tasks related to the resource ticket",
+				ArgsUsage: "<resource-ticket-name>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "state, s",
@@ -117,7 +127,7 @@ func GetResourceTicketCommand() cli.Command {
 // Sends a create resource-ticket task to client based on the cli.Context
 // Returns an error if one occurred
 func createResourceTicket(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "resource-ticket create [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -195,7 +205,7 @@ func createResourceTicket(c *cli.Context, w io.Writer) error {
 // Sends a show resource-ticket task to client based on the cli.Context
 // Returns an error if one occurred
 func showResourceTicket(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "resource-ticket show <name> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -249,7 +259,7 @@ func showResourceTicket(c *cli.Context, w io.Writer) error {
 
 // Retrieves a list of resource tickets, returns an error if one occurred
 func listResourceTickets(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "resource-ticket list [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -295,7 +305,7 @@ func listResourceTickets(c *cli.Context, w io.Writer) error {
 
 // Retrieves tasks for resource ticket
 func getResourceTicketTasks(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "resource-ticket tasks <name> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}

@@ -35,8 +35,10 @@ func GetAvailabilityZonesCommand() cli.Command {
 		Usage: "options for availability-zone",
 		Subcommands: []cli.Command{
 			{
-				Name:  "create",
-				Usage: "Create new availability-zone",
+				Name:        "create",
+				Usage:       "Create a new availability zone",
+				ArgsUsage:   " ",
+				Description: "This creates a new availablity zone. Only a system adminstrator can create one.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -52,7 +54,10 @@ func GetAvailabilityZonesCommand() cli.Command {
 			},
 			{
 				Name:  "delete",
-				Usage: "Delete availability-zone",
+				Usage: "Delete an availability zone",
+				Description: "This deletess an existing vailablity zone given its id.\n" +
+					"   Only a system adminstrator can delete an availability zone.",
+				ArgsUsage: "<zone-id>",
 				Action: func(c *cli.Context) {
 					err := deleteAvailabilityZone(c)
 					if err != nil {
@@ -61,8 +66,9 @@ func GetAvailabilityZonesCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list",
-				Usage: "List availability-zones",
+				Name:      "list",
+				Usage:     "List all availability zones",
+				ArgsUsage: " ",
 				Action: func(c *cli.Context) {
 					err := listAvailabilityZones(c, os.Stdout)
 					if err != nil {
@@ -71,8 +77,9 @@ func GetAvailabilityZonesCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show specified availability-zone",
+				Name:      "show",
+				Usage:     "Show specified availability-zone",
+				ArgsUsage: "<zone-id>",
 				Action: func(c *cli.Context) {
 					err := showAvailabilityZone(c, os.Stdout)
 					if err != nil {
@@ -81,8 +88,9 @@ func GetAvailabilityZonesCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "tasks",
-				Usage: "Show availability-zone tasks",
+				Name:      "tasks",
+				Usage:     "Show availability-zone tasks",
+				ArgsUsage: "<zone-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "state, s",
@@ -104,7 +112,7 @@ func GetAvailabilityZonesCommand() cli.Command {
 // Sends a create availability-zone task to client based on the cli.Context
 // Returns an error if one occurred
 func createAvailabilityZone(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "availability-zone create [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -154,7 +162,7 @@ func createAvailabilityZone(c *cli.Context, w io.Writer) error {
 
 // Retrieves availability zone against specified id.
 func showAvailabilityZone(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "availability-zone show <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -186,7 +194,7 @@ func showAvailabilityZone(c *cli.Context, w io.Writer) error {
 
 // Retrieves a list of availability zones, returns an error if one occurred
 func listAvailabilityZones(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "availability-zone list")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -226,7 +234,7 @@ func listAvailabilityZones(c *cli.Context, w io.Writer) error {
 // Sends a delete availability zone task to client based on the cli.Context
 // Returns an error if one occurred
 func deleteAvailabilityZone(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "availability-zone delete <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -252,7 +260,7 @@ func deleteAvailabilityZone(c *cli.Context) error {
 
 // Retrieves tasks from specified availability zone
 func getAvailabilityZoneTasks(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "availability-zone tasks <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}

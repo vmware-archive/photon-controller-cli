@@ -11,18 +11,19 @@ package command
 
 import (
 	"fmt"
-	"github.com/codegangsta/cli"
-	"github.com/vmware/photon-controller-cli/photon/client"
-	"github.com/vmware/photon-controller-cli/photon/utils"
-	"github.com/vmware/photon-controller-go-sdk/photon"
 	"io"
 	"os"
 	"regexp"
 	"text/tabwriter"
+
+	"github.com/codegangsta/cli"
+	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/utils"
+	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
 func createPhysicalNetwork(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "network create [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -86,7 +87,7 @@ func createPhysicalNetwork(c *cli.Context, w io.Writer) error {
 }
 
 func listPhysicalNetworks(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "network list [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -114,7 +115,7 @@ func listPhysicalNetworks(c *cli.Context, w io.Writer) error {
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w, "ID\tName\tState\tPortGroups\tDescriptions\tIsDefault\n")
+		fmt.Fprintf(w, "ID\tName\tState\tPortGroups\tDescription\tIsDefault\n")
 		for _, network := range networks.Items {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%t\n", network.ID, network.Name, network.State, network.PortGroups,
 				network.Description, network.IsDefault)
@@ -130,7 +131,7 @@ func listPhysicalNetworks(c *cli.Context, w io.Writer) error {
 }
 
 func showPhysicalNetwork(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "network show <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}

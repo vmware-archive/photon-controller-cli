@@ -36,8 +36,9 @@ func GetSystemCommand() cli.Command {
 		Usage: "options for system operations",
 		Subcommands: []cli.Command{
 			{
-				Name:  "status",
-				Usage: "display system status",
+				Name:      "status",
+				Usage:     "Display system status",
+				ArgsUsage: " ",
 				Action: func(c *cli.Context) {
 					err := getStatus(c)
 					if err != nil {
@@ -46,8 +47,9 @@ func GetSystemCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "deploy",
-				Usage: "Deploy Photon using DC Map",
+				Name:      "deploy",
+				Usage:     "Deploy Photon using DC Map",
+				ArgsUsage: "<dc-map-file>",
 				Action: func(c *cli.Context) {
 					err := deploy(c)
 					if err != nil {
@@ -56,8 +58,9 @@ func GetSystemCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "addHosts",
-				Usage: "Add multiple hosts",
+				Name:      "addHosts",
+				Usage:     "Add multiple hosts",
+				ArgsUsage: "<host-file>",
 				Action: func(c *cli.Context) {
 					err := addHosts(c)
 					if err != nil {
@@ -66,8 +69,9 @@ func GetSystemCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "destroy",
-				Usage: "destroy Photon deployment",
+				Name:      "destroy",
+				Usage:     "Destroy Photon deployment",
+				ArgsUsage: " ",
 				Action: func(c *cli.Context) {
 					err := destroy(c)
 					if err != nil {
@@ -118,7 +122,7 @@ func GetSystemCommand() cli.Command {
 
 // Get endpoint in config file and its status
 func getStatus(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "system status")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -158,7 +162,7 @@ func printStatus(status *photon.Status) error {
 
 // Deploy Photon Controller based on DC_map
 func deploy(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "system deploy <file>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -195,7 +199,7 @@ func deploy(c *cli.Context) error {
 
 // Add most hosts in batch mode
 func addHosts(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "system addHosts <file>")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -224,7 +228,7 @@ func addHosts(c *cli.Context) error {
 
 // Destroy a Photon Controller deployment
 func destroy(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "system destroy")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -308,7 +312,7 @@ func destroy(c *cli.Context) error {
 
 // Starts the recurring copy state of source system into destination
 func deploymentMigrationPrepareDeprecated(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "system migration prepare <old_management_endpoint>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -345,7 +349,7 @@ func deploymentMigrationPrepareDeprecated(c *cli.Context) error {
 // Finishes the copy state of source system into destination and makes this system the active one
 func deploymentMigrationFinalizeDeprecated(c *cli.Context) error {
 	fmt.Printf("'%d'", len(c.Args()))
-	err := checkArgNum(c.Args(), 1, "system migration finalize <old_management_endpoint>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -380,7 +384,7 @@ func deploymentMigrationFinalizeDeprecated(c *cli.Context) error {
 
 // displays the migration status
 func showMigrationStatusDeprecated(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "migration status")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}

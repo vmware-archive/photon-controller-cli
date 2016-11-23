@@ -11,14 +11,15 @@ package command
 
 import (
 	"fmt"
-	"github.com/codegangsta/cli"
-	"github.com/vmware/photon-controller-cli/photon/client"
-	"github.com/vmware/photon-controller-cli/photon/utils"
-	"github.com/vmware/photon-controller-go-sdk/photon"
 	"io"
 	"os"
 	"strconv"
 	"text/tabwriter"
+
+	"github.com/codegangsta/cli"
+	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/utils"
+	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
 const (
@@ -27,7 +28,7 @@ const (
 )
 
 func createVirtualNetwork(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "network create [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -134,7 +135,7 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 }
 
 func listVirtualNetworks(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "network list [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -197,7 +198,7 @@ func listVirtualNetworks(c *cli.Context, w io.Writer) error {
 }
 
 func showVirtualNetwork(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "network show <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}

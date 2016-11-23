@@ -40,8 +40,11 @@ func GetProjectsCommand() cli.Command {
 		Usage: "options for project",
 		Subcommands: []cli.Command{
 			{
-				Name:  "create",
-				Usage: "Create a new project",
+				Name:      "create",
+				Usage:     "Create a new project",
+				ArgsUsage: " ",
+				Description: "Create a new project within a tenant and assigns it some or all of a resource ticket.\n" +
+					"   Only system administrators can create new projects.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -76,8 +79,10 @@ func GetProjectsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "delete",
-				Usage: "Delete project with specified id",
+				Name:        "delete",
+				Usage:       "Delete project with specified id",
+				ArgsUsage:   "<project-id>",
+				Description: "Delete a project. You must be a system administrator to delete a project.",
 				Action: func(c *cli.Context) {
 					err := deleteProject(c)
 					if err != nil {
@@ -86,8 +91,9 @@ func GetProjectsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show project info with specified id",
+				Name:      "show",
+				Usage:     "Show project info with specified id",
+				ArgsUsage: "<project-id>",
 				Action: func(c *cli.Context) {
 					err := showProject(c, os.Stdout)
 					if err != nil {
@@ -96,8 +102,11 @@ func GetProjectsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "get",
-				Usage: "Get project in config file",
+				Name:      "get",
+				Usage:     "Show default project.",
+				ArgsUsage: " ",
+				Description: "Show default project in use for photon CLI commands. Most command allow you to either\n" +
+					"   use this default or specify a specific project to use.",
 				Action: func(c *cli.Context) {
 					err := getProject(c, os.Stdout)
 					if err != nil {
@@ -106,8 +115,11 @@ func GetProjectsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "set",
-				Usage: "Set project in config file",
+				Name:      "set",
+				Usage:     "Set default project",
+				ArgsUsage: "<project-name>",
+				Description: "Set the default project that will be used for all photon CLI commands that need a project.\n" +
+					"   Most commands allow you to override the default.",
 				Action: func(c *cli.Context) {
 					err := setProject(c)
 					if err != nil {
@@ -116,8 +128,9 @@ func GetProjectsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list",
-				Usage: "List all projects",
+				Name:      "list",
+				Usage:     "List all projects",
+				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "tenant, t",
@@ -132,8 +145,9 @@ func GetProjectsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "tasks",
-				Usage: "List all tasks related to the project",
+				Name:      "tasks",
+				Usage:     "List all tasks related to a given project",
+				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "state, s",
@@ -152,8 +166,12 @@ func GetProjectsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "set_security_groups",
-				Usage: "Set security groups for a project",
+				Name:      "set_security_groups",
+				Usage:     "Set security groups for a project",
+				ArgsUsage: "<project-id> <comma separated list of groups>",
+				Description: "Set the list of Lightwave groups that can use this project. This may only be\n" +
+					"   be set by a member of the project. Be cautious--you can remove your own access if you specify\n" +
+					"   the wrong set of groups.",
 				Action: func(c *cli.Context) {
 					err := setSecurityGroupsForProject(c)
 					if err != nil {
@@ -169,7 +187,7 @@ func GetProjectsCommand() cli.Command {
 // Sends a create project task to client based on the cli.Context
 // Returns an error if one occurred
 func createProject(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "project create [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -264,7 +282,7 @@ func createProject(c *cli.Context, w io.Writer) error {
 // Sends a delete project task to client based on the cli.Context
 // Returns an error if one occurred
 func deleteProject(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "project delete <project id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -294,7 +312,7 @@ func deleteProject(c *cli.Context) error {
 
 // Show project info with the specified project id, returns an error if one occurred
 func showProject(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "project show <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -355,7 +373,7 @@ func showProject(c *cli.Context, w io.Writer) error {
 // Sends a get project task to client based on the config file
 // Returns an error if one occurred
 func getProject(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "project get")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -382,7 +400,7 @@ func getProject(c *cli.Context, w io.Writer) error {
 // Set project name and id to config file
 // Returns an error if one occurred
 func setProject(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "project set <project name>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -422,7 +440,7 @@ func setProject(c *cli.Context) error {
 
 // Retrieves a list of projects, returns an error if one occurred
 func listProjects(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "project list [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -483,7 +501,7 @@ func listProjects(c *cli.Context, w io.Writer) error {
 
 // Retrieves tasks for project
 func getProjectTasks(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "project tasks <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -516,7 +534,7 @@ func getProjectTasks(c *cli.Context, w io.Writer) error {
 
 // Set security groups for a project
 func setSecurityGroupsForProject(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 2, "project set_security_groups <id> <comma-separated security group names>")
+	err := checkArgCount(c, 2)
 	if err != nil {
 		return err
 	}

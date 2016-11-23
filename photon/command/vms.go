@@ -19,9 +19,10 @@ import (
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 
+	"regexp"
+
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
-	"regexp"
 )
 
 // Creates a cli.Command for vm
@@ -53,8 +54,9 @@ func GetVMCommand() cli.Command {
 		Usage: "options for vm",
 		Subcommands: []cli.Command{
 			{
-				Name:  "create",
-				Usage: "Create a new VM",
+				Name:      "create",
+				Usage:     "Create a new VM",
+				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -101,8 +103,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "delete",
-				Usage: "Delete VM with specified ID",
+				Name:      "delete",
+				Usage:     "Delete VM with specified ID",
+				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
 					err := deleteVM(c)
 					if err != nil {
@@ -111,8 +114,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show VM info with specified ID",
+				Name:      "show",
+				Usage:     "Show VM info with specified ID",
+				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
 					err := showVM(c)
 					if err != nil {
@@ -121,8 +125,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list",
-				Usage: "List all VMs",
+				Name:      "list",
+				Usage:     "List all VMs",
+				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "tenant, t",
@@ -149,8 +154,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "tasks",
-				Usage: "List all tasks related to the VM",
+				Name:      "tasks",
+				Usage:     "List all tasks related to a VM",
+				ArgsUsage: "<vm-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "state, s",
@@ -165,8 +171,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "start",
-				Usage: "start VM",
+				Name:      "start",
+				Usage:     "Start a VM",
+				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
 					err := startVM(c)
 					if err != nil {
@@ -175,8 +182,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "stop",
-				Usage: "stop VM",
+				Name:      "stop",
+				Usage:     "Stop a VM",
+				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
 					err := stopVM(c)
 					if err != nil {
@@ -185,8 +193,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "suspend",
-				Usage: "suspend VM",
+				Name:      "suspend",
+				Usage:     "Suspend a VM",
+				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
 					err := suspendVM(c)
 					if err != nil {
@@ -195,8 +204,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "resume",
-				Usage: "resume VM",
+				Name:      "resume",
+				Usage:     "Resume a VM",
+				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
 					err := resumeVM(c)
 					if err != nil {
@@ -205,8 +215,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "restart",
-				Usage: "restart VM",
+				Name:      "restart",
+				Usage:     "Restart a VM",
+				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
 					err := restartVM(c)
 					if err != nil {
@@ -216,8 +227,8 @@ func GetVMCommand() cli.Command {
 			},
 			{
 				Name:      "attach-disk",
-				Usage:     "attach disk to VM",
-				ArgsUsage: "vm-id",
+				Usage:     "Attach a disk to a VM",
+				ArgsUsage: "<vm-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "disk, d",
@@ -233,8 +244,8 @@ func GetVMCommand() cli.Command {
 			},
 			{
 				Name:      "detach-disk",
-				Usage:     "detach disk from VM",
-				ArgsUsage: "vm-id",
+				Usage:     "Detach a disk from a VM",
+				ArgsUsage: "<vm-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "disk, d",
@@ -249,8 +260,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "attach-iso",
-				Usage: "attach ISO to VM",
+				Name:      "attach-iso",
+				Usage:     "Attach an ISO to a VM",
+				ArgsUsage: "<vm-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "path, p",
@@ -269,8 +281,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "detach-iso",
-				Usage: "detach ISO from VM",
+				Name:      "detach-iso",
+				Usage:     "Detach an ISO from a VM",
+				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
 					err := detachIso(c)
 					if err != nil {
@@ -279,12 +292,17 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "set-metadata",
-				Usage: "set VM metadata",
+				Name:      "set-metadata",
+				Usage:     "Set VM's metadata",
+				ArgsUsage: "<vm-id>",
+				Description: "This allows you to set the metadata for VM. The metadata is a set of key/value\n" +
+					"   pairs associated with a VM. Each key and value must be a string\n" +
+					"   Example:\n" +
+					"      photon vm set-metadata 8e138ee8-e135-43b2-8453-ebe4cea29f48 -m '{\"k1\":\"v1\", \"k2\":\"v2\"}'",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "metadata, m",
-						Usage: "metadata",
+						Usage: "The metadata: a JSON string representing a map of string keys with string values",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -295,12 +313,16 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "set-tag",
-				Usage: "set VM tag",
+				Name:      "set-tag",
+				Usage:     "Set a tag on a VM",
+				ArgsUsage: "<vm-id>",
+				Description: "Set a single tag on a VM. A VM can have multiple tags: this will add a single tag.\n" +
+					"   Example:\n" +
+					"      photon vm set-tag 8e138ee8-e135-43b2-8453-ebe4cea29f48 --tag foo",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "tag, t",
-						Usage: "tag",
+						Usage: "tag (arbitary text)",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -311,8 +333,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "networks",
-				Usage: "show VM networks",
+				Name:      "networks",
+				Usage:     "Show the networks a VM is attached to",
+				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
 					err := listVMNetworks(c)
 					if err != nil {
@@ -321,8 +344,9 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "mks-ticket",
-				Usage: "Get VM MKS ticket",
+				Name:      "mks-ticket",
+				Usage:     "Get VM MKS ticket for a VM",
+				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
 					err := getVMMksTicket(c)
 					if err != nil {
@@ -331,8 +355,11 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "create-image",
-				Usage: "Create an image by cloning VM",
+				Name:      "create-image",
+				Usage:     "Create an image by cloning VM",
+				ArgsUsage: "<vm-id>",
+				Description: "Create an image by cloning the VM. The image will be available within Photon Controller.\n" +
+					"   as if you had done a 'photon image create' command",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -351,8 +378,11 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "acquire-floating-ip",
-				Usage: "acquire a floating IP from a specific network",
+				Name:      "acquire-floating-ip",
+				Usage:     "Acquire a floating IP",
+				ArgsUsage: "<vm-id>",
+				Description: "Acquire a floating IP and assign it to the given VM. This can be used only when using\n" +
+					"   virtual networking. This will allow you to access a VM from outside of its virtual network",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "network_id, i",
@@ -367,8 +397,10 @@ func GetVMCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "release-floating-ip",
-				Usage: "release the floating IP",
+				Name:        "release-floating-ip",
+				Usage:       "Release floating IP",
+				ArgsUsage:   "<vm-id>",
+				Description: "Release the floating IP associated with the given VM",
 				Action: func(c *cli.Context) {
 					err := releaseFloatingIp(c)
 					if err != nil {
@@ -384,7 +416,7 @@ func GetVMCommand() cli.Command {
 // Sends a create VM task to client based on the cli.Context
 // Returns an error if one occurred
 func createVM(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "vm create [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -501,7 +533,7 @@ func createVM(c *cli.Context) error {
 // Sends a delete VM task to client based on the cli.Context
 // Returns an error if one occurred
 func deleteVM(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm delete <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -528,7 +560,7 @@ func deleteVM(c *cli.Context) error {
 // Sends a show VM task to client based on the cli.Context
 // Returns an error if one occurred
 func showVM(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm show <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -625,7 +657,7 @@ func showVM(c *cli.Context) error {
 
 // Retrieves a list of VMs, returns an error if one occurred
 func listVMs(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "vm list [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -668,7 +700,7 @@ func listVMs(c *cli.Context) error {
 
 // Retrieves tasks for VM
 func getVMTasks(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm tasks <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -699,7 +731,7 @@ func getVMTasks(c *cli.Context) error {
 }
 
 func startVM(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm start <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -725,7 +757,7 @@ func startVM(c *cli.Context) error {
 }
 
 func stopVM(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm stop <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -751,7 +783,7 @@ func stopVM(c *cli.Context) error {
 }
 
 func suspendVM(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm suspend <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -777,7 +809,7 @@ func suspendVM(c *cli.Context) error {
 }
 
 func resumeVM(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm resume <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -803,7 +835,7 @@ func resumeVM(c *cli.Context) error {
 }
 
 func restartVM(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm restart <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -829,7 +861,7 @@ func restartVM(c *cli.Context) error {
 }
 
 func attachDisk(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm attach-disk --disk <id> <vm-id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -860,7 +892,7 @@ func attachDisk(c *cli.Context) error {
 }
 
 func detachDisk(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm detach-disk --disk <id> <vm-id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -891,7 +923,7 @@ func detachDisk(c *cli.Context) error {
 }
 
 func attachIso(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm attach-iso <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -947,7 +979,7 @@ func attachIso(c *cli.Context) error {
 }
 
 func detachIso(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm detach-iso <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -973,7 +1005,7 @@ func detachIso(c *cli.Context) error {
 }
 
 func setVMMetadata(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm set-metadata <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -1013,7 +1045,7 @@ func setVMMetadata(c *cli.Context) error {
 }
 
 func listVMNetworks(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm networks <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -1037,7 +1069,7 @@ func listVMNetworks(c *cli.Context) error {
 }
 
 func setVMTag(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm set-tag <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -1071,7 +1103,7 @@ func setVMTag(c *cli.Context) error {
 }
 
 func getVMMksTicket(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm mks-ticket <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -1107,7 +1139,7 @@ func getVMMksTicket(c *cli.Context) error {
 }
 
 func createVmImage(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm create-image <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -1163,7 +1195,7 @@ func createVmImage(c *cli.Context) error {
 }
 
 func acquireFloatingIp(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm acquire-floating-ip <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -1194,7 +1226,7 @@ func acquireFloatingIp(c *cli.Context) error {
 }
 
 func releaseFloatingIp(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "vm release-floating-ip <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}

@@ -35,8 +35,17 @@ func GetFlavorsCommand() cli.Command {
 		Usage: "options for flavor",
 		Subcommands: []cli.Command{
 			{
-				Name:  "create",
-				Usage: "Create a new flavor",
+				Name:      "create",
+				Usage:     "Create a flavor",
+				ArgsUsage: " ",
+				Description: "This creates a new flavor. Only system administrators can create flavors.\n" +
+					"   A flavor is defined by a set of costs. Each cost has a type (e.g. vm.memory),\n" +
+					"   a numnber (e.g. 1) and a unit (GB, MB, KB, B, or COUNT). VM flavors must specify at\n" +
+					"   least two costs: vm.memory and vm.cpu.\n\n" +
+					"   Example VM flavor command:\n" +
+					"      photon flavor create --name f1 --kind vm --cost 'vm.memory 1 GB, vm.cpu 1 COUNT'\n" +
+					"   Example disk flavor:\n" +
+					"      photon flavor create --name f1 --kind persistent-disk --cost 'persistent-disk 1 COUNT'\n",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -48,7 +57,7 @@ func GetFlavorsCommand() cli.Command {
 					},
 					cli.StringFlag{
 						Name:  "cost, c",
-						Usage: "Flavor cost",
+						Usage: "Comma-separated costs. Each cost is \"type number unit\"",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -59,8 +68,10 @@ func GetFlavorsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "delete",
-				Usage: "Deletes a flavor",
+				Name:        "delete",
+				Usage:       "Deletes a flavor",
+				ArgsUsage:   "<flavor-id>",
+				Description: "Deletes a flavor. You must be a system administrator to delete a flavor.",
 				Action: func(c *cli.Context) {
 					err := deleteFlavor(c, os.Stdout)
 					if err != nil {
@@ -69,8 +80,9 @@ func GetFlavorsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list",
-				Usage: "Lists flavors",
+				Name:      "list",
+				Usage:     "Lists all flavors",
+				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -89,8 +101,9 @@ func GetFlavorsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show flavor info",
+				Name:      "show",
+				Usage:     "Show flavor info",
+				ArgsUsage: "<flavor-id>",
 				Action: func(c *cli.Context) {
 					err := showFlavor(c, os.Stdout)
 					if err != nil {
@@ -99,12 +112,13 @@ func GetFlavorsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "tasks",
-				Usage: "Show image tasks",
+				Name:      "tasks",
+				Usage:     "Show all tasks for given flavor",
+				ArgsUsage: "<flavor-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "state, s",
-						Usage: "Filter by task state",
+						Usage: "Filter by task state (QUEUED, STARTED, ERROR, or COMPLETED)",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -121,7 +135,7 @@ func GetFlavorsCommand() cli.Command {
 
 // Sends a create flavor task to client
 func createFlavor(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "flavor create [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -202,7 +216,7 @@ func createFlavor(c *cli.Context, w io.Writer) error {
 
 // Sends a delete flavor task to the client
 func deleteFlavor(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "flavor delete <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -228,7 +242,7 @@ func deleteFlavor(c *cli.Context, w io.Writer) error {
 
 // Retrieves a list of flavors
 func listFlavors(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "flavor list [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -275,7 +289,7 @@ func listFlavors(c *cli.Context, w io.Writer) error {
 
 // Retrieves information about a flavor
 func showFlavor(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "flavor show <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -313,7 +327,7 @@ func showFlavor(c *cli.Context, w io.Writer) error {
 
 // Retrieves tasks from specified flavor
 func getFlavorTasks(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "flavor tasks <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}

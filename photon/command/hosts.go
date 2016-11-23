@@ -46,8 +46,10 @@ func GetHostsCommand() cli.Command {
 		Usage: "options for host",
 		Subcommands: []cli.Command{
 			{
-				Name:  "create",
-				Usage: "Create a new host",
+				Name:        "create",
+				Usage:       "Add a new host",
+				ArgsUsage:   " ",
+				Description: "Add a new host to Photon Controller. You must a system administrator to add a host.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "username, u",
@@ -86,8 +88,11 @@ func GetHostsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "delete",
-				Usage: "Delete a host with specified id",
+				Name:      "delete",
+				Usage:     "Delete a host with specified id",
+				ArgsUsage: "<id>",
+				Description: "Removes a host from management by Photon Controller.\n" +
+					"   You must be a system administrator to do this.",
 				Action: func(c *cli.Context) {
 					err := deleteHost(c, os.Stdout)
 					if err != nil {
@@ -96,8 +101,9 @@ func GetHostsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list",
-				Usage: "List all the hosts",
+				Name:      "list",
+				Usage:     "List all the hosts managed by Photon Controller",
+				ArgsUsage: " ",
 				Action: func(c *cli.Context) {
 					err := listHosts(c, os.Stdout)
 					if err != nil {
@@ -116,8 +122,9 @@ func GetHostsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list-vms",
-				Usage: "List all the vms on the host",
+				Name:      "list-vms",
+				Usage:     "List all the VMs on a given host",
+				ArgsUsage: "<host-id>",
 				Action: func(c *cli.Context) {
 					err := listHostVMs(c, os.Stdout)
 					if err != nil {
@@ -126,8 +133,10 @@ func GetHostsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "set-availability-zone",
-				Usage: "Set host's availability zone",
+				Name:        "set-availability-zone",
+				Usage:       "Set a host's availability zone",
+				ArgsUsage:   "<host-id> <availability-zone-id>",
+				Description: "Set a host's availability zone. You must be a system administrator to do this.",
 				Action: func(c *cli.Context) {
 					err := setHostAvailabilityZone(c, os.Stdout)
 					if err != nil {
@@ -136,8 +145,9 @@ func GetHostsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "tasks",
-				Usage: "Show tenant tasks",
+				Name:      "tasks",
+				Usage:     "Show host tasks",
+				ArgsUsage: "<host-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "state, s",
@@ -152,8 +162,12 @@ func GetHostsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "suspend",
-				Usage: "Suspend host with specified id",
+				Name:      "suspend",
+				Usage:     "Suspend host with given id",
+				ArgsUsage: "<host-id>",
+				Description: "Suspend a host given its id. You must be a system administrator to do this.\n" +
+					"   This is a precursor to entering maintenance mode. No new VMs will be placed on the host\n" +
+					"   while it is suspended.",
 				Action: func(c *cli.Context) {
 					err := suspendHost(c, os.Stdout)
 					if err != nil {
@@ -162,8 +176,11 @@ func GetHostsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "resume",
-				Usage: "Resume host with specified id",
+				Name:      "resume",
+				Usage:     "Resume host with specified id",
+				ArgsUsage: "<host-id>",
+				Description: "Resume a host given its id. You must be a system administrator to do this.\n" +
+					"   This will return a host to normal service and new VMs can be placed on this host again.",
 				Action: func(c *cli.Context) {
 					err := resumeHost(c, os.Stdout)
 					if err != nil {
@@ -172,8 +189,11 @@ func GetHostsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "enter-maintenance",
-				Usage: "Host with specified id enter maintenance mode",
+				Name:      "enter-maintenance",
+				Usage:     "Host with specified id enter maintenance mode",
+				ArgsUsage: "<host-id>",
+				Description: "Put a host into maintenance mode. You must be a system administrator to do this.\n" +
+					"   A host must be suspended and have no VMs placed on it in order to enter maintenance mode.",
 				Action: func(c *cli.Context) {
 					err := enterMaintenanceMode(c, os.Stdout)
 					if err != nil {
@@ -182,8 +202,12 @@ func GetHostsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "exit-maintenance",
-				Usage: "Host with specified id exit maintenance mode",
+				Name:      "exit-maintenance",
+				Usage:     "Host with specified id exit maintenance mode",
+				ArgsUsage: "<host-id>",
+				Description: "Resume a host that was in maintenance mode given its id.\n" +
+					"   You must be a system administrator to do this.\n" +
+					"   This will return a host to normal service and new VMs can be placed on this host again.",
 				Action: func(c *cli.Context) {
 					err := exitMaintenanceMode(c, os.Stdout)
 					if err != nil {
@@ -199,7 +223,7 @@ func GetHostsCommand() cli.Command {
 // Sends a create host task to client based on the cli.Context
 // Returns an error if one occurred
 func createHost(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "host create [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -289,7 +313,7 @@ func createHost(c *cli.Context, w io.Writer) error {
 // Sends a delete host task to client based on the cli.Context
 // Returns an error if one occurred
 func deleteHost(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "host delete <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -317,7 +341,7 @@ func deleteHost(c *cli.Context, w io.Writer) error {
 // deployment ID so that users don't have to specify it. In most or all installations,
 // there will not be more than one deployment ID.
 func listHosts(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "host list")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -354,7 +378,7 @@ func listHosts(c *cli.Context, w io.Writer) error {
 
 // Show host info with the specified host ID, returns an error if one occurred
 func showHost(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "host show <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -396,7 +420,7 @@ func showHost(c *cli.Context, w io.Writer) error {
 
 // Set host's availability zone with the specified host ID, returns an error if one occurred
 func setHostAvailabilityZone(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 2, "host set-availability-zone <id> <availability-zone-id>")
+	err := checkArgCount(c, 2)
 	if err != nil {
 		return err
 	}
@@ -430,7 +454,7 @@ func setHostAvailabilityZone(c *cli.Context, w io.Writer) error {
 }
 
 func getHostTasks(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "host tasks <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -459,7 +483,7 @@ func getHostTasks(c *cli.Context, w io.Writer) error {
 }
 
 func listHostVMs(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "host list-vms <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -486,7 +510,7 @@ func listHostVMs(c *cli.Context, w io.Writer) error {
 // Sends a suspend host task to client based on the cli.Context
 // Returns an error if one occurred
 func suspendHost(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "host suspend <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -512,7 +536,7 @@ func suspendHost(c *cli.Context, w io.Writer) error {
 // Sends a resume host task to client based on the cli.Context
 // Returns an error if one occurred
 func resumeHost(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "host resume <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -538,7 +562,7 @@ func resumeHost(c *cli.Context, w io.Writer) error {
 // Put host with specified id into maintenance mode
 // Returns an error if one occurred
 func enterMaintenanceMode(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "host enter-maintenance <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -564,7 +588,7 @@ func enterMaintenanceMode(c *cli.Context, w io.Writer) error {
 // Take host with specified id out of maintenance mode
 // Returns an error if one occurred
 func exitMaintenanceMode(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "host exit-maintenance <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}

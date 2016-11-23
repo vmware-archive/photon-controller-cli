@@ -27,8 +27,9 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
 
-	"golang.org/x/crypto/ssh/terminal"
 	"unicode"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Creates a cli.Command for clusters
@@ -50,7 +51,7 @@ func GetClusterCommand() cli.Command {
 				Usage:     "Create a new cluster",
 				ArgsUsage: " ",
 				Description: "Create a new Kubernetes cluster or Harbor Docker registry. \n\n" +
-					"   Non-interactive mode Example: \n" +
+					"   Example: \n" +
 					"   photon cluster create -n k8-cluster -k KUBERNETES --dns 10.0.0.1 \\ \n" +
 					"     --gateway 192.0.2.1 --netmask 255.255.255.0 --master-ip 192.0.2.20 \\ \n" +
 					"     --container-network 10.2.0.0/16 --etcd1 192.0.2.21 \\ \n" +
@@ -148,7 +149,7 @@ func GetClusterCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := createCluster(c, os.Stdout)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -164,7 +165,7 @@ func GetClusterCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := showCluster(c, os.Stdout)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -192,7 +193,7 @@ func GetClusterCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := listClusters(c, os.Stdout)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -204,7 +205,7 @@ func GetClusterCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := listVms(c, os.Stdout)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -226,7 +227,7 @@ func GetClusterCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := resizeCluster(c, os.Stdout)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -241,7 +242,7 @@ func GetClusterCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := deleteCluster(c)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -253,7 +254,7 @@ func GetClusterCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := triggerMaintenance(c)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -270,7 +271,7 @@ func GetClusterCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := certToFile(c)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -282,7 +283,7 @@ func GetClusterCommand() cli.Command {
 // Sends a "create cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
 func createCluster(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "cluster create [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -544,7 +545,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 // Sends a "show cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
 func showCluster(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "cluster show <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -610,7 +611,7 @@ func showCluster(c *cli.Context, w io.Writer) error {
 // Sends a "list clusters" request to the API client based on the cli.Context
 // Returns an error if one occurred
 func listClusters(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "cluster list [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -650,7 +651,7 @@ func listClusters(c *cli.Context, w io.Writer) error {
 // Sends a "list VMs for cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
 func listVms(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "cluster list_vms <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -677,7 +678,7 @@ func listVms(c *cli.Context, w io.Writer) error {
 // Sends a "resize cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
 func resizeCluster(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 2, "cluster resize <id> <new worker count> [<options>]")
+	err := checkArgCount(c, 2)
 	if err != nil {
 		return err
 	}
@@ -739,7 +740,7 @@ func resizeCluster(c *cli.Context, w io.Writer) error {
 // Sends a "delete cluster" request to the API client based on the cli.Context
 // Returns an error if one occurred
 func deleteCluster(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "cluster delete <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return nil
 	}
@@ -779,7 +780,7 @@ func deleteCluster(c *cli.Context) error {
 // Sends a cluster trigger_maintenance request to the API client based on the cli.Context.
 // Returns an error if one occurred.
 func triggerMaintenance(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "cluster trigger-maintenance <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return nil
 	}
@@ -922,7 +923,7 @@ func validateCert(cert string) error {
 }
 
 func certToFile(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 2, "cluster cert-to-file <id> <file_path>")
+	err := checkArgCount(c, 2)
 	if err != nil {
 		return err
 	}

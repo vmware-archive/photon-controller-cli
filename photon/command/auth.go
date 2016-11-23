@@ -37,18 +37,24 @@ func GetAuthCommand() cli.Command {
 		Usage: "options for auth",
 		Subcommands: []cli.Command{
 			{
-				Name:  "show",
-				Usage: "Display auth info",
+				Name:      "show",
+				Usage:     "Display auth info",
+				ArgsUsage: " ",
+				Description: "Show information about the authentication service (Lightwave) used by the \n" +
+					"   current Photon Controller target.",
 				Action: func(c *cli.Context) {
 					err := show(c)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
 			{
-				Name:  "show-login-token",
-				Usage: "Show login token",
+				Name:      "show-login-token",
+				Usage:     "Show login token",
+				ArgsUsage: " ",
+				Description: "Show information about the current token being used to authenticate with \n" +
+					"   Photon Controller. The token is created by doing 'photon target login'",
 				Flags: []cli.Flag{
 					cli.BoolFlag{
 						Name:  "raw, r",
@@ -58,13 +64,16 @@ func GetAuthCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := showLoginToken(c)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
 			{
-				Name:  "get-api-tokens",
-				Usage: "Retrieve access and refresh tokens",
+				Name:      "get-api-tokens",
+				Usage:     "Retrieve access and refresh tokens",
+				ArgsUsage: " ",
+				Description: "Retrieve a token you can use with the API. You will get both the API token and" +
+					"   API refresh token, which allows you to refresh the API token when it expires.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "username, u",
@@ -82,7 +91,7 @@ func GetAuthCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := getApiTokens(c)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -93,7 +102,7 @@ func GetAuthCommand() cli.Command {
 
 // Get auth info
 func show(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "auth show")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -121,7 +130,7 @@ func showLoginToken(c *cli.Context) error {
 
 // Handles show-login-token, which shows the current login token, if any
 func showLoginTokenWriter(c *cli.Context, w io.Writer, config *configuration.Configuration) error {
-	err := checkArgNum(c.Args(), 0, "auth show-login-token")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -151,7 +160,7 @@ func showLoginTokenWriter(c *cli.Context, w io.Writer, config *configuration.Con
 }
 
 func getApiTokens(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "auth get-tokens")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}

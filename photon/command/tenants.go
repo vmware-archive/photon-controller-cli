@@ -40,12 +40,13 @@ func GetTenantsCommand() cli.Command {
 		Usage: "options for tenant",
 		Subcommands: []cli.Command{
 			{
-				Name:  "create",
-				Usage: "Create a new tenant",
+				Name:      "create",
+				Usage:     "Create a new tenant",
+				ArgsUsage: "<tenant-name>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "security-groups, s",
-						Usage: "Comma-separated security group names",
+						Usage: "Comma-separated Lightwave group names, to specify the tenant administrators",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -56,8 +57,9 @@ func GetTenantsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "delete",
-				Usage: "Delete a tenant",
+				Name:      "delete",
+				Usage:     "Delete a tenant",
+				ArgsUsage: "<tenant-id>",
 				Action: func(c *cli.Context) {
 					err := deleteTenant(c)
 					if err != nil {
@@ -66,8 +68,9 @@ func GetTenantsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show tenant info with specified id",
+				Name:      "show",
+				Usage:     "Show detailed tenant info with specified id",
+				ArgsUsage: "<tenant-id>",
 				Action: func(c *cli.Context) {
 					err := showTenant(c, os.Stdout)
 					if err != nil {
@@ -76,8 +79,9 @@ func GetTenantsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list",
-				Usage: "List tenants",
+				Name:      "list",
+				Usage:     "List all tenants",
+				ArgsUsage: " ",
 				Action: func(c *cli.Context) {
 					err := listTenants(c, os.Stdout)
 					if err != nil {
@@ -86,8 +90,11 @@ func GetTenantsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "set",
-				Usage: "Select tenant to work with",
+				Name:      "set",
+				Usage:     "Set default tenant",
+				ArgsUsage: "<tenant-name>",
+				Description: "Set the default project that will be used for all photon CLI commands that need a project.\n" +
+					"   Most commands allow you to override the default.",
 				Action: func(c *cli.Context) {
 					err := setTenant(c)
 					if err != nil {
@@ -96,8 +103,11 @@ func GetTenantsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "get",
-				Usage: "Get current tenant",
+				Name:      "get",
+				Usage:     "Get default tenant",
+				ArgsUsage: " ",
+				Description: "Show default project in use for photon CLI commands. Most command allow you to either\n" +
+					"   use this default or specify a specific project to use.",
 				Action: func(c *cli.Context) {
 					err := getTenant(c, os.Stdout)
 					if err != nil {
@@ -106,8 +116,9 @@ func GetTenantsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "tasks",
-				Usage: "Show tenant tasks",
+				Name:      "tasks",
+				Usage:     "Show tenant tasks",
+				ArgsUsage: "<tenant-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "state, s",
@@ -122,8 +133,12 @@ func GetTenantsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "set_security_groups",
-				Usage: "Set security groups for a tenant",
+				Name:      "set_security_groups",
+				Usage:     "Set security groups for a tenant",
+				ArgsUsage: "<tenant-id> <comma separated list of groups>",
+				Description: "Set the list of Lightwave groups that can administer this tenant. This may only be\n" +
+					"   be set by a member of the tenant. Be cautious--you can remove your own access if you specify\n" +
+					"   the wrong set of groups.",
 				Action: func(c *cli.Context) {
 					err := setSecurityGroups(c)
 					if err != nil {
@@ -202,7 +217,7 @@ func createTenant(c *cli.Context, w io.Writer) error {
 
 // Retrieves a list of tenants, returns an error if one occurred
 func listTenants(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "tenant list")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -242,7 +257,7 @@ func listTenants(c *cli.Context, w io.Writer) error {
 // Sends a delete tenant task to client based on the cli.Context
 // Returns an error if one occurred
 func deleteTenant(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "tenant delete <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -272,7 +287,7 @@ func deleteTenant(c *cli.Context) error {
 }
 
 func showTenant(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "tenant show <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -312,7 +327,7 @@ func showTenant(c *cli.Context, w io.Writer) error {
 
 // Overwrites the tenant in the config file
 func setTenant(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "tenant set <name>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -353,7 +368,7 @@ func setTenant(c *cli.Context) error {
 
 // Outputs the set tenant otherwise informs user it is not set
 func getTenant(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "tenant get")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -379,7 +394,7 @@ func getTenant(c *cli.Context, w io.Writer) error {
 
 // Retrieves tasks from specified tenant
 func getTenantTasks(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "tenant tasks <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -409,7 +424,7 @@ func getTenantTasks(c *cli.Context, w io.Writer) error {
 
 // Set security groups for a tenant
 func setSecurityGroups(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 2, "tenant set_security_groups <id> <comma-separated security group names>")
+	err := checkArgCount(c, 2)
 	if err != nil {
 		return err
 	}

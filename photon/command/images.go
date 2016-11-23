@@ -38,8 +38,12 @@ func GetImagesCommand() cli.Command {
 		Usage: "options for image",
 		Subcommands: []cli.Command{
 			{
-				Name:  "create",
-				Usage: "Create a new image",
+				Name:      "create",
+				Usage:     "Create a new image",
+				ArgsUsage: "<image-filename>",
+				Description: "Upload a new image to Photon Controller.\n" +
+					"   If the image replication is EAGER, it will be distributed to all allowed datastores on all ESXi hosts\n" +
+					"   If the image replication is ON_DEMAND, it will be distributed to all image datastores",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -47,7 +51,7 @@ func GetImagesCommand() cli.Command {
 					},
 					cli.StringFlag{
 						Name:  "image_replication, i",
-						Usage: "Image replication type",
+						Usage: "Image replication type (EAGER or ON_DEMAND)",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -58,8 +62,12 @@ func GetImagesCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "delete",
-				Usage: "delete an image",
+				Name:      "delete",
+				Usage:     "Delete an image",
+				ArgsUsage: "<image-id>",
+				Description: "Delete an image. All copies will be deleted.\n" +
+					"   Please note that if the image is in use by one or more VMs, it will not be deleted until\n" +
+					"   all VMs that use it are deleted",
 				Action: func(c *cli.Context) {
 					err := deleteImage(c)
 					if err != nil {
@@ -68,8 +76,9 @@ func GetImagesCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list",
-				Usage: "list images",
+				Name:      "list",
+				Usage:     "List images",
+				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -84,8 +93,9 @@ func GetImagesCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "show an image",
+				Name:      "show",
+				Usage:     "Show an image given it's ID",
+				ArgsUsage: "<image-id>",
 				Action: func(c *cli.Context) {
 					err := showImage(c, os.Stdout)
 					if err != nil {
@@ -94,8 +104,9 @@ func GetImagesCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "tasks",
-				Usage: "Show image tasks",
+				Name:      "tasks",
+				Usage:     "Show image tasks",
+				ArgsUsage: "<image-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "state, s",
@@ -211,7 +222,7 @@ func createImage(c *cli.Context, w io.Writer) error {
 
 // Deletes an image by id
 func deleteImage(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "image delete <path>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -241,7 +252,7 @@ func deleteImage(c *cli.Context) error {
 
 // Lists all images
 func listImages(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "image list [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -341,7 +352,7 @@ func showImage(c *cli.Context, w io.Writer) error {
 
 // Retrieves tasks from specified image
 func getImageTasks(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "image tasks <id> [<options>]")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}

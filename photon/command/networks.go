@@ -19,6 +19,7 @@ import (
 	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"errors"
+
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
 )
@@ -41,8 +42,9 @@ func GetNetworksCommand() cli.Command {
 		Usage: "options for network",
 		Subcommands: []cli.Command{
 			{
-				Name:  "create",
-				Usage: "Create a new network",
+				Name:      "create",
+				Usage:     "Create a new network",
+				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -91,8 +93,9 @@ func GetNetworksCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "delete",
-				Usage: "Delete a network",
+				Name:      "delete",
+				Usage:     "Delete a network",
+				ArgsUsage: "<network-id>",
 				Action: func(c *cli.Context) {
 					err := deleteNetwork(c)
 					if err != nil {
@@ -101,8 +104,9 @@ func GetNetworksCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list",
-				Usage: "List networks",
+				Name:      "list",
+				Usage:     "List networks",
+				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -131,8 +135,9 @@ func GetNetworksCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show specified network",
+				Name:      "show",
+				Usage:     "Show network given its id",
+				ArgsUsage: "<network-id>",
 				Action: func(c *cli.Context) {
 					sdnEnabled, err := isSoftwareDefinedNetwork(c)
 					if err != nil {
@@ -150,8 +155,12 @@ func GetNetworksCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "set-default",
-				Usage: "Set default network",
+				Name:      "set-default",
+				Usage:     "Set default network",
+				ArgsUsage: "<network-id>",
+				Description: "Set the default network to be used in the current project when making a VM\n" +
+					"   This is not required: when making a VM you can either specify the network to use, or rely\n" +
+					"   on the default network.",
 				Action: func(c *cli.Context) {
 					err := setDefaultNetwork(c, os.Stdout)
 					if err != nil {
@@ -184,7 +193,7 @@ func isSoftwareDefinedNetwork(c *cli.Context) (sdnEnabled bool, err error) {
 }
 
 func deleteNetwork(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "network delete <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -223,7 +232,7 @@ func deleteNetwork(c *cli.Context) error {
 }
 
 func setDefaultNetwork(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 1, "network set-default <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}

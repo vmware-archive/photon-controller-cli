@@ -41,12 +41,18 @@ func GetTargetCommand() cli.Command {
 		Usage: "options for target",
 		Subcommands: []cli.Command{
 			{
-				Name:  "set",
-				Usage: "Set API target endpoint",
+				Name:      "set",
+				Usage:     "Set API target endpoint",
+				ArgsUsage: "<endpoint>",
+				Description: "Sets the endpoint for Photon Controller that is used for all Photon CLI commands.\n" +
+					"   This is saved persistently in the CLI configuration file (typically ~/.photon-cli/.photon-config)\n" +
+					"   This should be the full URL (including port) of Photon Controller. Most installations use port 443.\n" +
+					"   Example:\n" +
+					"      photon target set https://192.0.2.42:443",
 				Flags: []cli.Flag{
 					cli.BoolFlag{
 						Name:  "nocertcheck, c",
-						Usage: "flag to avoid validating server cert",
+						Usage: "flag to avoid validating the server's certificate",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -67,8 +73,9 @@ func GetTargetCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "info",
-				Usage: "Display information about the Photon Controller that is the current target",
+				Name:      "info",
+				Usage:     "Display information about the Photon Controller that is the current target",
+				ArgsUsage: " ",
 				Action: func(c *cli.Context) {
 					err := showInfo(c, os.Stdout)
 					if err != nil {
@@ -77,8 +84,13 @@ func GetTargetCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "login",
-				Usage: "Allow user to login with a access token, refresh token or username/password",
+				Name:      "login",
+				Usage:     "Allow user to login with a access token, refresh token or username/password",
+				ArgsUsage: " ",
+				Description: "The typical usage is to provide a username and password.\n" +
+					"   If you do not provide any arguments, you will be prompted for the username and password.\n" +
+					"   Logging in will result in you receiving a token, which is stored in the CLI configuration file\n" +
+					"   in ~/.photon-cli/.photon-config. You can see it with the 'photon auth show-login-token'.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "access_token, t",
@@ -101,8 +113,9 @@ func GetTargetCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "logout",
-				Usage: "Allow user to logout",
+				Name:      "logout",
+				Usage:     "Remove the token created by the login command. Future requests will require you log in again.",
+				ArgsUsage: " ",
 				Action: func(c *cli.Context) {
 					err := logout(c)
 					if err != nil {
@@ -118,7 +131,7 @@ func GetTargetCommand() cli.Command {
 // Read config from config file, change target and then write back to file
 // Also check if the target is reachable securely
 func setEndpoint(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "target set <url>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -155,7 +168,7 @@ func setEndpoint(c *cli.Context) error {
 
 // Shows set endpoint
 func showEndpoint(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "target show")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -174,7 +187,7 @@ func showEndpoint(c *cli.Context) error {
 
 // Shows information about Photon Controller: version, etc.
 func showInfo(c *cli.Context, w io.Writer) error {
-	err := checkArgNum(c.Args(), 0, "target show")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -198,7 +211,7 @@ func showInfo(c *cli.Context, w io.Writer) error {
 
 // Store token in the config file
 func login(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "target login")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -261,7 +274,7 @@ func login(c *cli.Context) error {
 
 // Remove token from the config file
 func logout(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "target logout")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}

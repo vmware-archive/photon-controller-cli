@@ -21,6 +21,7 @@ import (
 	"github.com/vmware/photon-controller-go-sdk/photon"
 
 	"encoding/json"
+
 	"github.com/vmware/photon-controller-cli/photon/client"
 )
 
@@ -40,8 +41,9 @@ func GetTasksCommand() cli.Command {
 		Usage: "options for task",
 		Subcommands: []cli.Command{
 			{
-				Name:  "list",
-				Usage: "list all tasks",
+				Name:      "list",
+				Usage:     "list all tasks",
+				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "entityId, e",
@@ -64,8 +66,9 @@ func GetTasksCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show task info with specified ID",
+				Name:      "show",
+				Usage:     "Show task info with specified ID",
+				ArgsUsage: "<task-id>",
 				Action: func(c *cli.Context) {
 					err := showTask(c)
 					if err != nil {
@@ -74,8 +77,9 @@ func GetTasksCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "monitor",
-				Usage: "Monitor task progress with specified ID",
+				Name:      "monitor",
+				Usage:     "Monitor task progress with specified ID",
+				ArgsUsage: "<task-id>",
 				Action: func(c *cli.Context) {
 					err := monitorTask(c)
 					if err != nil {
@@ -90,7 +94,7 @@ func GetTasksCommand() cli.Command {
 
 // Retrieves a list of tasks, returns an error if one occurred
 func listTasks(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "task list <options>")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -122,7 +126,7 @@ func listTasks(c *cli.Context) error {
 
 // Show the task current state, returns an error if one occurred
 func showTask(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "task show <task id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -175,7 +179,7 @@ func showTask(c *cli.Context) error {
 
 // Track the progress of the task, returns an error if one occurred
 func monitorTask(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "task monitor <task id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}

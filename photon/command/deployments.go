@@ -62,8 +62,10 @@ func GetDeploymentsCommand() cli.Command {
 		Usage: "options for deployment",
 		Subcommands: []cli.Command{
 			{
-				Name:  "list",
-				Usage: "Lists all the deployments",
+				Name:        "list",
+				Usage:       "Lists all the deployments",
+				ArgsUsage:   " ",
+				Description: "[Deprecated] List the current deployment.",
 				Action: func(c *cli.Context) {
 					err := listDeployments(c)
 					if err != nil {
@@ -72,8 +74,11 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show deployment info",
+				Name:      "show",
+				Usage:     "Show deployment info",
+				ArgsUsage: " ",
+				Description: "Show detailed information about the current deployment.\n" +
+					"   Requires system administrator access,",
 				Action: func(c *cli.Context) {
 					err := showDeployment(c)
 					if err != nil {
@@ -82,8 +87,12 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list-hosts",
-				Usage: "Lists all the hosts associated with the deployment",
+				Name:      "list-hosts",
+				Usage:     "Lists all ESXi hosts",
+				ArgsUsage: " ",
+				Description: "List information about all ESXi hosts used in the deployment.\n" +
+					"   For each host, the ID, the current state, the IP, and the type (MGMT and/or CLOUD)\n" +
+					"   Requires system administrator access.",
 				Action: func(c *cli.Context) {
 					err := listDeploymentHosts(c)
 					if err != nil {
@@ -92,8 +101,11 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "list-vms",
-				Usage: "Lists all the vms associated with the deployment",
+				Name:      "list-vms",
+				Usage:     "Lists all VMs",
+				ArgsUsage: " ",
+				Description: "List all VMs associated with all tenants and projects.\n" +
+					"   Requires system administrator access.",
 				Action: func(c *cli.Context) {
 					err := listDeploymentVms(c)
 					if err != nil {
@@ -102,8 +114,12 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "enable-cluster-type",
-				Usage: "Enable cluster type for deployment",
+				Name:      "enable-cluster-type",
+				Usage:     "Enable cluster type for deployment",
+				ArgsUsage: " ",
+				Description: "Enable a cluster type (e.g. Kubernetes) and specify the image to be used\n" +
+					"   when creating the cluster.\n" +
+					"   Requires system administrator access.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "type, k",
@@ -122,8 +138,12 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "disable-cluster-type",
-				Usage: "Disable cluster type for deployment",
+				Name:      "disable-cluster-type",
+				Usage:     "Disable cluster type for deployment",
+				ArgsUsage: " ",
+				Description: "Disable a cluster type (e.g. Kubernetes). Users will no longer be able\n" +
+					"   to deploy clusters of that type, but existing clusters will be unaffected.\n" +
+					"   Requires system administrator access.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "type, k",
@@ -138,8 +158,11 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "update-image-datastores",
-				Usage: "Updates the list of image datastores",
+				Name:      "update-image-datastores",
+				Usage:     "Updates the list of image datastores",
+				ArgsUsage: " ",
+				Description: "Update the list of allowed image datastores.\n" +
+					"   Requires system administrator access.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "datastores, d",
@@ -165,8 +188,12 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "pause",
-				Usage: "Pause system under the deployment",
+				Name:      "pause",
+				Usage:     "Pause system under the deployment",
+				ArgsUsage: " ",
+				Description: "Pause Photon Controller. All incoming requests that modify the system\n" +
+					"   state (other than resume) will be refused. This implies pause-background-states" +
+					"   Requires system administrator access.",
 				Action: func(c *cli.Context) {
 					err := pauseSystem(c)
 					if err != nil {
@@ -175,8 +202,12 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "pause-background-tasks",
-				Usage: "Pause system's background tasks under the deployment",
+				Name:      "pause-background-tasks",
+				Usage:     "Pause background tasks",
+				ArgsUsage: " ",
+				Description: "Pause all background tasks in Photon Controller, such as image replication." +
+					"   Incoming requests from users will continue to work\n" +
+					"   Requires system administrator access.",
 				Action: func(c *cli.Context) {
 					err := pauseBackgroundTasks(c)
 					if err != nil {
@@ -185,8 +216,11 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "resume",
-				Usage: "Resume system under the deployment",
+				Name:      "resume",
+				Usage:     "Resume system under the deployment",
+				ArgsUsage: " ",
+				Description: "Resume Photon Controller after it has been paused.\n" +
+					"   Requires system administrator access.",
 				Action: func(c *cli.Context) {
 					err := resumeSystem(c)
 					if err != nil {
@@ -195,8 +229,13 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "set-security-groups",
-				Usage: "Set security groups for a deployment",
+				Name:      "set-security-groups",
+				Usage:     "Set security groups for a deployment",
+				ArgsUsage: "<security-groups>",
+				Description: "Provide the list of Lightwave groups that contain the people who are\n" +
+					"   allowed to be system administrators. Be careful: providing the wrong group could remove\n" +
+					"   your access." +
+					"   Requires system administrator access.",
 				Action: func(c *cli.Context) {
 					err := setDeploymentSecurityGroups(c)
 					if err != nil {
@@ -259,7 +298,7 @@ func GetDeploymentsCommand() cli.Command {
 
 // Retrieves a list of deployments
 func listDeployments(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "deployment list")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}

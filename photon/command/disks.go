@@ -32,12 +32,16 @@ import (
 //              tasks;  Usage: disk tasks <id> [<options>]
 func GetDiskCommand() cli.Command {
 	command := cli.Command{
-		Name:  "disk",
-		Usage: "options for disk",
+		Name: "disk",
 		Subcommands: []cli.Command{
 			{
-				Name:  "create",
-				Usage: "Create a new disk",
+				Name:      "create",
+				Usage:     "Create a new disk",
+				ArgsUsage: " ",
+				Description: "This creates a new disk on a datastore selected by Photon Controller.\n" +
+					"   If you wish to create the disk on the same datastore as a given VM, specify the\n" +
+					"   affinities flag. If you wish to create the disk on a particularly type of datastore\n" +
+					"   specify the appropriate flavor.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -53,7 +57,7 @@ func GetDiskCommand() cli.Command {
 					},
 					cli.StringFlag{
 						Name:  "affinities, a",
-						Usage: "disk Locality(kind id)",
+						Usage: "Specify affinity to a VM as: vm:VM-ID",
 					},
 					cli.StringFlag{
 						Name:  "tenant, t",
@@ -71,33 +75,36 @@ func GetDiskCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := createDisk(c)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
 			{
-				Name:  "delete",
-				Usage: "Delete disk with specified ID",
+				Name:      "delete",
+				Usage:     "Delete disk with specified ID",
+				ArgsUsage: "<disk-id>",
 				Action: func(c *cli.Context) {
 					err := deleteDisk(c)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
 			{
-				Name:  "show",
-				Usage: "Show disk info with specified ID",
+				Name:      "show",
+				Usage:     "Show disk info with specified ID",
+				ArgsUsage: "<disk-id>",
 				Action: func(c *cli.Context) {
 					err := showDisk(c)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
 			{
-				Name:  "list",
-				Usage: "List all disks",
+				Name:      "list",
+				Usage:     "List all disks",
+				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "tenant, t",
@@ -119,23 +126,24 @@ func GetDiskCommand() cli.Command {
 				Action: func(c *cli.Context) {
 					err := listDisks(c)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
 			{
-				Name:  "tasks",
-				Usage: "List all tasks related to the disk",
+				Name:      "tasks",
+				Usage:     "List all tasks related to a specific disk",
+				ArgsUsage: "<disk-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "state, s",
-						Usage: "specify task state for filtering",
+						Usage: "specify task state for filtering (QUEUED, STARTED, ERROR, or COMPLETED)",
 					},
 				},
 				Action: func(c *cli.Context) {
 					err := getDiskTasks(c)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -147,7 +155,7 @@ func GetDiskCommand() cli.Command {
 // Sends a create disk task to client based on the cli.Context
 // Returns an error if one occurred
 func createDisk(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "disk create [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
@@ -236,7 +244,7 @@ func createDisk(c *cli.Context) error {
 // Sends a delete disk task to client based on the cli.Context
 // Returns an error if one occurred
 func deleteDisk(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "disk delete <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -263,7 +271,7 @@ func deleteDisk(c *cli.Context) error {
 // Sends a show disk task to client based on the cli.Context
 // Returns an error if one occurred
 func showDisk(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 1, "disk show <id>")
+	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
@@ -303,7 +311,7 @@ func showDisk(c *cli.Context) error {
 
 // Retrieves a list of disk, returns an error if one occurred
 func listDisks(c *cli.Context) error {
-	err := checkArgNum(c.Args(), 0, "disk list [<options>]")
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
