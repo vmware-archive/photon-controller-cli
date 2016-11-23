@@ -316,16 +316,15 @@ func setTenant(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	name := c.Args().First()
+	identity := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	// Ensure tenant exists
-	id, err := findTenantID(name)
-	if len(id) == 0 || err != nil {
+	tenant, err := client.Esxclient.Tenants.Get(identity)
+	if err != nil {
 		return err
 	}
 
@@ -334,7 +333,7 @@ func setTenant(c *cli.Context) error {
 		return err
 	}
 
-	config.Tenant = &cf.TenantConfiguration{Name: name, ID: id}
+	config.Tenant = &cf.TenantConfiguration{Name: tenant.Name, ID: tenant.ID}
 	err = cf.SaveConfig(config)
 	if err != nil {
 		return err
@@ -346,7 +345,7 @@ func setTenant(c *cli.Context) error {
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		fmt.Printf("Tenant set to '%s'\n", name)
+		fmt.Printf("Tenant set to '%s'\n", identity)
 	}
 	return nil
 }

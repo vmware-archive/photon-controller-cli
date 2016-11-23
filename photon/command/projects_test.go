@@ -123,10 +123,44 @@ func TestShowProject(t *testing.T) {
 		t.Error("Not expecting error serializaing expected project")
 	}
 
+	// There is one project that I created with id name fake_project_ID and name with fake_project_name
+	// I first do project show with ID. Then i do project show with Name.
 	mocks.RegisterResponder(
 		"GET",
 		server.URL+"/projects/"+"fake_project_ID",
 		mocks.CreateResponder(200, string(response[:])))
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/projects/"+"fake_project_name",
+		mocks.CreateResponder(500, string(response[:])))
+
+	projectListStruct := photon.ProjectList{
+		Items: []photon.ProjectCompact{
+			{
+				Name: "fake_project_name",
+				ID:   "fake_project_ID",
+				ResourceTicket: photon.ProjectTicket{
+					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
+					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
+				},
+			},
+		},
+	}
+	listResponse, err := json.Marshal(projectListStruct)
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants/fake_tenant_id"+"/projects?name=fake_project_name",
+		mocks.CreateResponder(200, string(listResponse[:])))
+
+	config := &cf.Configuration{
+		Tenant: &cf.TenantConfiguration{Name: "fake_tenant_name", ID: "fake_tenant_id"},
+	}
+	err = cf.SaveConfig(config)
+	if err != nil {
+		t.Error("Not expecting error when saving config file")
+	}
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"fake_project_ID"})
@@ -134,6 +168,18 @@ func TestShowProject(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	cxt := cli.NewContext(nil, set, nil)
+
+	err = showProject(cxt, os.Stdout)
+	if err != nil {
+		t.Error("Not expecting error showing project: " + err.Error())
+	}
+
+	set = flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake_project_name"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt = cli.NewContext(nil, set, nil)
 
 	err = showProject(cxt, os.Stdout)
 	if err != nil {

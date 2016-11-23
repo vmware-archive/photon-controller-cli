@@ -22,6 +22,7 @@ import (
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
 	"github.com/vmware/photon-controller-cli/photon/mocks"
 
+	"fmt"
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
 )
@@ -252,6 +253,65 @@ func TestSetTenant(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
+	// First tenant has id 1 and name testname. We are setting the tenant by name
+	// Second tenant has id 2 and name secondname. We are setting the tenant by id
+	// Both should succeed and the second tenant should rewrite the config set by the first tenant
+	mockTenant := &photon.Tenant{
+		ID:   "1",
+		Name: "testname",
+	}
+	response, err := json.Marshal(mockTenant)
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants/1",
+		mocks.CreateResponder(200, string(response[:])))
+
+	// Because testname is not an id. This page would return 500 for mock purpose. My code will throw
+	// an err and it will go to the case to query by name
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants/testname",
+		mocks.CreateResponder(500, string(response[:])))
+
+	mockTenant = &photon.Tenant{
+		ID:   "2",
+		Name: "secondname",
+	}
+	response, err = json.Marshal(mockTenant)
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants/2",
+		mocks.CreateResponder(200, string(response[:])))
+
+	expectedTenants := MockTenantsPage{
+		Items: []photon.Tenant{
+			{
+				Name: "testname",
+				ID:   "1",
+			},
+		},
+		NextPageLink:     "",
+		PreviousPageLink: "",
+	}
+
+	response, err = json.Marshal(expectedTenants)
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants?name=testname",
+		mocks.CreateResponder(200, string(response[:])))
+
+	defer server.Close()
+	mocks.Activate(true)
+
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	fmt.Println(server.URL + "/tenants/1")
+
 	err = setTenant(cxt)
 	if err == nil {
 		t.Error("Expecting error should not set tenant")
@@ -279,7 +339,7 @@ func TestSetTenant(t *testing.T) {
 	}
 
 	tenantOverwrite := &cf.TenantConfiguration{Name: "secondname", ID: "2"}
-	err = set.Parse([]string{"secondname"})
+	err = set.Parse([]string{"2"})
 	if err != nil {
 		t.Error("Not expecting arguments parsing to fail")
 	}

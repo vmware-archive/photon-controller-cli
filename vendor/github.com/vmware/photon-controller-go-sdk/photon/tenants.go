@@ -12,6 +12,7 @@ package photon
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 )
 
 // Contains functionality for tenants API.
@@ -163,19 +164,42 @@ func (api *TenantsAPI) GetTasks(id string, options *TaskGetOptions) (result *Tas
 	return
 }
 
-// Gets a tenant with the specified ID.
-func (api *TenantsAPI) Get(id string) (tenant *Tenant, err error) {
-	res, err := api.client.restClient.Get(api.getEntityUrl(id), api.client.options.TokenOptions.AccessToken)
+// Gets a tenant with the specified ID or name
+func (api *TenantsAPI) Get(identity string) (tenant *Tenant, err error) {
+	res, err := api.client.restClient.Get(api.getEntityUrl(identity), api.client.options.TokenOptions.AccessToken)
 	if err != nil {
 		return
 	}
 	defer res.Body.Close()
 	res, err = getError(res)
+	tenant = &Tenant{}
+	if res != nil {
+		err = json.NewDecoder(res.Body).Decode(tenant)
+		// ID corresponds to the tenant ID found, return tenant
+		if err == nil {
+			return
+		}
+	}
+	// Find by Name
+	uri := api.client.Endpoint + tenantUrl + "?name=" + identity
+	res2, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions.AccessToken)
+
 	if err != nil {
 		return
 	}
-	tenant = &Tenant{}
-	err = json.NewDecoder(res.Body).Decode(tenant)
+
+	tenants := &Tenants{}
+	err = json.Unmarshal(res2, tenants)
+	if err != nil {
+		return
+	}
+
+	if len(tenants.Items) < 1 {
+		err = fmt.Errorf("Cannot find a tenant with id or name match %s", identity)
+		return
+	}
+
+	tenant = &(tenants.Items[0])
 	return
 }
 

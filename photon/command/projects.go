@@ -298,14 +298,24 @@ func showProject(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
+	identity := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	project, err := client.Esxclient.Projects.Get(id)
+	config, err := cf.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	if config == nil || config.Tenant == nil {
+		return fmt.Errorf("Error: Set tenant first using 'tenant set <name>' or '-t <name>' option")
+	}
+
+	project, err := findProject(config.Tenant.ID, identity)
+
 	if err != nil {
 		return err
 	}
@@ -386,13 +396,12 @@ func setProject(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	name := c.Args().First()
+	identity := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
-
 	config, err := cf.LoadConfig()
 	if err != nil {
 		return err
@@ -402,7 +411,7 @@ func setProject(c *cli.Context) error {
 		return fmt.Errorf("Error: Set tenant first using 'tenant set <name>' or '-t <name>' option")
 	}
 
-	project, err := findProject(config.Tenant.ID, name)
+	project, err := findProject(config.Tenant.ID, identity)
 	if err != nil {
 		return err
 	}
@@ -414,7 +423,7 @@ func setProject(c *cli.Context) error {
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		fmt.Printf("Project set to '%s'\n", name)
+		fmt.Printf("Project set to '%s'\n", identity)
 	}
 
 	return nil
