@@ -15,7 +15,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -24,12 +23,13 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"strings"
 )
 
 // Creates a cli.Command for project
 // Subcommands: create; Usage: project create [<options>]
-//              delete; Usage: project delete <id>
-//              show;   Usage: project show <id>
+//              delete; Usage: project delete <id | name>
+//              show;   Usage: project show <id | name>
 //              set;    Usage: project set <name>
 //              get;    Usage: project get
 //              list;   Usage: project list [<options>]
@@ -283,17 +283,26 @@ func createProject(c *cli.Context, w io.Writer) error {
 // Returns an error if one occurred
 func deleteProject(c *cli.Context) error {
 	err := checkArgCount(c, 1)
+
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
+	identity := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deleteTask, err := client.Esxclient.Projects.Delete(id)
+	config, err := cf.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	project, err := findProject(config.Tenant.ID, identity)
+
+	deleteTask, err := client.Esxclient.Projects.Delete(project.ID)
+
 	if err != nil {
 		return err
 	}
@@ -302,7 +311,7 @@ func deleteProject(c *cli.Context) error {
 		return err
 	}
 
-	err = clearConfigProject(id)
+	err = clearConfigProject(project.ID)
 	if err != nil {
 		return err
 	}
@@ -310,20 +319,30 @@ func deleteProject(c *cli.Context) error {
 	return nil
 }
 
-// Show project info with the specified project id, returns an error if one occurred
+// Show project info with the specified project id or name, returns an error if one occurred
 func showProject(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
-	id := c.Args().First()
+	identity := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	project, err := client.Esxclient.Projects.Get(id)
+	config, err := cf.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	if config == nil || config.Tenant == nil {
+		return fmt.Errorf("Error: Set tenant first using 'tenant set <name>' or '-t <name>' option")
+	}
+
+	project, err := findProject(config.Tenant.ID, identity)
+
 	if err != nil {
 		return err
 	}
@@ -404,13 +423,12 @@ func setProject(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	name := c.Args().First()
+	identity := c.Args().First()
 
 	client.Esxclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
-
 	config, err := cf.LoadConfig()
 	if err != nil {
 		return err
@@ -420,7 +438,7 @@ func setProject(c *cli.Context) error {
 		return fmt.Errorf("Error: Set tenant first using 'tenant set <name>' or '-t <name>' option")
 	}
 
-	project, err := findProject(config.Tenant.ID, name)
+	project, err := findProject(config.Tenant.ID, identity)
 	if err != nil {
 		return err
 	}
@@ -432,7 +450,7 @@ func setProject(c *cli.Context) error {
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		fmt.Printf("Project set to '%s'\n", name)
+		fmt.Printf("Project set to '%s'\n", identity)
 	}
 
 	return nil

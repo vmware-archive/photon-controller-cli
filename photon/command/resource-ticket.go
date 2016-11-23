@@ -54,7 +54,7 @@ func GetResourceTicketCommand() cli.Command {
 					},
 					cli.StringFlag{
 						Name:  "tenant, t",
-						Usage: "Tenant name for resource-ticket",
+						Usage: "Tenant name or id for resource-ticket",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -131,7 +131,7 @@ func createResourceTicket(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	tenantName := c.String("tenant")
+	tenantIdentity := c.String("tenant")
 	name := c.String("name")
 	limits := c.String("limits")
 
@@ -140,7 +140,7 @@ func createResourceTicket(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	tenant, err := verifyTenant(tenantName)
+	tenant, err := client.Esxclient.Tenants.Get(tenantIdentity)
 	if err != nil {
 		return err
 	}

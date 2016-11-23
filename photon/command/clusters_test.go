@@ -114,6 +114,14 @@ func TestCreateDeleteCluster(t *testing.T) {
 		mocks.CreateResponder(200, string(tenantResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
+		server.URL+"/tenants/fake_tenant_name",
+		mocks.CreateResponder(500, string(tenantResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tenants?name=fake_tenant_name",
+		mocks.CreateResponder(200, string(tenantResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
 		server.URL+"/tenants/fake_tenant_id/projects?name=fake_project_name",
 		mocks.CreateResponder(200, string(projectResponse[:])))
 	mocks.RegisterResponder(

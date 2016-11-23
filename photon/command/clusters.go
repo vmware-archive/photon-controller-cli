@@ -59,11 +59,11 @@ func GetClusterCommand() cli.Command {
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "tenant, t",
-						Usage: "Tenant name",
+						Usage: "Tenant name or id",
 					},
 					cli.StringFlag{
 						Name:  "project, p",
-						Usage: "Project name",
+						Usage: "Project name or id",
 					},
 					cli.StringFlag{
 						Name:  "name, n",
@@ -288,8 +288,8 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	tenantName := c.String("tenant")
-	projectName := c.String("project")
+	tenantIdentity := c.String("tenant")
+	projectIdentity := c.String("project")
 	name := c.String("name")
 	cluster_type := c.String("type")
 	vm_flavor := c.String("vm_flavor")
@@ -326,12 +326,12 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	tenant, err := verifyTenant(tenantName)
+	tenant, err := client.Esxclient.Tenants.Get(tenantIdentity)
 	if err != nil {
 		return err
 	}
 
-	project, err := verifyProject(tenant.ID, projectName)
+	project, err := findProject(tenant.ID, projectIdentity)
 	if err != nil {
 		return err
 	}
