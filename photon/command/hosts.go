@@ -235,6 +235,11 @@ func createHost(c *cli.Context, w io.Writer) error {
 	metadata := c.String("metadata")
 	deploymentID := c.String("deployment_id")
 
+	deploymentID, err = getDeploymentId(c)
+	if err != nil {
+		return err
+	}
+
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
 		username, err = askForInput("Username: ", username)
@@ -259,10 +264,6 @@ func createHost(c *cli.Context, w io.Writer) error {
 			return err
 		}
 		metadata, err = askForInput("Host Metadata ({'key':'value'}. required by host of 'MGMT' tag): ", metadata)
-		if err != nil {
-			return err
-		}
-		deploymentID, err = askForInput("Deployment ID: ", deploymentID)
 		if err != nil {
 			return err
 		}
