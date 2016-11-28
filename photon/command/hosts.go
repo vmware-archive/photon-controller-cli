@@ -75,10 +75,6 @@ func GetHostsCommand() cli.Command {
 						Name:  "metadata, m",
 						Usage: "metadata for the host",
 					},
-					cli.StringFlag{
-						Name:  "deployment_id, d",
-						Usage: "deployment id to create host",
-					},
 				},
 				Action: func(c *cli.Context) {
 					err := createHost(c, os.Stdout)
@@ -235,6 +231,11 @@ func createHost(c *cli.Context, w io.Writer) error {
 	metadata := c.String("metadata")
 	deploymentID := c.String("deployment_id")
 
+	deploymentID, err = getDeploymentId(c)
+	if err != nil {
+		return err
+	}
+
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
 		username, err = askForInput("Username: ", username)
@@ -259,10 +260,6 @@ func createHost(c *cli.Context, w io.Writer) error {
 			return err
 		}
 		metadata, err = askForInput("Host Metadata ({'key':'value'}. required by host of 'MGMT' tag): ", metadata)
-		if err != nil {
-			return err
-		}
-		deploymentID, err = askForInput("Deployment ID: ", deploymentID)
 		if err != nil {
 			return err
 		}
