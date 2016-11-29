@@ -20,6 +20,7 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"os"
 )
 
 type MockHostsPage struct {
@@ -32,7 +33,7 @@ func TestListDeployment(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	err := set.Parse([]string{""})
 	cxt := cli.NewContext(nil, set, nil)
-	err = listDeployments(cxt)
+	err = listDeployments(cxt, os.Stdout)
 	// No responder from mock server for list tenant set yet
 	if err == nil {
 		t.Error("Expecting an error listing deployments")
@@ -82,7 +83,7 @@ func TestGetDeployment(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = showDeployment(cxt)
+	err = showDeployment(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting get deployment to fail")
 	}
@@ -142,7 +143,7 @@ func TestListDeploymentHosts(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	cxt := cli.NewContext(nil, set, nil)
-	err = listDeploymentHosts(cxt)
+	err = listDeploymentHosts(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting deployment list hosts to fail")
 	}
@@ -213,7 +214,7 @@ func TestListDeploymentVms(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	cxt := cli.NewContext(nil, set, nil)
-	err = listDeploymentVms(cxt)
+	err = listDeploymentVms(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting deployment list hosts to fail")
 	}
