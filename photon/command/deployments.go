@@ -20,7 +20,9 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"io"
 )
 
 type VM_NetworkIPs struct {
@@ -67,7 +69,7 @@ func GetDeploymentsCommand() cli.Command {
 				ArgsUsage:   " ",
 				Description: "[Deprecated] List the current deployment.",
 				Action: func(c *cli.Context) {
-					err := listDeployments(c)
+					err := listDeployments(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -80,7 +82,7 @@ func GetDeploymentsCommand() cli.Command {
 				Description: "Show detailed information about the current deployment.\n" +
 					"   Requires system administrator access,",
 				Action: func(c *cli.Context) {
-					err := showDeployment(c)
+					err := showDeployment(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -94,7 +96,7 @@ func GetDeploymentsCommand() cli.Command {
 					"   For each host, the ID, the current state, the IP, and the type (MGMT and/or CLOUD)\n" +
 					"   Requires system administrator access.",
 				Action: func(c *cli.Context) {
-					err := listDeploymentHosts(c)
+					err := listDeploymentHosts(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -107,7 +109,7 @@ func GetDeploymentsCommand() cli.Command {
 				Description: "List all VMs associated with all tenants and projects.\n" +
 					"   Requires system administrator access.",
 				Action: func(c *cli.Context) {
-					err := listDeploymentVms(c)
+					err := listDeploymentVms(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -297,7 +299,7 @@ func GetDeploymentsCommand() cli.Command {
 }
 
 // Retrieves a list of deployments
-func listDeployments(c *cli.Context) error {
+func listDeployments(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -313,7 +315,9 @@ func listDeployments(c *cli.Context) error {
 		return err
 	}
 
-	if c.GlobalIsSet("non-interactive") {
+	if utils.NeedsFormatting(c) {
+		utils.FormatObject(deployments, w, c)
+	} else if c.GlobalIsSet("non-interactive") {
 		for _, deployment := range deployments.Items {
 			fmt.Printf("%s\n", deployment.ID)
 		}
@@ -335,7 +339,7 @@ func listDeployments(c *cli.Context) error {
 }
 
 // Retrieves information about a deployment
-func showDeployment(c *cli.Context) error {
+func showDeployment(c *cli.Context, w io.Writer) error {
 	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
@@ -376,7 +380,9 @@ func showDeployment(c *cli.Context) error {
 		}
 		data = append(data, VM_NetworkIPs{vm, ipAddr})
 	}
-	if c.GlobalIsSet("non-interactive") {
+	if utils.NeedsFormatting(c) {
+		utils.FormatObject(deployment, w, c)
+	} else if c.GlobalIsSet("non-interactive") {
 		imageDataStores := getCommaSeparatedStringFromStringArray(deployment.ImageDatastores)
 		securityGroups := getCommaSeparatedStringFromStringArray(deployment.Auth.SecurityGroups)
 
@@ -425,7 +431,7 @@ func showDeployment(c *cli.Context) error {
 		stats := deployment.Stats
 		if c.GlobalIsSet("non-interactive") {
 			fmt.Printf("%t\t%s\t%d\n", stats.Enabled, stats.StoreEndpoint, stats.StorePort)
-		} else {
+		} else if !utils.NeedsFormatting(c) {
 
 			fmt.Printf("\n  Stats:\n")
 			fmt.Printf("    Enabled:               %t\n", stats.Enabled)
@@ -445,7 +451,7 @@ func showDeployment(c *cli.Context) error {
 		if c.GlobalIsSet("non-interactive") {
 			fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
 				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
-		} else {
+		} else if !utils.NeedsFormatting(c) {
 			fmt.Printf("\n  Migration status:\n")
 			fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
 			fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
@@ -466,7 +472,7 @@ func showDeployment(c *cli.Context) error {
 			}
 			scriptClusterConfigurations := strings.Join(clusterConfigurations, ",")
 			fmt.Printf("%s\n", scriptClusterConfigurations)
-		} else {
+		} else if !utils.NeedsFormatting(c) {
 			fmt.Println("\n  Cluster Configurations:")
 			for i, c := range deployment.ClusterConfigurations {
 				fmt.Printf("    ClusterConfiguration %d:\n", i+1)
@@ -478,21 +484,24 @@ func showDeployment(c *cli.Context) error {
 	} else {
 		if c.GlobalIsSet("non-interactive") {
 			fmt.Printf("\n")
-		} else {
+		} else if !utils.NeedsFormatting(c) {
 			fmt.Println("\n  Cluster Configurations:")
 			fmt.Printf("    No cluster is supported")
 		}
 	}
-	err = displayDeploymentSummary(data, c.GlobalIsSet("non-interactive"))
-	if err != nil {
-		return err
+
+	if !utils.NeedsFormatting(c) {
+		err = displayDeploymentSummary(data, c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 // Lists all the hosts associated with the deployment
-func listDeploymentHosts(c *cli.Context) error {
+func listDeploymentHosts(c *cli.Context, w io.Writer) error {
 	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
@@ -508,16 +517,20 @@ func listDeploymentHosts(c *cli.Context) error {
 		return err
 	}
 
-	err = printHostList(hosts.Items, os.Stdout, c)
-	if err != nil {
-		return err
+	if utils.NeedsFormatting(c) {
+		utils.FormatObjects(hosts, w, c)
+	} else {
+		err = printHostList(hosts.Items, os.Stdout, c)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 // Lists all the hosts associated with the deployment
-func listDeploymentVms(c *cli.Context) error {
+func listDeploymentVms(c *cli.Context, w io.Writer) error {
 	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
@@ -533,9 +546,13 @@ func listDeploymentVms(c *cli.Context) error {
 		return err
 	}
 
-	err = printVMList(vms.Items, os.Stdout, c, false)
-	if err != nil {
-		return err
+	if utils.NeedsFormatting(c) {
+		utils.FormatObjects(vms, w, c)
+	} else {
+		err = printVMList(vms.Items, os.Stdout, c, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
