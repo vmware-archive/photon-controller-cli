@@ -260,6 +260,8 @@ func login(c *cli.Context) error {
 		}
 
 		config.Token = options.AccessToken
+		config.ExpiresIn = options.ExpiresInTime
+		config.RefreshToken = options.RefreshToken
 	}
 
 	err = cf.SaveConfig(config)
@@ -284,6 +286,7 @@ func logout(c *cli.Context) error {
 	}
 
 	config.Token = ""
+	config.RefreshToken = ""
 
 	err = cf.SaveConfig(config)
 	if err != nil {

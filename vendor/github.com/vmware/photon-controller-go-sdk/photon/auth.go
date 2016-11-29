@@ -13,7 +13,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
+	"time"
 )
+
+// While checking for expriry and when to refresh the AccessToken
+// we want to refresh the token a little before the actual expriry time
+// so that our commands do not get expired in between the API calls.
+const expiresInDelta = time.Duration(15) * time.Second
 
 // Contains functionality for auth API.
 type AuthAPI struct {
@@ -36,6 +42,21 @@ func (api *AuthAPI) Get() (info *AuthInfo, err error) {
 	info = &AuthInfo{}
 	err = json.NewDecoder(res.Body).Decode(info)
 	return
+}
+
+// Check if Token is expired.
+func (api *AuthAPI) IsTokenExpired() bool {
+
+	if api.client.options.TokenOptions.ExpiresInTime.IsZero() {
+		return false
+	}
+
+	return api.client.options.TokenOptions.ExpiresInTime.Add(-expiresInDelta).Before(time.Now())
+}
+
+// Gets tokens from refresh token.
+func (api *AuthAPI) DoRefreshToken() (tokenOptions *TokenOptions, err error) {
+	return api.GetTokensByRefreshToken(api.client.options.TokenOptions.RefreshToken)
 }
 
 // Gets Tokens from username/password.
@@ -108,9 +129,16 @@ func (api *AuthAPI) buildOIDCClientOptions(options *ClientOptions) *lightwave.OI
 }
 
 func (api *AuthAPI) toTokenOptions(response *lightwave.OIDCTokenResponse) *TokenOptions {
+	var expiresInTime time.Time
+
+	if response.ExpiresIn != 0 {
+		expiresInTime = time.Now().Add(time.Duration(response.ExpiresIn) * time.Second)
+	}
+
 	return &TokenOptions{
 		AccessToken:  response.AccessToken,
 		ExpiresIn:    response.ExpiresIn,
+		ExpiresInTime:    expiresInTime,
 		RefreshToken: response.RefreshToken,
 		IdToken:      response.IdToken,
 		TokenType:    response.TokenType,

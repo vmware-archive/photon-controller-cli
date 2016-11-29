@@ -48,6 +48,7 @@ type Client struct {
 type TokenOptions struct {
 	AccessToken  string `json:"access_token"`
 	ExpiresIn    int    `json:"expires_in"`
+	ExpiresInTime    time.Time    `json:"expires_in_time"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 	IdToken      string `json:"id_token"`
 	TokenType    string `json:"token_type"`

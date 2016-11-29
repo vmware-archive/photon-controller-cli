@@ -20,6 +20,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 type TenantConfiguration struct {
@@ -35,6 +36,8 @@ type ProjectConfiguration struct {
 type Configuration struct {
 	CloudTarget       string
 	Token             string
+	ExpiresIn         time.Time
+	RefreshToken      string
 	IgnoreCertificate bool
 	Tenant            *TenantConfiguration
 	Project           *ProjectConfiguration

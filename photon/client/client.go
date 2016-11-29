@@ -37,7 +37,9 @@ func NewClient(config *cf.Configuration) (*photon.Client, error) {
 	options := &photon.ClientOptions{
 		IgnoreCertificate: config.IgnoreCertificate,
 		TokenOptions: &photon.TokenOptions{
-			AccessToken: config.Token,
+			AccessToken:  config.Token,
+			ExpiresInTime:    config.ExpiresIn,
+			RefreshToken: config.RefreshToken,
 		},
 	}
 
@@ -63,7 +65,10 @@ func NewClient(config *cf.Configuration) (*photon.Client, error) {
 
 // Returns the photon client, if not set, it will read a config file.
 func GetClient(c *cli.Context) (*photon.Client, error) {
+
 	var err error
+	config, err := cf.LoadConfig()
+	
 	if Esxclient == nil {
 		Esxclient, err = get()
 		if err != nil {
@@ -77,6 +82,23 @@ func GetClient(c *cli.Context) (*photon.Client, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	if (Esxclient.Auth.IsTokenExpired()) {
+		options, err := Esxclient.Auth.DoRefreshToken()
+		if err != nil {
+			return nil, err
+		}
+
+		config.Token = options.AccessToken
+		config.ExpiresIn = options.ExpiresInTime
+
+		err = cf.SaveConfig(config)
+		if err != nil {
+			return nil, err
+		}
+
+		Esxclient, err = get() 
 	}
 
 	return Esxclient, nil
