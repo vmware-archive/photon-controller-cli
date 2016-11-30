@@ -251,7 +251,7 @@ func createProject(c *cli.Context, w io.Writer) error {
 			fmt.Printf("%d: %s, %g, %s\n", i+1, l.Key, l.Value, l.Unit)
 		}
 	}
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		if len(securityGroups) > 0 {
 			projectSpec.SecurityGroups = regexp.MustCompile(`\s*,\s*`).Split(securityGroups, -1)
 		}
