@@ -504,7 +504,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		fmt.Printf("\n")
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		createTask, err := client.Esxclient.Projects.CreateCluster(project.ID, &clusterSpec)
 		if err != nil {
 			return err
@@ -701,7 +701,7 @@ func resizeCluster(c *cli.Context, w io.Writer) error {
 		fmt.Printf("\nResizing cluster %s to worker count %d\n", cluster_id, worker_count)
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		resizeSpec := photon.ClusterResizeOperation{}
 		resizeSpec.NewWorkerCount = worker_count
 		resizeTask, err := client.Esxclient.Clusters.Resize(cluster_id, &resizeSpec)
@@ -760,7 +760,7 @@ func deleteCluster(c *cli.Context) error {
 		fmt.Printf("\nDeleting cluster %s\n", cluster_id)
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		deleteTask, err := client.Esxclient.Clusters.Delete(cluster_id)
 		if err != nil {
 			return err
