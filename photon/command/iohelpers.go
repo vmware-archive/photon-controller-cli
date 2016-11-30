@@ -116,8 +116,10 @@ func askForLimitList(limitsList []photon.QuotaLineItem) ([]photon.QuotaLineItem,
 }
 
 // Prompts the user to confirm action, will repeat until a response is yes, y, no, or n.
-func confirmed(isScripting bool) bool {
-	if !isScripting {
+func confirmed(c *cli.Context) bool {
+	if c.GlobalIsSet("non-interactive") || utils.NeedsFormatting(c) {
+		return true
+	} else {
 		response := ""
 		for {
 			response, _ = askForInput("Are you sure [y/n]? ", response)
@@ -132,7 +134,6 @@ func confirmed(isScripting bool) bool {
 			response = ""
 		}
 	}
-	return true
 }
 
 // Prints out the output of tasks

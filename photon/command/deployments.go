@@ -762,7 +762,7 @@ func enableClusterType(c *cli.Context) error {
 		return fmt.Errorf("Please provide image ID using --image-id flag")
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		client.Esxclient, err = client.GetClient(c)
 		if err != nil {
 			return err
@@ -812,7 +812,7 @@ func disableClusterType(c *cli.Context) error {
 		return fmt.Errorf("Please provide cluster type using --type flag")
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		client.Esxclient, err = client.GetClient(c)
 		if err != nil {
 			return err
