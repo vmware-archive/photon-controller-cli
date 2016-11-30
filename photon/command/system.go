@@ -24,7 +24,9 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/manifest"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"io"
 )
 
 // Create a cli.command object for command "system"
@@ -40,7 +42,7 @@ func GetSystemCommand() cli.Command {
 				Usage:     "Display system status",
 				ArgsUsage: " ",
 				Action: func(c *cli.Context) {
-					err := getStatus(c)
+					err := getStatus(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -121,7 +123,7 @@ func GetSystemCommand() cli.Command {
 }
 
 // Get endpoint in config file and its status
-func getStatus(c *cli.Context) error {
+func getStatus(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -136,7 +138,11 @@ func getStatus(c *cli.Context) error {
 		return err
 	}
 
-	err = printStatus(status)
+	if utils.NeedsFormatting(c) {
+		err = printStatus(status)
+	} else {
+		utils.FormatObject(status, w, c)
+	}
 	if err != nil {
 		return err
 	}

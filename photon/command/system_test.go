@@ -26,6 +26,7 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"os"
 )
 
 func TestGetStatus(t *testing.T) {
@@ -36,7 +37,7 @@ func TestGetStatus(t *testing.T) {
 	}
 	set := flag.NewFlagSet("test", 0)
 	cxt := cli.NewContext(nil, set, nil)
-	err = getStatus(cxt)
+	err = getStatus(cxt, os.Stdout)
 	if err == nil {
 		t.Error("Expected to receive error trying to get status when config file does not exist")
 	}
@@ -65,7 +66,7 @@ func TestGetStatus(t *testing.T) {
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
 	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
 
-	err = getStatus(cxt)
+	err = getStatus(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error getting status of mock client")
 	}
