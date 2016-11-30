@@ -23,6 +23,7 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 )
 
 // Creates a cli.Command for vm
@@ -514,7 +515,7 @@ func createVM(c *cli.Context) error {
 		}
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c.GlobalIsSet("non-interactive") || utils.NeedsFormatting(c)) {
 		createTask, err := client.Esxclient.Projects.CreateVM(project.ID, &vmSpec)
 		if err != nil {
 			return err

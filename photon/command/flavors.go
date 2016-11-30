@@ -185,7 +185,7 @@ func createFlavor(c *cli.Context, w io.Writer) error {
 		}
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c.GlobalIsSet("non-interactive") || utils.NeedsFormatting(c)) {
 		var err error
 		client.Esxclient, err = client.GetClient(c)
 		if err != nil {

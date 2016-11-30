@@ -20,6 +20,7 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"os"
 )
 
 type MockDisksPage struct {
@@ -117,7 +118,7 @@ func TestCreateDisk(t *testing.T) {
 	set.String("tags", "fake_disk_tag1, fake_disk_tag2", "Tags for disk")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = createDisk(cxt)
+	err = createDisk(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating project: " + err.Error())
 	}
@@ -152,7 +153,7 @@ func TestShowDisk(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = showDisk(cxt)
+	err = showDisk(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing disk: " + err.Error())
 	}
@@ -204,7 +205,7 @@ func TestListDisks(t *testing.T) {
 	set.String("project", "fake_project_name", "project name")
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = listDisks(cxt)
+	err = listDisks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error listing disks: " + err.Error())
 	}
@@ -254,7 +255,7 @@ func TestListDiskTasks(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = getDiskTasks(cxt)
+	err = getDiskTasks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing disk tasks: " + err.Error())
 	}
@@ -398,7 +399,7 @@ func TestFindDisksByName(t *testing.T) {
 	}
 
 	cxt := cli.NewContext(nil, set, nil)
-	err = listDisks(cxt)
+	err = listDisks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting an error listing disks by name", err)
 	}
