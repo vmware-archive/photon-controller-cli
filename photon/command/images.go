@@ -228,7 +228,7 @@ func deleteImage(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		client.Esxclient, err = client.GetClient(c)
 		if err != nil {
 			return err

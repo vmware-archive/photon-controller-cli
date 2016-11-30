@@ -174,7 +174,7 @@ func createResourceTicket(c *cli.Context, w io.Writer) error {
 		}
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		createTask, err := client.Esxclient.Tenants.CreateResourceTicket(tenant.ID, &rtSpec)
 		if err != nil {
 			return err

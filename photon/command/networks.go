@@ -220,7 +220,7 @@ func deleteNetwork(c *cli.Context) error {
 		return err
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		_, err = waitOnTaskOperation(task.ID, c)
 		if err != nil {
 			return err
@@ -259,7 +259,7 @@ func setDefaultNetwork(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		id, err := waitOnTaskOperation(task.ID, c)
 		if err != nil {
 			return err

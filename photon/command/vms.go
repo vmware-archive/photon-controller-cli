@@ -514,7 +514,7 @@ func createVM(c *cli.Context) error {
 		}
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		createTask, err := client.Esxclient.Projects.CreateVM(project.ID, &vmSpec)
 		if err != nil {
 			return err

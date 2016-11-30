@@ -21,7 +21,9 @@ import (
 	"github.com/vmware/photon-controller-cli/photon/client"
 
 	"github.com/codegangsta/cli"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"io"
 )
 
 // Creates a cli.Command for disk
@@ -73,7 +75,7 @@ func GetDiskCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createDisk(c)
+					err := createDisk(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -95,7 +97,7 @@ func GetDiskCommand() cli.Command {
 				Usage:     "Show disk info with specified ID",
 				ArgsUsage: "<disk-id>",
 				Action: func(c *cli.Context) {
-					err := showDisk(c)
+					err := showDisk(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -124,7 +126,7 @@ func GetDiskCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := listDisks(c)
+					err := listDisks(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -141,7 +143,7 @@ func GetDiskCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := getDiskTasks(c)
+					err := getDiskTasks(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -154,7 +156,7 @@ func GetDiskCommand() cli.Command {
 
 // Sends a create disk task to client based on the cli.Context
 // Returns an error if one occurred
-func createDisk(c *cli.Context) error {
+func createDisk(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -219,21 +221,30 @@ func createDisk(c *cli.Context) error {
 	diskSpec.Affinities = affinitiesList
 	diskSpec.Tags = regexp.MustCompile(`\s*,\s*`).Split(tags, -1)
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
 		fmt.Printf("\nCreating disk: %s (%s)\n", diskSpec.Name, diskSpec.Flavor)
 		fmt.Printf("Tenant: %s, project: %s\n", tenant.Name, project.Name)
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
+	if confirmed(c) {
 		createTask, err := client.Esxclient.Projects.CreateDisk(project.ID, &diskSpec)
 		if err != nil {
 			return err
 		}
 
-		_, err = waitOnTaskOperation(createTask.ID, c)
+		diskID, err := waitOnTaskOperation(createTask.ID, c)
 		if err != nil {
 			return err
 		}
+
+		if utils.NeedsFormatting(c) {
+			disk, err := client.Esxclient.Disks.Get(diskID)
+			if err != nil {
+				return err
+			}
+			utils.FormatObject(disk, w, c)
+		}
+
 	} else {
 		fmt.Println("OK. Canceled")
 	}
@@ -270,7 +281,7 @@ func deleteDisk(c *cli.Context) error {
 
 // Sends a show disk task to client based on the cli.Context
 // Returns an error if one occurred
-func showDisk(c *cli.Context) error {
+func showDisk(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -294,6 +305,8 @@ func showDisk(c *cli.Context) error {
 		scriptVMs := strings.Replace(vms, " ", ",", -1)
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\n", disk.ID, disk.Name,
 			disk.State, disk.Kind, disk.Flavor, disk.CapacityGB, disk.Datastore, scriptTag, scriptVMs)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(disk, w, c)
 	} else {
 		fmt.Println("Disk ID: ", disk.ID)
 		fmt.Println("  Name:       ", disk.Name)
@@ -310,7 +323,7 @@ func showDisk(c *cli.Context) error {
 }
 
 // Retrieves a list of disk, returns an error if one occurred
-func listDisks(c *cli.Context) error {
+func listDisks(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -343,6 +356,11 @@ func listDisks(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		utils.FormatObjects(diskList, w, c)
+		return nil
+	}
+
 	stateCount := make(map[string]int)
 	for _, disk := range diskList.Items {
 		stateCount[disk.State]++
@@ -354,7 +372,7 @@ func listDisks(c *cli.Context) error {
 				fmt.Printf("%s\t%s\t%s\n", disk.ID, disk.Name, disk.State)
 			}
 		}
-	} else {
+	} else if !utils.NeedsFormatting(c) {
 		if !summaryView {
 			w := new(tabwriter.Writer)
 			w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -377,7 +395,7 @@ func listDisks(c *cli.Context) error {
 }
 
 // Retrieves tasks for disk
-func getDiskTasks(c *cli.Context) error {
+func getDiskTasks(c *cli.Context, w io.Writer) error {
 	err := checkArgNum(c.Args(), 1, "disk tasks <id> [<options>]")
 	if err != nil {
 		return err
@@ -399,9 +417,13 @@ func getDiskTasks(c *cli.Context) error {
 		return err
 	}
 
-	err = printTaskList(taskList.Items, c)
-	if err != nil {
-		return err
+	if !utils.NeedsFormatting(c) {
+		err = printTaskList(taskList.Items, c)
+		if err != nil {
+			return err
+		}
+	} else {
+		utils.FormatObjects(taskList, w, c)
 	}
 
 	return nil
