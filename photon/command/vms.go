@@ -22,7 +22,9 @@ import (
 	"regexp"
 
 	"github.com/codegangsta/cli"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"io"
 )
 
 // Creates a cli.Command for vm
@@ -96,7 +98,7 @@ func GetVMCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createVM(c)
+					err := createVM(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -107,7 +109,7 @@ func GetVMCommand() cli.Command {
 				Usage:     "Delete VM with specified ID",
 				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
-					err := deleteVM(c)
+					err := deleteVM(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -118,7 +120,7 @@ func GetVMCommand() cli.Command {
 				Usage:     "Show VM info with specified ID",
 				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
-					err := showVM(c)
+					err := showVM(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -147,7 +149,7 @@ func GetVMCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := listVMs(c)
+					err := listVMs(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -175,7 +177,7 @@ func GetVMCommand() cli.Command {
 				Usage:     "Start a VM",
 				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
-					err := startVM(c)
+					err := startVM(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -186,7 +188,7 @@ func GetVMCommand() cli.Command {
 				Usage:     "Stop a VM",
 				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
-					err := stopVM(c)
+					err := stopVM(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -197,7 +199,7 @@ func GetVMCommand() cli.Command {
 				Usage:     "Suspend a VM",
 				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
-					err := suspendVM(c)
+					err := suspendVM(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -208,7 +210,7 @@ func GetVMCommand() cli.Command {
 				Usage:     "Resume a VM",
 				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
-					err := resumeVM(c)
+					err := resumeVM(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -219,7 +221,7 @@ func GetVMCommand() cli.Command {
 				Usage:     "Restart a VM",
 				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
-					err := restartVM(c)
+					err := restartVM(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -236,7 +238,7 @@ func GetVMCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := attachDisk(c)
+					err := attachDisk(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -253,7 +255,7 @@ func GetVMCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := detachDisk(c)
+					err := detachDisk(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -274,7 +276,7 @@ func GetVMCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := attachIso(c)
+					err := attachIso(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -285,7 +287,7 @@ func GetVMCommand() cli.Command {
 				Usage:     "Detach an ISO from a VM",
 				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
-					err := detachIso(c)
+					err := detachIso(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -306,7 +308,7 @@ func GetVMCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := setVMMetadata(c)
+					err := setVMMetadata(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -326,7 +328,7 @@ func GetVMCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := setVMTag(c)
+					err := setVMTag(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -337,7 +339,7 @@ func GetVMCommand() cli.Command {
 				Usage:     "Show the networks a VM is attached to",
 				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
-					err := listVMNetworks(c)
+					err := listVMNetworks(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -348,7 +350,7 @@ func GetVMCommand() cli.Command {
 				Usage:     "Get VM MKS ticket for a VM",
 				ArgsUsage: "<vm-id>",
 				Action: func(c *cli.Context) {
-					err := getVMMksTicket(c)
+					err := getVMMksTicket(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -371,7 +373,7 @@ func GetVMCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createVmImage(c)
+					err := createVmImage(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -390,7 +392,7 @@ func GetVMCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := acquireFloatingIp(c)
+					err := acquireFloatingIp(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -402,7 +404,7 @@ func GetVMCommand() cli.Command {
 				ArgsUsage:   "<vm-id>",
 				Description: "Release the floating IP associated with the given VM",
 				Action: func(c *cli.Context) {
-					err := releaseFloatingIp(c)
+					err := releaseFloatingIp(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -415,7 +417,7 @@ func GetVMCommand() cli.Command {
 
 // Sends a create VM task to client based on the cli.Context
 // Returns an error if one occurred
-func createVM(c *cli.Context) error {
+func createVM(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -451,7 +453,7 @@ func createVM(c *cli.Context) error {
 		return err
 	}
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
 		name, err = askForInput("VM name: ", name)
 		if err != nil {
 			return err
@@ -501,7 +503,7 @@ func createVM(c *cli.Context) error {
 	vmSpec.Environment = environmentMap
 	vmSpec.Subnets = networkList
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
 		fmt.Printf("\nCreating VM: %s(%s)\n", vmSpec.Name, vmSpec.Flavor)
 		fmt.Printf("Source image ID: %s\n\n", vmSpec.SourceImageID)
 		fmt.Println("Please make sure disks below are correct:")
@@ -519,9 +521,18 @@ func createVM(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		_, err = waitOnTaskOperation(createTask.ID, c)
+		vmID, err := waitOnTaskOperation(createTask.ID, c)
 		if err != nil {
 			return err
+		}
+
+		if utils.NeedsFormatting(c) {
+			vm, err := client.Esxclient.Disks.Get(vmID)
+			if err != nil {
+				return err
+			}
+			utils.FormatObject(vm, w, c)
+
 		}
 	} else {
 		fmt.Println("OK. Canceled")
@@ -532,7 +543,7 @@ func createVM(c *cli.Context) error {
 
 // Sends a delete VM task to client based on the cli.Context
 // Returns an error if one occurred
-func deleteVM(c *cli.Context) error {
+func deleteVM(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -549,9 +560,13 @@ func deleteVM(c *cli.Context) error {
 		return err
 	}
 
-	_, err = waitOnTaskOperation(deleteTask.ID, c)
+	vm, err := waitOnTaskOperation(deleteTask.ID, c)
 	if err != nil {
 		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		utils.FormatObject(vm, w, c)
 	}
 
 	return nil
@@ -559,7 +574,7 @@ func deleteVM(c *cli.Context) error {
 
 // Sends a show VM task to client based on the cli.Context
 // Returns an error if one occurred
-func showVM(c *cli.Context) error {
+func showVM(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -607,6 +622,8 @@ func showVM(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(vm, w, c)
 	} else {
 		fmt.Println("VM ID: ", vm.ID)
 		fmt.Println("  Name:        ", vm.Name)
@@ -656,7 +673,7 @@ func showVM(c *cli.Context) error {
 }
 
 // Retrieves a list of VMs, returns an error if one occurred
-func listVMs(c *cli.Context) error {
+func listVMs(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -690,7 +707,11 @@ func listVMs(c *cli.Context) error {
 		return err
 	}
 
-	err = printVMList(vmList.Items, os.Stdout, c, summaryView)
+	if !utils.NeedsFormatting(c) {
+		err = printVMList(vmList.Items, os.Stdout, c, summaryView)
+	} else {
+		utils.FormatObjects(vmList, w, c)
+	}
 	if err != nil {
 		return err
 	}
@@ -730,7 +751,7 @@ func getVMTasks(c *cli.Context) error {
 	return nil
 }
 
-func startVM(c *cli.Context) error {
+func startVM(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -753,10 +774,18 @@ func startVM(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func stopVM(c *cli.Context) error {
+func stopVM(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -779,10 +808,18 @@ func stopVM(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func suspendVM(c *cli.Context) error {
+func suspendVM(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -805,10 +842,18 @@ func suspendVM(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func resumeVM(c *cli.Context) error {
+func resumeVM(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -831,10 +876,18 @@ func resumeVM(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func restartVM(c *cli.Context) error {
+func restartVM(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -857,10 +910,18 @@ func restartVM(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func attachDisk(c *cli.Context) error {
+func attachDisk(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -888,10 +949,18 @@ func attachDisk(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func detachDisk(c *cli.Context) error {
+func detachDisk(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -919,10 +988,18 @@ func detachDisk(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func attachIso(c *cli.Context) error {
+func attachIso(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -975,10 +1052,18 @@ func attachIso(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func detachIso(c *cli.Context) error {
+func detachIso(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -1001,10 +1086,18 @@ func detachIso(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func setVMMetadata(c *cli.Context) error {
+func setVMMetadata(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -1041,10 +1134,18 @@ func setVMMetadata(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func listVMNetworks(c *cli.Context) error {
+func listVMNetworks(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -1061,14 +1162,19 @@ func listVMNetworks(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	err = printVMNetworks(networks, c.GlobalIsSet("non-interactive"))
-	if err != nil {
-		return err
+
+	if !utils.NeedsFormatting(c) {
+		err = printVMNetworks(networks, c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
+		}
+	} else {
+		utils.FormatObjects(networks, w, c)
 	}
 	return nil
 }
 
-func setVMTag(c *cli.Context) error {
+func setVMTag(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -1099,10 +1205,18 @@ func setVMTag(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func getVMMksTicket(c *cli.Context) error {
+func getVMMksTicket(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -1127,6 +1241,13 @@ func getVMMksTicket(c *cli.Context) error {
 		}
 		mksTicket := task.ResourceProperties.(map[string]interface{})
 		fmt.Printf("%s\t%v\n", task.Entity.ID, mksTicket["ticket"])
+	} else if utils.NeedsFormatting(c) {
+		task, err := client.Esxclient.Tasks.Wait(task.ID)
+		if err != nil {
+			return err
+		}
+		mksTicket := task.ResourceProperties.(map[string]interface{})
+		utils.FormatObject(mksTicket, w, c)
 	} else {
 		task, err = pollTask(task.ID)
 		if err != nil {
@@ -1138,7 +1259,7 @@ func getVMMksTicket(c *cli.Context) error {
 	return nil
 }
 
-func createVmImage(c *cli.Context) error {
+func createVmImage(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -1149,7 +1270,7 @@ func createVmImage(c *cli.Context) error {
 	name := c.String("name")
 	replicationType := c.String("image_replication")
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
 		defaultName := "image-from-vm-" + id
 		defaultReplication := "EAGER"
 
@@ -1191,10 +1312,18 @@ func createVmImage(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func acquireFloatingIp(c *cli.Context) error {
+func acquireFloatingIp(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -1222,10 +1351,18 @@ func acquireFloatingIp(c *cli.Context) error {
 		return err
 	}
 
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
+	}
+
 	return nil
 }
 
-func releaseFloatingIp(c *cli.Context) error {
+func releaseFloatingIp(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -1246,6 +1383,14 @@ func releaseFloatingIp(c *cli.Context) error {
 	_, err = waitOnTaskOperation(task.ID, c)
 	if err != nil {
 		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		vm, err := client.Esxclient.VMs.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(vm, w, c)
 	}
 
 	return nil
