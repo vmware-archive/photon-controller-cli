@@ -20,6 +20,7 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"os"
 )
 
 type MockTasksPage struct {
@@ -77,7 +78,7 @@ func TestListTasks(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = listTasks(cxt)
+	err = listTasks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error listing tasks: " + err.Error())
 	}
@@ -92,7 +93,7 @@ func TestListTasks(t *testing.T) {
 	set.String("entityKind", "vm", "entity kind")
 	cxt = cli.NewContext(nil, set, nil)
 
-	err = listTasks(cxt)
+	err = listTasks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error listing tasks with filter options: " + err.Error())
 	}
@@ -128,11 +129,11 @@ func TestShowMonitorTask(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = showTask(cxt)
+	err = showTask(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing task: " + err.Error())
 	}
-	err = monitorTask(cxt)
+	err = monitorTask(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error monitoring task: " + err.Error())
 	}
