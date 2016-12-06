@@ -210,23 +210,23 @@ func deleteNetwork(c *cli.Context) error {
 	}
 
 	var task *photon.Task
+	if !confirmed(c) {
+		fmt.Println("Canceled")
+		return nil
+	}
+
 	if sdnEnabled {
 		task, err = client.Esxclient.VirtualSubnets.Delete(id)
 	} else {
 		task, err = client.Esxclient.Subnets.Delete(id)
 	}
-
 	if err != nil {
 		return err
 	}
 
-	if confirmed(c) {
-		_, err = waitOnTaskOperation(task.ID, c)
-		if err != nil {
-			return err
-		}
-	} else {
-		fmt.Println("OK. Canceled")
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
 	}
 	return nil
 }
