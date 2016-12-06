@@ -20,6 +20,7 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"os"
 )
 
 type MockVMsPage struct {
@@ -118,7 +119,7 @@ func TestCreateDeleteVM(t *testing.T) {
 	set.String("network", "networkid1", "VM Network")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = createVM(cxt)
+	err = createVM(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating VM: " + err.Error())
 	}
@@ -204,7 +205,7 @@ func TestShowVM(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = showVM(cxt)
+	err = showVM(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing VM: " + err.Error())
 	}
@@ -249,7 +250,7 @@ func TestStartVM(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = startVM(cxt)
+	err = startVM(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error starting VM: " + err.Error())
 	}
@@ -294,7 +295,7 @@ func TestStopVM(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = stopVM(cxt)
+	err = stopVM(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error stoping VM: " + err.Error())
 	}
@@ -339,7 +340,7 @@ func TestResumeVM(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = resumeVM(cxt)
+	err = resumeVM(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error resuming VM: " + err.Error())
 	}
@@ -384,7 +385,7 @@ func TestRestartVM(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = restartVM(cxt)
+	err = restartVM(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error restarting VM: " + err.Error())
 	}
@@ -429,7 +430,7 @@ func TestSuspendVM(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = suspendVM(cxt)
+	err = suspendVM(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error suspending VM: " + err.Error())
 	}
@@ -473,7 +474,7 @@ func TestAttachDisk(t *testing.T) {
 	set.String("disk", "fake_disk_ID", "attach disk")
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = attachDisk(cxt)
+	err = attachDisk(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error attaching disk: " + err.Error())
 	}
@@ -517,7 +518,7 @@ func TestDetachDisk(t *testing.T) {
 	set.String("disk", "fake_disk_ID", "detach disk")
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = detachDisk(cxt)
+	err = detachDisk(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error detaching disk: " + err.Error())
 	}
@@ -568,7 +569,7 @@ func TestAttachDetachISO(t *testing.T) {
 	set.String("path", "../../testdata/ttylinux-pc_i486-16.1.iso", "attach iso")
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = attachIso(cxt)
+	err = attachIso(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error attaching iso: " + err.Error())
 	}
@@ -608,7 +609,7 @@ func TestAttachDetachISO(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	cxt = cli.NewContext(nil, set, nil)
-	err = detachIso(cxt)
+	err = detachIso(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error detaching iso: " + err.Error())
 	}
@@ -715,7 +716,7 @@ func TestListVMs(t *testing.T) {
 	set.String("project", "fake_project_name", "project name")
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = listVMs(cxt)
+	err = listVMs(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error listing VMs: " + err.Error())
 	}
@@ -822,7 +823,7 @@ func TestFindVMsByName(t *testing.T) {
 	set.String("name", vmName, "VM name")
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = listVMs(cxt)
+	err = listVMs(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error listing VMs by name: " + err.Error())
 	}
@@ -877,7 +878,7 @@ func TestListVMTasks(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = getVMTasks(cxt)
+	err = getVMTasks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error showing VM tasks: " + err.Error())
 	}
@@ -930,7 +931,7 @@ func TestSetVMMetadata(t *testing.T) {
 
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = setVMMetadata(cxt)
+	err = setVMMetadata(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error setting vm metadata: " + err.Error())
 	}
@@ -989,7 +990,7 @@ func TestVMNetworks(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = listVMNetworks(cxt)
+	err = listVMNetworks(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error getting vm networks: " + err.Error())
 	}
@@ -1041,7 +1042,7 @@ func TestSetVMTag(t *testing.T) {
 
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = setVMTag(cxt)
+	err = setVMTag(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error setting vm tag: " + err.Error())
 	}
@@ -1096,7 +1097,7 @@ func TestGetVMMksTicket(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, nil)
 
-	err = getVMMksTicket(cxt)
+	err = getVMMksTicket(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error getting vm mks ticket: " + err.Error())
 	}
@@ -1155,7 +1156,7 @@ func TestCreateVMImage(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = createVmImage(cxt)
+	err = createVmImage(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating VM image: " + err.Error())
 	}
@@ -1215,7 +1216,7 @@ func TestAcquireFloatingIp(t *testing.T) {
 	set.String("network_id", "fake_network_id", "network id")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = acquireFloatingIp(cxt)
+	err = acquireFloatingIp(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating VM image: " + err.Error())
 	}
@@ -1274,7 +1275,7 @@ func TestReleaseFloatingIp(t *testing.T) {
 	}
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = releaseFloatingIp(cxt)
+	err = releaseFloatingIp(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating VM image: " + err.Error())
 	}

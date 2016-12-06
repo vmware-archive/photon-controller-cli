@@ -138,7 +138,7 @@ func getStatus(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	if utils.NeedsFormatting(c) {
+	if !utils.NeedsFormatting(c) {
 		err = printStatus(status)
 	} else {
 		utils.FormatObject(status, w, c)
