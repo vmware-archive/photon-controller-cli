@@ -23,6 +23,8 @@ import (
 	"encoding/json"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/utils"
+	"io"
 )
 
 type stepSorter []photon.Step
@@ -59,7 +61,7 @@ func GetTasksCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := listTasks(c)
+					err := listTasks(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -70,7 +72,7 @@ func GetTasksCommand() cli.Command {
 				Usage:     "Show task info with specified ID",
 				ArgsUsage: "<task-id>",
 				Action: func(c *cli.Context) {
-					err := showTask(c)
+					err := showTask(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -81,7 +83,7 @@ func GetTasksCommand() cli.Command {
 				Usage:     "Monitor task progress with specified ID",
 				ArgsUsage: "<task-id>",
 				Action: func(c *cli.Context) {
-					err := monitorTask(c)
+					err := monitorTask(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -93,7 +95,7 @@ func GetTasksCommand() cli.Command {
 }
 
 // Retrieves a list of tasks, returns an error if one occurred
-func listTasks(c *cli.Context) error {
+func listTasks(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -121,11 +123,12 @@ func listTasks(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 // Show the task current state, returns an error if one occurred
-func showTask(c *cli.Context) error {
+func showTask(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -152,6 +155,8 @@ func showTask(c *cli.Context) error {
 	if c.GlobalIsSet("non-interactive") {
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%d\t%d\t%v\n", task.ID, task.State, task.Entity.ID, task.Entity.Kind,
 			task.Operation, task.StartedTime, task.EndTime, resourceProperties)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(task, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
@@ -169,16 +174,19 @@ func showTask(c *cli.Context) error {
 			return err
 		}
 	}
-	err = printTaskSteps(task, c.GlobalIsSet("non-interactive"))
-	if err != nil {
-		return err
+
+	if !utils.NeedsFormatting(c) {
+		err = printTaskSteps(task, c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 // Track the progress of the task, returns an error if one occurred
-func monitorTask(c *cli.Context) error {
+func monitorTask(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -196,6 +204,12 @@ func monitorTask(c *cli.Context) error {
 			return err
 		}
 		fmt.Printf("%s\t%s\t%s\t%s\n", task.ID, task.State, task.Entity.ID, task.Entity.Kind)
+	} else if utils.NeedsFormatting(c) {
+		task, err := client.Esxclient.Tasks.Wait(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(task, w, c)
 	} else {
 		task, err := pollTask(id)
 		if err != nil {
