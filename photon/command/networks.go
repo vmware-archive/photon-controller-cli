@@ -19,6 +19,7 @@ import (
 	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"errors"
+
 	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
 )
@@ -201,23 +202,23 @@ func deleteNetwork(c *cli.Context) error {
 	}
 
 	var task *photon.Task
+	if !confirmed(c.GlobalIsSet("non-interactive")) {
+		fmt.Println("Canceled")
+		return nil
+	}
+
 	if sdnEnabled {
 		task, err = client.Esxclient.VirtualSubnets.Delete(id)
 	} else {
 		task, err = client.Esxclient.Subnets.Delete(id)
 	}
-
 	if err != nil {
 		return err
 	}
 
-	if confirmed(c.GlobalIsSet("non-interactive")) {
-		_, err = waitOnTaskOperation(task.ID, c)
-		if err != nil {
-			return err
-		}
-	} else {
-		fmt.Println("OK. Canceled")
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
 	}
 	return nil
 }
