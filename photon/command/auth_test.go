@@ -31,22 +31,22 @@ import (
 //   "alg": "RS256"
 // }
 // {
-//   "sub": "ec-admin@esxcloud",
+//   "sub": "ec-admin@photon-controller",
 //   "aud": [
-//     "ec-admin@esxcloud",
-//     "rs_esxcloud"
+//     "ec-admin@photon-controller",
+//     "rs_photon_controller"
 //   ],
-//   "scope": "openid offline_access rs_esxcloud at_groups",
-//   "iss": "https:\/\/10.146.64.238\/openidconnect\/esxcloud",
+//   "scope": "openid offline_access rs_photon_controller at_groups",
+//   "iss": "https:\/\/10.146.64.238\/openidconnect\/photon-controller",
 //   "groups": [
-//     "esxcloud\\ESXCloudAdmins",
-//     "esxcloud\\Everyone"
+//     "photon-controller\\Admins",
+//     "photon-controller\\Everyone"
 //   ],
 //   "token_class": "access_token",
 //   "token_type": "Bearer",
 //   "exp": 1461803127,
 //   "iat": 1461795927,
-//   "tenant": "esxcloud",
+//   "tenant": "photon-controller",
 //   "jti": "CfPby7BAlaOI3Uj_TEq_UJOJmYXJiVOYuCYAXPw2l2U"
 // }
 var accessToken = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJlYy1hZG1pbkBlc3hjbG91ZCIsImF1ZCI6WyJlYy1hZG1pbkB" +
@@ -69,15 +69,15 @@ var accessToken = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJlYy1hZG1pbkBlc3hjbG91ZCIsImF1
 //   "alg": "RS256"
 // }
 // {
-//   "sub": "ec-admin@esxcloud",
-//   "aud": "ec-admin@esxcloud",
-//   "scope": "openid offline_access rs_esxcloud at_groups",
-//   "iss": "https:\/\/10.146.64.238\/openidconnect\/esxcloud",
+//   "sub": "ec-admin@photon-controller",
+//   "aud": "ec-admin@photon-controller",
+//   "scope": "openid offline_access rs_photon_controller at_groups",
+//   "iss": "https:\/\/10.146.64.238\/openidconnect\/photon-controller",
 //   "token_class": "refresh_token",
 //   "token_type": "Bearer",
 //   "exp": 1461817527,
 //   "iat": 1461795927,
-//   "tenant": "esxcloud",
+//   "tenant": "photon-controller",
 //   "jti": "yE2jPR59JYn-c3y5zirI1KwZGQ8HUi7o2TEwLfnC5OI"
 // }
 var refreshToken = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJlYy1hZG1pbkBlc3hjbG91ZCIsImF1ZCI6ImVjLWFkbWluQG" +
@@ -94,9 +94,9 @@ var refreshToken = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJlYy1hZG1pbkBlc3hjbG91ZCIsImF
 	"SvfvqAwOaq3XNsHQKSgt7Mxxtz72CZxnci4LHWTytUHQOJtd6pYa667A6Dqa0QgH11WOOvgZE_G2oLpTq2-BHPlxl6Csom" +
 	"pBXzdiTYWQ-pe0nPmAZY0I"
 
-const expectedSubject = "ec-admin@esxcloud"
-const expectedAdminGroup = `esxcloud\\ESXCloudAdmins`
-const expectedEveryoneGroup = `esxcloud\\Everyone`
+const expectedSubject = "ec-admin@photon-controller"
+const expectedAdminGroup = `photon-controller\\Admins`
+const expectedEveryoneGroup = `photon-controller\\Everyone`
 const expectedDate = `2016-04-27`
 
 func TestShow(t *testing.T) {

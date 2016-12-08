@@ -4,7 +4,7 @@ set -e
 
 # Get path of executable binary file
 path=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-cli="$path/../../../bin/esxcloud-cli"
+cli="$path/../../../bin/photon"
 
 # Function to parse json string in the format of k1:v1,k2:v2...
 # take two input: string variable and key

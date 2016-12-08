@@ -4,7 +4,7 @@ set -e
 
 # Get path of executable binary file
 path=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-cli="$path/../../../bin/esxcloud-cli"
+cli="$path/../../../bin/photon"
 
 # Set target with hardcoded endpoint
 $cli -n target set "http://localhost:9080"

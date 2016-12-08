@@ -3,7 +3,7 @@
 set -e
 
 path=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-cli="$path/../../../bin/esxcloud-cli"
+cli="$path/../../../bin/photon"
 
 # Store initial list of tenants
 initialTenants=$($cli -n tenant list | awk '{print $2}')
