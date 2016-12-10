@@ -10,11 +10,12 @@
 package configuration_test
 
 import (
+	"io/ioutil"
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/vmware/photon-controller-cli/photon/configuration"
-	"io/ioutil"
-	"os"
 )
 
 var _ = Describe("Config", func() {

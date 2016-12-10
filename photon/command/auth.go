@@ -15,19 +15,18 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"strings"
-
-	"github.com/codegangsta/cli"
-	"github.com/vmware/photon-controller-go-sdk/photon"
-	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
-
 	"os"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/configuration"
 
 	"golang.org/x/crypto/ssh/terminal"
+
+	"github.com/urfave/cli"
+	"github.com/vmware/photon-controller-go-sdk/photon"
+	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 )
 
 // Create a cli.command object for command "auth"

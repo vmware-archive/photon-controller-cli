@@ -24,7 +24,7 @@ import (
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
 	"github.com/vmware/photon-controller-cli/photon/utils"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
@@ -221,14 +221,20 @@ func checkArgNum(args []string, num int, usage string) error {
 func checkArgCount(c *cli.Context, num int) error {
 	args := c.Args()
 	if len(args) < num {
-		if c.App != nil { // may be nill during tests, can cause panic
-			cli.ShowSubcommandHelp(c)
+		if c.App != nil { // may be nil during tests, can cause panic
+			err := cli.ShowSubcommandHelp(c)
+			if err != nil {
+				return err
+			}
 		}
 		return fmt.Errorf("Insufficient arguments: expected %d, provided %d", num, len(args))
 	}
 	if len(args) > num {
-		if c.App != nil { // may be nill during tests, can cause panic
-			cli.ShowSubcommandHelp(c)
+		if c.App != nil { // may be nil during tests, can cause panic
+			err := cli.ShowSubcommandHelp(c)
+			if err != nil {
+				return err
+			}
 		}
 		return fmt.Errorf("Unknown arguments: %v", args[num:])
 	}

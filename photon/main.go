@@ -11,11 +11,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/codegangsta/cli"
+	"os"
+
+	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/command"
 	"github.com/vmware/photon-controller-cli/photon/utils"
-	"os"
 )
 
 var commandName = ""

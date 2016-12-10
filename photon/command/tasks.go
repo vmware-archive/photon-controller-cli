@@ -10,6 +10,7 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -17,10 +18,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
-
-	"encoding/json"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 )

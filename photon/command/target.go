@@ -12,20 +12,19 @@ package command
 import (
 	"crypto/md5"
 	"crypto/sha1"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"log"
 	"net/url"
 	"os"
 
-	"github.com/codegangsta/cli"
-
-	"crypto/x509"
+	"github.com/urfave/cli"
+	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
 	"github.com/vmware/photon-controller-cli/photon/utils"
-	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 
 	"golang.org/x/crypto/ssh/terminal"
 )

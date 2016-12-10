@@ -12,12 +12,14 @@ package command
 import (
 	"encoding/json"
 	"flag"
-	"github.com/codegangsta/cli"
-	"github.com/vmware/photon-controller-cli/photon/client"
-	"github.com/vmware/photon-controller-cli/photon/mocks"
-	"github.com/vmware/photon-controller-go-sdk/photon"
 	"net/http"
 	"testing"
+
+	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/mocks"
+
+	"github.com/urfave/cli"
+	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
 func TestCheckSoftwareDefinedNetworkEnabled(t *testing.T) {

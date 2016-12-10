@@ -3,12 +3,6 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "wA/M4y8ZsX+nr9DFTzUATmaIhsI=",
-			"path": "github.com/codegangsta/cli",
-			"revision": "5db74198dee1cfe60cf06a611d03a420361baad6",
-			"revisionTime": "2016-02-18T03:24:44Z"
-		},
-		{
 			"checksumSHA1": "dTN0dHuXwOjCkIsiKIbSRFq9pCU=",
 			"path": "github.com/onsi/ginkgo",
 			"revision": "609d49a3caf785206c0f285755da0622c49eec99",
@@ -169,6 +163,14 @@
 			"path": "github.com/onsi/gomega/types",
 			"revision": "9ed8da19f2156b87a803a8fdf6d126f627a12db1",
 			"revisionTime": "2016-07-18T19:04:35Z"
+		},
+		{
+			"checksumSHA1": "LMu1NsthSqcXfKu0m6YGPAmwBcY=",
+			"path": "github.com/urfave/cli",
+			"revision": "0bdeddeeb0f650497d603c4ad7b20cfe685682f6",
+			"revisionTime": "2016-11-22T04:36:10Z",
+			"version": "v1",
+			"versionExact": "v1.19.1"
 		},
 		{
 			"checksumSHA1": "U1M+tHr+FgdHOg+VIJ1FdjdVJ9w=",

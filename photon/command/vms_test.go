@@ -13,14 +13,14 @@ import (
 	"encoding/json"
 	"flag"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/mocks"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
-	"os"
 )
 
 type MockVMsPage struct {

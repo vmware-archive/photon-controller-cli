@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"syscall"
 	"testing"
 	"time"
@@ -24,9 +25,8 @@ import (
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
 	"github.com/vmware/photon-controller-cli/photon/mocks"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
-	"os"
 )
 
 func TestGetStatus(t *testing.T) {

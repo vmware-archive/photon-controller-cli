@@ -21,7 +21,7 @@ import (
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/mocks"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 

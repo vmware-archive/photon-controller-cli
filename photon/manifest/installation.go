@@ -10,9 +10,10 @@
 package manifest
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"regexp"
+
+	"gopkg.in/yaml.v2"
 )
 
 type Installation struct {

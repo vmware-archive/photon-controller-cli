@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -21,12 +22,12 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/manifest"
 	"github.com/vmware/photon-controller-cli/photon/utils"
+
+	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
-	"io"
 )
 
 // Create a cli.command object for command "system"

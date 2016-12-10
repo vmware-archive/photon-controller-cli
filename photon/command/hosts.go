@@ -22,7 +22,7 @@ import (
 
 	"encoding/json"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
 
 	"golang.org/x/crypto/ssh/terminal"

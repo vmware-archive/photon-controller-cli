@@ -19,7 +19,7 @@ import (
 
 	"github.com/vmware/photon-controller-go-sdk/photon"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
 )
 

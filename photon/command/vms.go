@@ -12,19 +12,18 @@ package command
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
-
-	"regexp"
-
-	"github.com/codegangsta/cli"
 	"github.com/vmware/photon-controller-cli/photon/utils"
+
+	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
-	"io"
 )
 
 // Creates a cli.Command for vm

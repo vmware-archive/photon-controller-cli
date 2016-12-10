@@ -20,9 +20,9 @@ import (
 	"github.com/vmware/photon-controller-cli/photon/client"
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
 	"github.com/vmware/photon-controller-cli/photon/mocks"
-	"github.com/vmware/photon-controller-go-sdk/photon"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
+	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
 func TestSetEndpoint(t *testing.T) {

@@ -12,10 +12,11 @@ package manifest_test
 import (
 	. "github.com/vmware/photon-controller-cli/photon/manifest"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"io/ioutil"
 	"os"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Installation", func() {

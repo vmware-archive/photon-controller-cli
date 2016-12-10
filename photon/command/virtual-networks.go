@@ -16,10 +16,11 @@ import (
 	"strconv"
 	"text/tabwriter"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
+	"github.com/vmware/photon-controller-go-sdk/photon"
+
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/utils"
-	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
 const (
