@@ -166,12 +166,25 @@ func GetProjectsCommand() cli.Command {
 				},
 			},
 			{
-				Name:      "set_security_groups",
+				Name:      "set-security-groups",
 				Usage:     "Set security groups for a project",
 				ArgsUsage: "<project-id> <comma separated list of groups>",
 				Description: "Set the list of Lightwave groups that can use this project. This may only be\n" +
 					"   be set by a member of the project. Be cautious--you can remove your own access if you specify\n" +
 					"   the wrong set of groups.",
+				Action: func(c *cli.Context) {
+					err := setSecurityGroupsForProject(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Hidden:      true,
+				Name:        "set_security_groups",
+				Usage:       "Set security groups for a project",
+				ArgsUsage:   "<project-id> <comma separated list of groups>",
+				Description: "Deprecated, use set-security-groups instead",
 				Action: func(c *cli.Context) {
 					err := setSecurityGroupsForProject(c)
 					if err != nil {
