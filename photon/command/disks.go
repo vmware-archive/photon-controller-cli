@@ -34,7 +34,8 @@ import (
 //              tasks;  Usage: disk tasks <id> [<options>]
 func GetDiskCommand() cli.Command {
 	command := cli.Command{
-		Name: "disk",
+		Name:  "disk",
+		Usage: "Options for persistent disks",
 		Subcommands: []cli.Command{
 			{
 				Name:      "create",

@@ -61,9 +61,22 @@ func GetSystemCommand() cli.Command {
 				},
 			},
 			{
-				Name:      "addHosts",
+				Name:      "add-hosts",
 				Usage:     "Add multiple hosts",
 				ArgsUsage: "<host-file>",
+				Action: func(c *cli.Context) {
+					err := addHosts(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Hidden:      true,
+				Name:        "addHosts",
+				Usage:       "Add multiple hosts",
+				ArgsUsage:   "<host-file>",
+				Description: "Deprecated, use add-hosts instead",
 				Action: func(c *cli.Context) {
 					err := addHosts(c)
 					if err != nil {
