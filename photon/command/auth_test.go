@@ -24,6 +24,7 @@ import (
 
 	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"os"
 )
 
 // This access token has to two JSON-encoded chunks plus a signature:
@@ -119,7 +120,7 @@ func TestShow(t *testing.T) {
 
 	set := flag.NewFlagSet("test", 0)
 	cxt := cli.NewContext(nil, set, nil)
-	err = show(cxt)
+	err = show(cxt, os.Stdout)
 	if err != nil {
 		t.Error(err)
 	}
@@ -200,14 +201,14 @@ func TestShowLoginTokenRaw(t *testing.T) {
 	}
 
 	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
-	err := globalFlags.Parse([]string{})
+	globalFlags.Bool("detail", true, "detail")
+	err := globalFlags.Parse([]string{"--detail"})
 	if err != nil {
 		t.Error(err)
 	}
 	globalCtx := cli.NewContext(nil, globalFlags, nil)
 	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
-	commandFlags.Bool("raw", true, "raw")
-	err = commandFlags.Parse([]string{"--raw"})
+	err = commandFlags.Parse([]string{})
 	if err != nil {
 		t.Error(err)
 	}
