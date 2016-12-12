@@ -25,6 +25,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/urfave/cli"
+	"github.com/vmware/photon-controller-cli/photon/utils"
 	"github.com/vmware/photon-controller-go-sdk/photon"
 	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 )
@@ -42,7 +43,7 @@ func GetAuthCommand() cli.Command {
 				Description: "Show information about the authentication service (Lightwave) used by the \n" +
 					"   current Photon Controller target.",
 				Action: func(c *cli.Context) {
-					err := show(c)
+					err := show(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -53,13 +54,8 @@ func GetAuthCommand() cli.Command {
 				Usage:     "Show login token",
 				ArgsUsage: " ",
 				Description: "Show information about the current token being used to authenticate with \n" +
-					"   Photon Controller. The token is created by doing 'photon target login'",
-				Flags: []cli.Flag{
-					cli.BoolFlag{
-						Name:  "raw, r",
-						Usage: "raw, prints the full JSON text of the token",
-					},
-				},
+					"   Photon Controller. The token is created by doing 'photon target login' \n" +
+					"   Using the --detail flag will print the decoded token to stdout.",
 				Action: func(c *cli.Context) {
 					err := showLoginToken(c)
 					if err != nil {
@@ -72,7 +68,8 @@ func GetAuthCommand() cli.Command {
 				Usage:     "Retrieve access and refresh tokens",
 				ArgsUsage: " ",
 				Description: "Retrieve a token you can use with the API. You will get both the API token and" +
-					"   API refresh token, which allows you to refresh the API token when it expires.",
+					"   API refresh token, which allows you to refresh the API token when it \n" +
+					"   expires. Using the --detail flag will print the decoded token to stdout. ",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "username, u",
@@ -82,13 +79,9 @@ func GetAuthCommand() cli.Command {
 						Name:  "password, p",
 						Usage: "password, if this is provided a username needs to be provided as well",
 					},
-					cli.BoolFlag{
-						Name:  "raw, r",
-						Usage: "raw, prints the full JSON text of the token",
-					},
 				},
 				Action: func(c *cli.Context) {
-					err := getApiTokens(c)
+					err := getApiTokens(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -100,7 +93,7 @@ func GetAuthCommand() cli.Command {
 }
 
 // Get auth info
-func show(c *cli.Context) error {
+func show(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -115,9 +108,13 @@ func show(c *cli.Context) error {
 		return err
 	}
 
-	err = printAuthInfo(auth, c.GlobalIsSet("non-interactive"))
-	if err != nil {
-		return err
+	if !utils.NeedsFormatting(c) {
+		err = printAuthInfo(auth, c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
+		}
+	} else {
+		utils.FormatObject(auth, w, c)
 	}
 
 	return nil
@@ -145,20 +142,21 @@ func showLoginTokenWriter(c *cli.Context, w io.Writer, config *configuration.Con
 		err = fmt.Errorf("No login token available")
 		return err
 	}
-	if !c.GlobalIsSet("non-interactive") {
-		raw := c.Bool("raw")
-		if raw {
-			dumpTokenDetailsRaw(w, "Login Access Token", config.Token)
-		} else {
-			dumpTokenDetails(w, "Login Access Token", config.Token)
-		}
-	} else {
+	if c.GlobalIsSet("detail") {
+		dumpTokenDetailsRaw(w, "Login Access Token", config.Token)
+	} else if c.GlobalIsSet("non-interactive") {
 		fmt.Fprintf(w, "%s\n", config.Token)
+	} else if utils.NeedsFormatting(c) {
+		mytoken := photon.TokenOptions{AccessToken: config.Token}
+		utils.FormatObject(mytoken, w, c)
+	} else {
+		// General mode
+		dumpTokenDetails(w, "Login Access Token", config.Token)
 	}
 	return nil
 }
 
-func getApiTokens(c *cli.Context) error {
+func getApiTokens(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -167,7 +165,7 @@ func getApiTokens(c *cli.Context) error {
 	username := c.String("username")
 	password := c.String("password")
 
-	if !c.GlobalIsSet("non-interactive") {
+	if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
 		username, err = askForInput("User name (username@tenant): ", username)
 		if err != nil {
 			return err
@@ -197,17 +195,17 @@ func getApiTokens(c *cli.Context) error {
 		return err
 	}
 
-	if !c.GlobalIsSet("non-interactive") {
-		raw := c.Bool("raw")
-		if raw {
-			dumpTokenDetailsRaw(os.Stdout, "API Access Token", tokens.AccessToken)
-			dumpTokenDetailsRaw(os.Stdout, "API Refresh Token", tokens.RefreshToken)
-		} else {
-			dumpTokenDetails(os.Stdout, "API Access Token", tokens.AccessToken)
-			dumpTokenDetails(os.Stdout, "API Refresh Token", tokens.RefreshToken)
-		}
-	} else {
+	if c.GlobalIsSet("detail") {
+		dumpTokenDetailsRaw(os.Stdout, "API Access Token", tokens.AccessToken)
+		dumpTokenDetailsRaw(os.Stdout, "API Refresh Token", tokens.RefreshToken)
+	} else if c.GlobalIsSet("non-interactive") {
 		fmt.Printf("%s\t%s", tokens.AccessToken, tokens.RefreshToken)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(tokens, w, c)
+	} else {
+		// General mode
+		dumpTokenDetails(os.Stdout, "API Access Token", tokens.AccessToken)
+		dumpTokenDetails(os.Stdout, "API Refresh Token", tokens.RefreshToken)
 	}
 
 	return nil
