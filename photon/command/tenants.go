@@ -133,6 +133,21 @@ func GetTenantsCommand() cli.Command {
 				},
 			},
 			{
+				Name:      "set-security-groups",
+				Usage:     "Set security groups for a tenant",
+				ArgsUsage: "<tenant-id> <comma separated list of groups>",
+				Description: "Set the list of Lightwave groups that can administer this tenant. This may only be\n" +
+					"   be set by a member of the tenant. Be cautious--you can remove your own access if you specify\n" +
+					"   the wrong set of groups.",
+				Action: func(c *cli.Context) {
+					err := setSecurityGroups(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Hidden:    true,
 				Name:      "set_security_groups",
 				Usage:     "Set security groups for a tenant",
 				ArgsUsage: "<tenant-id> <comma separated list of groups>",

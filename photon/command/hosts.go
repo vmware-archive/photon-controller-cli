@@ -76,8 +76,9 @@ func GetHostsCommand() cli.Command {
 						Usage: "metadata for the host",
 					},
 					cli.StringFlag{
-						Name:  "deployment_id, d",
-						Usage: "deployment id to create host",
+						Hidden: true,
+						Name:   "deployment_id, d",
+						Usage:  "deployment id to create host",
 					},
 				},
 				Action: func(c *cli.Context) {

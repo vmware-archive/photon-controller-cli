@@ -197,6 +197,19 @@ func GetClusterCommand() cli.Command {
 				},
 			},
 			{
+				Name:        "list-vms",
+				Usage:       "List the VMs associated with a cluster",
+				ArgsUsage:   "cluster-id",
+				Description: "Example: photon cluster list_vms 9b159e92-9495-49a4-af58-53ad4764f616",
+				Action: func(c *cli.Context) {
+					err := listVms(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Hidden:      true,
 				Name:        "list_vms",
 				Usage:       "List the VMs associated with a cluster",
 				ArgsUsage:   "cluster-id",
