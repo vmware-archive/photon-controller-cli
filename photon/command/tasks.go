@@ -101,7 +101,7 @@ func listTasks(c *cli.Context) error {
 	entityKind := c.String("entityKind")
 	state := c.String("state")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func listTasks(c *cli.Context) error {
 		EntityID:   entityId,
 		EntityKind: entityKind,
 	}
-	taskList, err := client.Esxclient.Tasks.GetAll(options)
+	taskList, err := client.Photonclient.Tasks.GetAll(options)
 	if err != nil {
 		return err
 	}
@@ -131,12 +131,12 @@ func showTask(c *cli.Context) error {
 	}
 	id := c.Args()[0]
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, taskError := client.Esxclient.Tasks.Get(id)
+	task, taskError := client.Photonclient.Tasks.Get(id)
 	if taskError != nil && task == nil {
 		return taskError
 	}
@@ -184,13 +184,13 @@ func monitorTask(c *cli.Context) error {
 	}
 	id := c.Args()[0]
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		task, err := client.Esxclient.Tasks.Wait(id)
+		task, err := client.Photonclient.Tasks.Wait(id)
 		if err != nil {
 			return err
 		}

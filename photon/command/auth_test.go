@@ -115,7 +115,7 @@ func TestShow(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	cxt := cli.NewContext(nil, set, nil)

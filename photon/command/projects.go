@@ -198,7 +198,7 @@ func createProject(c *cli.Context, w io.Writer) error {
 	percent := c.Float64("percent")
 	securityGroups := c.String("security-groups")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func createProject(c *cli.Context, w io.Writer) error {
 		if len(securityGroups) > 0 {
 			projectSpec.SecurityGroups = regexp.MustCompile(`\s*,\s*`).Split(securityGroups, -1)
 		}
-		createTask, err := client.Esxclient.Tenants.CreateProject(tenant.ID, &projectSpec)
+		createTask, err := client.Photonclient.Tenants.CreateProject(tenant.ID, &projectSpec)
 		if err != nil {
 			return err
 		}
@@ -266,7 +266,7 @@ func createProject(c *cli.Context, w io.Writer) error {
 		}
 
 		if utils.NeedsFormatting(c) {
-			project, err := client.Esxclient.Projects.Get(id)
+			project, err := client.Photonclient.Projects.Get(id)
 			if err != nil {
 				return err
 			}
@@ -288,12 +288,12 @@ func deleteProject(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deleteTask, err := client.Esxclient.Projects.Delete(id)
+	deleteTask, err := client.Photonclient.Projects.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -318,12 +318,12 @@ func showProject(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	project, err := client.Esxclient.Projects.Get(id)
+	project, err := client.Photonclient.Projects.Get(id)
 	if err != nil {
 		return err
 	}
@@ -406,7 +406,7 @@ func setProject(c *cli.Context) error {
 	}
 	name := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -446,7 +446,7 @@ func listProjects(c *cli.Context, w io.Writer) error {
 	}
 	tenantName := c.String("tenant")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -456,7 +456,7 @@ func listProjects(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	projects, err := client.Esxclient.Tenants.GetProjects(tenant.ID, nil)
+	projects, err := client.Photonclient.Tenants.GetProjects(tenant.ID, nil)
 	if err != nil {
 		return err
 	}
@@ -509,7 +509,7 @@ func getProjectTasks(c *cli.Context, w io.Writer) error {
 	state := c.String("state")
 	kind := c.String("kind")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -519,7 +519,7 @@ func getProjectTasks(c *cli.Context, w io.Writer) error {
 		Kind:  kind,
 	}
 
-	taskList, err := client.Esxclient.Projects.GetTasks(id, options)
+	taskList, err := client.Photonclient.Projects.GetTasks(id, options)
 	if err != nil {
 		return err
 	}
@@ -542,12 +542,12 @@ func setSecurityGroupsForProject(c *cli.Context) error {
 	securityGroups := &photon.SecurityGroupsSpec{
 		Items: regexp.MustCompile(`\s*,\s*`).Split(c.Args()[1], -1),
 	}
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.Projects.SetSecurityGroups(id, securityGroups)
+	task, err := client.Photonclient.Projects.SetSecurityGroups(id, securityGroups)
 	if err != nil {
 		return err
 	}

@@ -188,12 +188,12 @@ func createTenant(c *cli.Context, w io.Writer) error {
 	}
 
 	var err error
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	createTask, err := client.Esxclient.Tenants.Create(tenantSpec)
+	createTask, err := client.Photonclient.Tenants.Create(tenantSpec)
 
 	if err != nil {
 		return err
@@ -205,7 +205,7 @@ func createTenant(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		tenant, err := client.Esxclient.Tenants.Get(id)
+		tenant, err := client.Photonclient.Tenants.Get(id)
 		if err != nil {
 			return err
 		}
@@ -221,12 +221,12 @@ func listTenants(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	tenants, err := client.Esxclient.Tenants.GetAll()
+	tenants, err := client.Photonclient.Tenants.GetAll()
 	if err != nil {
 		return err
 	}
@@ -263,12 +263,12 @@ func deleteTenant(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deleteTask, err := client.Esxclient.Tenants.Delete(id)
+	deleteTask, err := client.Photonclient.Tenants.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -293,12 +293,12 @@ func showTenant(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	tenant, err := client.Esxclient.Tenants.Get(id)
+	tenant, err := client.Photonclient.Tenants.Get(id)
 	if err != nil {
 		return err
 	}
@@ -333,7 +333,7 @@ func setTenant(c *cli.Context) error {
 	}
 	name := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -405,12 +405,12 @@ func getTenantTasks(c *cli.Context, w io.Writer) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	taskList, err := client.Esxclient.Tenants.GetTasks(id, options)
+	taskList, err := client.Photonclient.Tenants.GetTasks(id, options)
 	if err != nil {
 		return err
 	}
@@ -437,12 +437,12 @@ func setSecurityGroups(c *cli.Context) error {
 		Items: items,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.Tenants.SetSecurityGroups(id, securityGroups)
+	task, err := client.Photonclient.Tenants.SetSecurityGroups(id, securityGroups)
 	if err != nil {
 		return err
 	}

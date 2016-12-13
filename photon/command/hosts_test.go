@@ -64,7 +64,7 @@ func TestCreateDeleteHost(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	set.String("username", "u", "username")
@@ -160,7 +160,7 @@ func TestListHosts(t *testing.T) {
 	mocks.Activate(true)
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
 	globalFlags.String("output", "json", "output")
@@ -314,7 +314,7 @@ func TestShowHost(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{expectedStruct.ID})
@@ -365,7 +365,7 @@ func TestSetHostAvailabilityZone(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"fake-host-id", "fake-availability-zone-id"})
@@ -421,7 +421,7 @@ func TestHostTasks(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"1"})
@@ -473,7 +473,7 @@ func TestHostGetVMs(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"1"})
@@ -523,7 +523,7 @@ func TestSuspendAndResumeHost(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"fake-host-id"})
@@ -614,7 +614,7 @@ func TestEnterAndExitMaintenanceMode(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"fake-host-id"})

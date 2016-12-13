@@ -105,12 +105,12 @@ func testGetEndpoint(t *testing.T, endpoint string, ephttps bool, skipVerify boo
 		t.Error("Not expecting error saving config file")
 	}
 
-	Esxclient, err = get()
+	Photonclient, err = get()
 	if err != nil {
 		t.Error("Not expecting error trying to get client when config file has valid endpoint")
 	}
 
-	if Esxclient.Endpoint != endpoint {
+	if Photonclient.Endpoint != endpoint {
 		t.Error("Endpoint of client not match endpoint in config file")
 	}
 }

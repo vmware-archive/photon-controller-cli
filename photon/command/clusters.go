@@ -320,7 +320,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 
 	const DEFAULT_WORKER_COUNT = 1
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -504,7 +504,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	}
 
 	if confirmed(c) {
-		createTask, err := client.Esxclient.Projects.CreateCluster(project.ID, &clusterSpec)
+		createTask, err := client.Photonclient.Projects.CreateCluster(project.ID, &clusterSpec)
 		if err != nil {
 			return err
 		}
@@ -550,17 +550,17 @@ func showCluster(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	cluster, err := client.Esxclient.Clusters.Get(id)
+	cluster, err := client.Photonclient.Clusters.Get(id)
 	if err != nil {
 		return err
 	}
 
-	vms, err := client.Esxclient.Clusters.GetVMs(id)
+	vms, err := client.Photonclient.Clusters.GetVMs(id)
 	if err != nil {
 		return err
 	}
@@ -619,7 +619,7 @@ func listClusters(c *cli.Context, w io.Writer) error {
 	projectName := c.String("project")
 	summaryView := c.IsSet("summary")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -634,7 +634,7 @@ func listClusters(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	clusterList, err := client.Esxclient.Projects.GetClusters(project.ID)
+	clusterList, err := client.Photonclient.Projects.GetClusters(project.ID)
 	if err != nil {
 		return err
 	}
@@ -656,12 +656,12 @@ func listVms(c *cli.Context, w io.Writer) error {
 	}
 	cluster_id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	vms, err := client.Esxclient.Clusters.GetVMs(cluster_id)
+	vms, err := client.Photonclient.Clusters.GetVMs(cluster_id)
 	if err != nil {
 		return err
 	}
@@ -691,7 +691,7 @@ func resizeCluster(c *cli.Context, w io.Writer) error {
 		return fmt.Errorf("Provide a valid cluster ID and worker count")
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -703,7 +703,7 @@ func resizeCluster(c *cli.Context, w io.Writer) error {
 	if confirmed(c) {
 		resizeSpec := photon.ClusterResizeOperation{}
 		resizeSpec.NewWorkerCount = worker_count
-		resizeTask, err := client.Esxclient.Clusters.Resize(cluster_id, &resizeSpec)
+		resizeTask, err := client.Photonclient.Clusters.Resize(cluster_id, &resizeSpec)
 		if err != nil {
 			return err
 		}
@@ -750,7 +750,7 @@ func deleteCluster(c *cli.Context) error {
 		return fmt.Errorf("Please provide a valid cluster ID")
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -760,7 +760,7 @@ func deleteCluster(c *cli.Context) error {
 	}
 
 	if confirmed(c) {
-		deleteTask, err := client.Esxclient.Clusters.Delete(cluster_id)
+		deleteTask, err := client.Photonclient.Clusters.Delete(cluster_id)
 		if err != nil {
 			return err
 		}
@@ -790,7 +790,7 @@ func triggerMaintenance(c *cli.Context) error {
 		return fmt.Errorf("Please provide a valid cluster ID")
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -799,7 +799,7 @@ func triggerMaintenance(c *cli.Context) error {
 		fmt.Printf("Maintenance triggered for cluster %s\n", clusterId)
 	}
 
-	task, err := client.Esxclient.Clusters.TriggerMaintenance(clusterId)
+	task, err := client.Photonclient.Clusters.TriggerMaintenance(clusterId)
 	if err != nil {
 		return err
 	}
@@ -829,7 +829,7 @@ func waitForCluster(id string) (cluster *photon.Cluster, err error) {
 	}()
 
 	for time.Since(start) < taskPollTimeout {
-		cluster, err = client.Esxclient.Clusters.Get(id)
+		cluster, err = client.Photonclient.Clusters.Get(id)
 		if err != nil {
 			numErr++
 			if numErr > taskRetryCount {
@@ -929,12 +929,12 @@ func certToFile(c *cli.Context) error {
 	id := c.Args().First()
 	filePath := c.Args()[1]
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	cluster, err := client.Esxclient.Clusters.Get(id)
+	cluster, err := client.Photonclient.Clusters.Get(id)
 	if err != nil {
 		return err
 	}

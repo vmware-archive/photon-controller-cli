@@ -435,13 +435,13 @@ func printClusterVMs(vms []photon.VM, w io.Writer, c *cli.Context) (err error) {
 }
 
 func getVMNetworks(id string, c *cli.Context) (networks []interface{}, err error) {
-	task, err := client.Esxclient.VMs.GetNetworks(id)
+	task, err := client.Photonclient.VMs.GetNetworks(id)
 	if err != nil {
 		return nil, err
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		task, err = client.Esxclient.Tasks.Wait(task.ID)
+		task, err = client.Photonclient.Tasks.Wait(task.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -528,7 +528,7 @@ func clearConfigTenant(id string) error {
 
 // Finds the id of the tenant based on name, returns empty string with an error if it is not found
 func findTenantID(name string) (string, error) {
-	tenants, err := client.Esxclient.Tenants.GetAll()
+	tenants, err := client.Photonclient.Tenants.GetAll()
 	if err != nil {
 		return "", err
 	}
@@ -592,7 +592,7 @@ func clearConfigProject(id string) error {
 
 // Finds the rt based on tenant id and rt name, returns nil with an error if it is not found
 func findResourceTicket(tenantID string, name string) (*photon.ResourceTicket, error) {
-	tickets, err := client.Esxclient.Tenants.GetResourceTickets(tenantID, &photon.ResourceTicketGetOptions{Name: name})
+	tickets, err := client.Photonclient.Tenants.GetResourceTickets(tenantID, &photon.ResourceTicketGetOptions{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -610,7 +610,7 @@ func findResourceTicket(tenantID string, name string) (*photon.ResourceTicket, e
 
 // Finds the project based on tenant id and project name, returns nil with an error if it is not found
 func findProject(tenantID string, name string) (*photon.ProjectCompact, error) {
-	tickets, err := client.Esxclient.Tenants.GetProjects(tenantID, &photon.ProjectGetOptions{Name: name})
+	tickets, err := client.Photonclient.Tenants.GetProjects(tenantID, &photon.ProjectGetOptions{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -695,7 +695,7 @@ func displayTaskProgress(start time.Time) {
 
 // Wait for task to finish and display task progress
 func pollTask(id string) (task *photon.Task, err error) {
-	return pollTaskWithTimeout(client.Esxclient, id, 30*time.Minute)
+	return pollTaskWithTimeout(client.Photonclient, id, 30*time.Minute)
 }
 
 func pollTaskWithTimeout(api *photon.Client, id string, pollTimeout time.Duration) (task *photon.Task, err error) {
@@ -782,7 +782,7 @@ func waitOnTaskOperation(taskId string, c *cli.Context) (string, error) {
 	var err error
 	needsFormatting := utils.NeedsFormatting(c)
 	if c.GlobalIsSet("non-interactive") || needsFormatting {
-		task, err = client.Esxclient.Tasks.Wait(taskId)
+		task, err = client.Photonclient.Tasks.Wait(taskId)
 		if err != nil {
 			return "", err
 		}

@@ -432,7 +432,7 @@ func createVM(c *cli.Context, w io.Writer) error {
 	projectName := c.String("project")
 	networks := c.String("networks")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -516,7 +516,7 @@ func createVM(c *cli.Context, w io.Writer) error {
 	}
 
 	if confirmed(c) {
-		createTask, err := client.Esxclient.Projects.CreateVM(project.ID, &vmSpec)
+		createTask, err := client.Photonclient.Projects.CreateVM(project.ID, &vmSpec)
 		if err != nil {
 			return err
 		}
@@ -525,7 +525,7 @@ func createVM(c *cli.Context, w io.Writer) error {
 			return err
 		}
 
-		err = formatHelper(c, w, client.Esxclient, vmID)
+		err = formatHelper(c, w, client.Photonclient, vmID)
 
 		return err
 
@@ -545,12 +545,12 @@ func deleteVM(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deleteTask, err := client.Esxclient.VMs.Delete(id)
+	deleteTask, err := client.Photonclient.VMs.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -572,12 +572,12 @@ func showVM(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	vm, err := client.Esxclient.VMs.Get(id)
+	vm, err := client.Photonclient.VMs.Get(id)
 	if err != nil {
 		return err
 	}
@@ -679,7 +679,7 @@ func listVMs(c *cli.Context, w io.Writer) error {
 		Name: name,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -693,7 +693,7 @@ func listVMs(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	vmList, err := client.Esxclient.Projects.GetVMs(project.ID, options)
+	vmList, err := client.Photonclient.Projects.GetVMs(project.ID, options)
 	if err != nil {
 		return err
 	}
@@ -720,7 +720,7 @@ func getVMTasks(c *cli.Context, w io.Writer) error {
 	id := c.Args().First()
 	state := c.String("state")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -729,7 +729,7 @@ func getVMTasks(c *cli.Context, w io.Writer) error {
 		State: state,
 	}
 
-	taskList, err := client.Esxclient.VMs.GetTasks(id, options)
+	taskList, err := client.Photonclient.VMs.GetTasks(id, options)
 	if err != nil {
 		return err
 	}
@@ -754,12 +754,12 @@ func startVM(c *cli.Context, w io.Writer) error {
 
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	opTask, err := client.Esxclient.VMs.Start(id)
+	opTask, err := client.Photonclient.VMs.Start(id)
 	if err != nil {
 		return err
 	}
@@ -769,7 +769,7 @@ func startVM(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -782,12 +782,12 @@ func stopVM(c *cli.Context, w io.Writer) error {
 
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	opTask, err := client.Esxclient.VMs.Stop(id)
+	opTask, err := client.Photonclient.VMs.Stop(id)
 	if err != nil {
 		return err
 	}
@@ -797,7 +797,7 @@ func stopVM(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -810,12 +810,12 @@ func suspendVM(c *cli.Context, w io.Writer) error {
 
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	opTask, err := client.Esxclient.VMs.Suspend(id)
+	opTask, err := client.Photonclient.VMs.Suspend(id)
 	if err != nil {
 		return err
 	}
@@ -825,7 +825,7 @@ func suspendVM(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -838,12 +838,12 @@ func resumeVM(c *cli.Context, w io.Writer) error {
 
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	opTask, err := client.Esxclient.VMs.Resume(id)
+	opTask, err := client.Photonclient.VMs.Resume(id)
 	if err != nil {
 		return err
 	}
@@ -853,7 +853,7 @@ func resumeVM(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -866,12 +866,12 @@ func restartVM(c *cli.Context, w io.Writer) error {
 
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	opTask, err := client.Esxclient.VMs.Restart(id)
+	opTask, err := client.Photonclient.VMs.Restart(id)
 	if err != nil {
 		return err
 	}
@@ -881,7 +881,7 @@ func restartVM(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -895,7 +895,7 @@ func attachDisk(c *cli.Context, w io.Writer) error {
 	id := c.Args().First()
 	diskID := c.String("disk")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -904,7 +904,7 @@ func attachDisk(c *cli.Context, w io.Writer) error {
 		DiskID: diskID,
 	}
 
-	task, err := client.Esxclient.VMs.AttachDisk(id, operation)
+	task, err := client.Photonclient.VMs.AttachDisk(id, operation)
 	if err != nil {
 		return err
 	}
@@ -914,7 +914,7 @@ func attachDisk(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -928,7 +928,7 @@ func detachDisk(c *cli.Context, w io.Writer) error {
 	id := c.Args().First()
 	diskID := c.String("disk")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -937,7 +937,7 @@ func detachDisk(c *cli.Context, w io.Writer) error {
 		DiskID: diskID,
 	}
 
-	task, err := client.Esxclient.VMs.DetachDisk(id, operation)
+	task, err := client.Photonclient.VMs.DetachDisk(id, operation)
 	if err != nil {
 		return err
 	}
@@ -947,7 +947,7 @@ func detachDisk(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -990,12 +990,12 @@ func attachIso(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.VMs.AttachISO(id, file, name)
+	task, err := client.Photonclient.VMs.AttachISO(id, file, name)
 	if err != nil {
 		return err
 	}
@@ -1005,7 +1005,7 @@ func attachIso(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -1018,12 +1018,12 @@ func detachIso(c *cli.Context, w io.Writer) error {
 
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.VMs.DetachISO(id)
+	task, err := client.Photonclient.VMs.DetachISO(id)
 	if err != nil {
 		return err
 	}
@@ -1033,7 +1033,7 @@ func detachIso(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -1046,7 +1046,7 @@ func setVMMetadata(c *cli.Context, w io.Writer) error {
 
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -1065,7 +1065,7 @@ func setVMMetadata(c *cli.Context, w io.Writer) error {
 		vmMetadata.Metadata = data
 	}
 
-	task, err := client.Esxclient.VMs.SetMetadata(id, vmMetadata)
+	task, err := client.Photonclient.VMs.SetMetadata(id, vmMetadata)
 	if err != nil {
 		return err
 	}
@@ -1075,7 +1075,7 @@ func setVMMetadata(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -1088,7 +1088,7 @@ func listVMNetworks(c *cli.Context, w io.Writer) error {
 
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -1125,12 +1125,12 @@ func setVMTag(c *cli.Context, w io.Writer) error {
 	}
 	vmTag.Tag = tag
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.VMs.SetTag(id, vmTag)
+	task, err := client.Photonclient.VMs.SetTag(id, vmTag)
 	if err != nil {
 		return err
 	}
@@ -1140,7 +1140,7 @@ func setVMTag(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -1153,25 +1153,25 @@ func getVMMksTicket(c *cli.Context, w io.Writer) error {
 
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.VMs.GetMKSTicket(id)
+	task, err := client.Photonclient.VMs.GetMKSTicket(id)
 	if err != nil {
 		return err
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		task, err := client.Esxclient.Tasks.Wait(task.ID)
+		task, err := client.Photonclient.Tasks.Wait(task.ID)
 		if err != nil {
 			return err
 		}
 		mksTicket := task.ResourceProperties.(map[string]interface{})
 		fmt.Printf("%s\t%v\n", task.Entity.ID, mksTicket["ticket"])
 	} else if utils.NeedsFormatting(c) {
-		task, err := client.Esxclient.Tasks.Wait(task.ID)
+		task, err := client.Photonclient.Tasks.Wait(task.ID)
 		if err != nil {
 			return err
 		}
@@ -1226,12 +1226,12 @@ func createVmImage(c *cli.Context, w io.Writer) error {
 		ReplicationType: replicationType,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.VMs.CreateImage(id, options)
+	task, err := client.Photonclient.VMs.CreateImage(id, options)
 	if err != nil {
 		return err
 	}
@@ -1241,7 +1241,7 @@ func createVmImage(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -1259,12 +1259,12 @@ func acquireFloatingIp(c *cli.Context, w io.Writer) error {
 		NetworkId: networkId,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.VMs.AcquireFloatingIp(id, options)
+	task, err := client.Photonclient.VMs.AcquireFloatingIp(id, options)
 	if err != nil {
 		return err
 	}
@@ -1274,7 +1274,7 @@ func acquireFloatingIp(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }
@@ -1287,12 +1287,12 @@ func releaseFloatingIp(c *cli.Context, w io.Writer) error {
 
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.VMs.ReleaseFloatingIp(id)
+	task, err := client.Photonclient.VMs.ReleaseFloatingIp(id)
 	if err != nil {
 		return err
 	}
@@ -1302,7 +1302,7 @@ func releaseFloatingIp(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	err = formatHelper(c, w, client.Esxclient, id)
+	err = formatHelper(c, w, client.Photonclient, id)
 
 	return err
 }

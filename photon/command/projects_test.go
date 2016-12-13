@@ -84,7 +84,7 @@ func TestCreateProject(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	globalSet := flag.NewFlagSet("test", 0)
 	globalSet.Bool("non-interactive", true, "doc")
@@ -251,7 +251,7 @@ func TestListProjects(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
 	globalFlags.String("output", "json", "output")
@@ -416,7 +416,7 @@ func TestSetSecurityGroupsForProject(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{projectId, "sg1"})

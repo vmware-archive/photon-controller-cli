@@ -287,11 +287,11 @@ func createHost(c *cli.Context, w io.Writer) error {
 		hostSpec.Metadata = data
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
-	createTask, err := client.Esxclient.Hosts.Create(&hostSpec, deploymentID)
+	createTask, err := client.Photonclient.Hosts.Create(&hostSpec, deploymentID)
 	if err != nil {
 		return err
 	}
@@ -301,7 +301,7 @@ func createHost(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		host, err := client.Esxclient.Hosts.Get(id)
+		host, err := client.Photonclient.Hosts.Get(id)
 		if err != nil {
 			return err
 		}
@@ -320,12 +320,12 @@ func deleteHost(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deleteTask, err := client.Esxclient.Hosts.Delete(id)
+	deleteTask, err := client.Photonclient.Hosts.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -347,13 +347,13 @@ func listHosts(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
 	// Find the current deployment
-	deployments, err := client.Esxclient.Deployments.GetAll()
+	deployments, err := client.Photonclient.Deployments.GetAll()
 	if err != nil {
 		return err
 	}
@@ -365,7 +365,7 @@ func listHosts(c *cli.Context, w io.Writer) error {
 	}
 	id := deployments.Items[0].ID
 
-	hosts, err := client.Esxclient.Deployments.GetHosts(id)
+	hosts, err := client.Photonclient.Deployments.GetHosts(id)
 	if err != nil {
 		return err
 	}
@@ -385,12 +385,12 @@ func showHost(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	host, err := client.Esxclient.Hosts.Get(id)
+	host, err := client.Photonclient.Hosts.Get(id)
 	if err != nil {
 		return err
 	}
@@ -428,14 +428,14 @@ func setHostAvailabilityZone(c *cli.Context, w io.Writer) error {
 	id := c.Args().First()
 	availabilityZoneId := c.Args()[1]
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
 	setAvailabilityZoneSpec := photon.HostSetAvailabilityZoneOperation{}
 	setAvailabilityZoneSpec.AvailabilityZoneId = availabilityZoneId
-	setTask, err := client.Esxclient.Hosts.SetAvailabilityZone(id, &setAvailabilityZoneSpec)
+	setTask, err := client.Photonclient.Hosts.SetAvailabilityZone(id, &setAvailabilityZoneSpec)
 	if err != nil {
 		return err
 	}
@@ -444,7 +444,7 @@ func setHostAvailabilityZone(c *cli.Context, w io.Writer) error {
 		return err
 	}
 	if utils.NeedsFormatting(c) {
-		host, err := client.Esxclient.Hosts.Get(id)
+		host, err := client.Photonclient.Hosts.Get(id)
 		if err != nil {
 			return err
 		}
@@ -466,12 +466,12 @@ func getHostTasks(c *cli.Context, w io.Writer) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	taskList, err := client.Esxclient.Hosts.GetTasks(id, options)
+	taskList, err := client.Photonclient.Hosts.GetTasks(id, options)
 	if err != nil {
 		return err
 	}
@@ -490,12 +490,12 @@ func listHostVMs(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	vmList, err := client.Esxclient.Hosts.GetVMs(id)
+	vmList, err := client.Photonclient.Hosts.GetVMs(id)
 	if err != nil {
 		return err
 	}
@@ -517,12 +517,12 @@ func suspendHost(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	suspendTask, err := client.Esxclient.Hosts.Suspend(id)
+	suspendTask, err := client.Photonclient.Hosts.Suspend(id)
 	if err != nil {
 		return err
 	}
@@ -543,12 +543,12 @@ func resumeHost(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	resumeTask, err := client.Esxclient.Hosts.Resume(id)
+	resumeTask, err := client.Photonclient.Hosts.Resume(id)
 	if err != nil {
 		return err
 	}
@@ -569,12 +569,12 @@ func enterMaintenanceMode(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	enterTask, err := client.Esxclient.Hosts.EnterMaintenanceMode(id)
+	enterTask, err := client.Photonclient.Hosts.EnterMaintenanceMode(id)
 	if err != nil {
 		return err
 	}
@@ -595,12 +595,12 @@ func exitMaintenanceMode(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	exitTask, err := client.Esxclient.Hosts.ExitMaintenanceMode(id)
+	exitTask, err := client.Photonclient.Hosts.ExitMaintenanceMode(id)
 	if err != nil {
 		return err
 	}

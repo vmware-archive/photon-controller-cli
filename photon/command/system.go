@@ -129,12 +129,12 @@ func getStatus(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	status, err := client.Esxclient.Status.Get()
+	status, err := client.Photonclient.Status.Get()
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func deploy(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -216,12 +216,12 @@ func addHosts(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deployments, err := client.Esxclient.Deployments.GetAll()
+	deployments, err := client.Photonclient.Deployments.GetAll()
 	deploymentID := deployments.Items[0].ID
 
 	// Create Hosts
@@ -240,12 +240,12 @@ func destroy(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deployments, err := client.Esxclient.Deployments.GetAll()
+	deployments, err := client.Photonclient.Deployments.GetAll()
 	if err != nil {
 		return err
 	}
@@ -263,13 +263,13 @@ func destroy(c *cli.Context) error {
 
 	// Delete hosts
 	for _, deployment := range deployments.Items {
-		hosts, err := client.Esxclient.Deployments.GetHosts(deployment.ID)
+		hosts, err := client.Photonclient.Deployments.GetHosts(deployment.ID)
 		if err != nil {
 			return err
 		}
 
 		for _, host := range hosts.Items {
-			deleteTask, err := client.Esxclient.Hosts.Delete(host.ID)
+			deleteTask, err := client.Photonclient.Hosts.Delete(host.ID)
 			if err != nil {
 				return err
 			}
@@ -283,12 +283,12 @@ func destroy(c *cli.Context) error {
 	}
 
 	// Delete availability-zones
-	zones, err := client.Esxclient.AvailabilityZones.GetAll()
+	zones, err := client.Photonclient.AvailabilityZones.GetAll()
 	if err != nil {
 		return err
 	}
 	for _, zone := range zones.Items {
-		deleteTask, err := client.Esxclient.AvailabilityZones.Delete(zone.ID)
+		deleteTask, err := client.Photonclient.AvailabilityZones.Delete(zone.ID)
 		if err != nil {
 			return err
 		}
@@ -302,7 +302,7 @@ func destroy(c *cli.Context) error {
 
 	// Delete deployment doc
 	for _, deployment := range deployments.Items {
-		deleteTask, err := client.Esxclient.Deployments.Delete(deployment.ID)
+		deleteTask, err := client.Photonclient.Deployments.Delete(deployment.ID)
 		if err != nil {
 			return err
 		}
@@ -324,11 +324,11 @@ func deploymentMigrationPrepareDeprecated(c *cli.Context) error {
 		return err
 	}
 	sourceAddress := c.Args().First()
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
-	deployments, err := client.Esxclient.Deployments.GetAll()
+	deployments, err := client.Photonclient.Deployments.GetAll()
 	if err != nil {
 		return err
 	}
@@ -337,7 +337,7 @@ func deploymentMigrationPrepareDeprecated(c *cli.Context) error {
 
 	// Initialize deployment migration
 	for _, deployment := range deployments.Items {
-		initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(&initializeMigrationSpec, deployment.ID)
+		initializeMigrate, err := client.Photonclient.Deployments.InitializeDeploymentMigration(&initializeMigrationSpec, deployment.ID)
 		if err != nil {
 			return err
 		}
@@ -361,11 +361,11 @@ func deploymentMigrationFinalizeDeprecated(c *cli.Context) error {
 		return err
 	}
 	sourceAddress := c.Args().First()
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
-	deployments, err := client.Esxclient.Deployments.GetAll()
+	deployments, err := client.Photonclient.Deployments.GetAll()
 	if err != nil {
 		return err
 	}
@@ -374,7 +374,7 @@ func deploymentMigrationFinalizeDeprecated(c *cli.Context) error {
 
 	// Finalize deployment migration
 	for _, deployment := range deployments.Items {
-		finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(&finalizeMigrationSpec, deployment.ID)
+		finalizeMigrate, err := client.Photonclient.Deployments.FinalizeDeploymentMigration(&finalizeMigrationSpec, deployment.ID)
 		if err != nil {
 			return err
 		}
@@ -395,11 +395,11 @@ func showMigrationStatusDeprecated(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
-	deployments, err := client.Esxclient.Deployments.GetAll()
+	deployments, err := client.Photonclient.Deployments.GetAll()
 	if err != nil {
 		return err
 	}
@@ -502,7 +502,7 @@ func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID strin
 		LoadBalancerEnabled:     lbEnabled,
 	}
 
-	createDeploymentTask, err := client.Esxclient.Deployments.Create(deploymentSpec)
+	createDeploymentTask, err := client.Photonclient.Deployments.Create(deploymentSpec)
 	if err != nil {
 		return "", err
 	}
@@ -533,7 +533,7 @@ func createAvailabilityZonesFromDcMap(dcMap *manifest.Installation) (map[string]
 					Name: host.AvailabilityZone,
 				}
 
-				createAvailabilityZoneTask, err := client.Esxclient.AvailabilityZones.Create(availabilityZoneSpec)
+				createAvailabilityZoneTask, err := client.Photonclient.AvailabilityZones.Create(availabilityZoneSpec)
 				if err != nil {
 					return nil, err
 				}
@@ -556,7 +556,7 @@ func createHostsFromDcMap(dcMap *manifest.Installation, deploymentID string) err
 	}
 
 	for _, spec := range hostSpecs {
-		createHostTask, err := client.Esxclient.Hosts.Create(&spec, deploymentID)
+		createHostTask, err := client.Photonclient.Hosts.Create(&spec, deploymentID)
 		if err != nil {
 			return err
 		}
@@ -581,7 +581,7 @@ func createHostsInBatch(dcMap *manifest.Installation, deploymentID string) error
 	var creationErrors []error
 	var pollErrors []error
 	for _, spec := range hostSpecs {
-		createHostTask, err := client.Esxclient.Hosts.Create(&spec, deploymentID)
+		createHostTask, err := client.Photonclient.Hosts.Create(&spec, deploymentID)
 		if err != nil {
 			creationErrors = append(creationErrors, err)
 			fmt.Printf("Creation of Host document with ip '%s' failed: with err '%s'\n",
@@ -704,12 +704,12 @@ func doDeploy(installSpec *manifest.Installation, deploymentID string) error {
 	deploymentDeployOperation := &photon.DeploymentDeployOperation{
 		DesiredState: desiredState,
 	}
-	deployTask, err := client.Esxclient.Deployments.Deploy(deploymentID, deploymentDeployOperation)
+	deployTask, err := client.Photonclient.Deployments.Deploy(deploymentID, deploymentDeployOperation)
 	if err != nil {
 		return err
 	}
 
-	_, err = pollTaskWithTimeout(client.Esxclient, deployTask.ID, 120*time.Minute)
+	_, err = pollTaskWithTimeout(client.Photonclient, deployTask.ID, 120*time.Minute)
 	if err != nil {
 		return err
 	}
@@ -719,7 +719,7 @@ func doDeploy(installSpec *manifest.Installation, deploymentID string) error {
 }
 
 func doDestroy(deploymentID string) error {
-	destroyTask, err := client.Esxclient.Deployments.Destroy(deploymentID)
+	destroyTask, err := client.Photonclient.Deployments.Destroy(deploymentID)
 	if err != nil {
 		return err
 	}

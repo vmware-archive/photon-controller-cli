@@ -135,7 +135,7 @@ func createResourceTicket(c *cli.Context, w io.Writer) error {
 	name := c.String("name")
 	limits := c.String("limits")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func createResourceTicket(c *cli.Context, w io.Writer) error {
 	}
 
 	if confirmed(c) {
-		createTask, err := client.Esxclient.Tenants.CreateResourceTicket(tenant.ID, &rtSpec)
+		createTask, err := client.Photonclient.Tenants.CreateResourceTicket(tenant.ID, &rtSpec)
 		if err != nil {
 			return err
 		}
@@ -189,7 +189,7 @@ func createResourceTicket(c *cli.Context, w io.Writer) error {
 			options := &photon.ResourceTicketGetOptions{
 				Name: name,
 			}
-			tickets, err := client.Esxclient.Tenants.GetResourceTickets(tenant.ID, options)
+			tickets, err := client.Photonclient.Tenants.GetResourceTickets(tenant.ID, options)
 			if err != nil {
 				return err
 			}
@@ -212,7 +212,7 @@ func showResourceTicket(c *cli.Context, w io.Writer) error {
 	name := c.Args().First()
 	tenantName := c.String("tenant")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -265,7 +265,7 @@ func listResourceTickets(c *cli.Context, w io.Writer) error {
 	}
 	tenantName := c.String("tenant")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func listResourceTickets(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	tickets, err := client.Esxclient.Tenants.GetResourceTickets(tenant.ID, nil)
+	tickets, err := client.Photonclient.Tenants.GetResourceTickets(tenant.ID, nil)
 	if err != nil {
 		return err
 	}
@@ -313,7 +313,7 @@ func getResourceTicketTasks(c *cli.Context, w io.Writer) error {
 	tenantName := c.String("tenant")
 	state := c.String("state")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -332,7 +332,7 @@ func getResourceTicketTasks(c *cli.Context, w io.Writer) error {
 		State: state,
 	}
 
-	taskList, err := client.Esxclient.ResourceTickets.GetTasks(rt.ID, options)
+	taskList, err := client.Photonclient.ResourceTickets.GetTasks(rt.ID, options)
 	if err != nil {
 		return err
 	}

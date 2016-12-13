@@ -173,12 +173,12 @@ func GetNetworksCommand() cli.Command {
 }
 
 func isSoftwareDefinedNetwork(c *cli.Context) (sdnEnabled bool, err error) {
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return
 	}
 
-	info, err := client.Esxclient.Info.Get()
+	info, err := client.Photonclient.Info.Get()
 	if err != nil {
 		return
 	}
@@ -198,7 +198,7 @@ func deleteNetwork(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -215,9 +215,9 @@ func deleteNetwork(c *cli.Context) error {
 	}
 
 	if sdnEnabled {
-		task, err = client.Esxclient.VirtualSubnets.Delete(id)
+		task, err = client.Photonclient.VirtualSubnets.Delete(id)
 	} else {
-		task, err = client.Esxclient.Subnets.Delete(id)
+		task, err = client.Photonclient.Subnets.Delete(id)
 	}
 	if err != nil {
 		return err
@@ -237,7 +237,7 @@ func setDefaultNetwork(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -249,9 +249,9 @@ func setDefaultNetwork(c *cli.Context, w io.Writer) error {
 
 	var task *photon.Task
 	if sdnEnabled {
-		task, err = client.Esxclient.VirtualSubnets.SetDefault(id)
+		task, err = client.Photonclient.VirtualSubnets.SetDefault(id)
 	} else {
-		task, err = client.Esxclient.Subnets.SetDefault(id)
+		task, err = client.Photonclient.Subnets.SetDefault(id)
 	}
 
 	if err != nil {
@@ -265,7 +265,7 @@ func setDefaultNetwork(c *cli.Context, w io.Writer) error {
 		}
 
 		if utils.NeedsFormatting(c) {
-			network, err := client.Esxclient.Subnets.Get(id)
+			network, err := client.Photonclient.Subnets.Get(id)
 			if err != nil {
 				return err
 			}

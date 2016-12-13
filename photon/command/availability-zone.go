@@ -134,12 +134,12 @@ func createAvailabilityZone(c *cli.Context, w io.Writer) error {
 		Name: name,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	createTask, err := client.Esxclient.AvailabilityZones.Create(azSpec)
+	createTask, err := client.Photonclient.AvailabilityZones.Create(azSpec)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func createAvailabilityZone(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		zone, err := client.Esxclient.AvailabilityZones.Get(id)
+		zone, err := client.Photonclient.AvailabilityZones.Get(id)
 		if err != nil {
 			return err
 		}
@@ -168,12 +168,12 @@ func showAvailabilityZone(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	zone, err := client.Esxclient.AvailabilityZones.Get(id)
+	zone, err := client.Photonclient.AvailabilityZones.Get(id)
 	if err != nil {
 		return err
 	}
@@ -198,12 +198,12 @@ func listAvailabilityZones(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	zones, err := client.Esxclient.AvailabilityZones.GetAll()
+	zones, err := client.Photonclient.AvailabilityZones.GetAll()
 	if err != nil {
 		return err
 	}
@@ -240,12 +240,12 @@ func deleteAvailabilityZone(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deleteTask, err := client.Esxclient.AvailabilityZones.Delete(id)
+	deleteTask, err := client.Photonclient.AvailabilityZones.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -271,12 +271,12 @@ func getAvailabilityZoneTasks(c *cli.Context, w io.Writer) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	taskList, err := client.Esxclient.AvailabilityZones.GetTasks(id, options)
+	taskList, err := client.Photonclient.AvailabilityZones.GetTasks(id, options)
 	if err != nil {
 		return err
 	}

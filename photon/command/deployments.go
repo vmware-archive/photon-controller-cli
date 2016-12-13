@@ -306,12 +306,12 @@ func listDeployments(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deployments, err := client.Esxclient.Deployments.GetAll()
+	deployments, err := client.Photonclient.Deployments.GetAll()
 	if err != nil {
 		return err
 	}
@@ -346,17 +346,17 @@ func showDeployment(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deployment, err := client.Esxclient.Deployments.Get(id)
+	deployment, err := client.Photonclient.Deployments.Get(id)
 	if err != nil {
 		return err
 	}
 
-	vms, err := client.Esxclient.Deployments.GetVms(id)
+	vms, err := client.Photonclient.Deployments.GetVms(id)
 	if err != nil {
 		return err
 	}
@@ -508,12 +508,12 @@ func listDeploymentHosts(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	hosts, err := client.Esxclient.Deployments.GetHosts(id)
+	hosts, err := client.Photonclient.Deployments.GetHosts(id)
 	if err != nil {
 		return err
 	}
@@ -537,12 +537,12 @@ func listDeploymentVms(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	vms, err := client.Esxclient.Deployments.GetVms(id)
+	vms, err := client.Photonclient.Deployments.GetVms(id)
 	if err != nil {
 		return err
 	}
@@ -584,12 +584,12 @@ func updateImageDatastores(c *cli.Context) error {
 		Items: regexp.MustCompile(`\s*,\s*`).Split(datastores, -1),
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.Deployments.SetImageDatastores(id, imageDataStores)
+	task, err := client.Photonclient.Deployments.SetImageDatastores(id, imageDataStores)
 	if err != nil {
 		return err
 	}
@@ -599,7 +599,7 @@ func updateImageDatastores(c *cli.Context) error {
 		return err
 	}
 
-	err = deploymentJsonHelper(c, id, client.Esxclient)
+	err = deploymentJsonHelper(c, id, client.Photonclient)
 	if err != nil {
 		return err
 	}
@@ -614,12 +614,12 @@ func syncHostsConfig(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.Deployments.SyncHostsConfig(id)
+	task, err := client.Photonclient.Deployments.SyncHostsConfig(id)
 	if err != nil {
 		return err
 	}
@@ -629,7 +629,7 @@ func syncHostsConfig(c *cli.Context) error {
 		return err
 	}
 
-	err = deploymentJsonHelper(c, id, client.Esxclient)
+	err = deploymentJsonHelper(c, id, client.Photonclient)
 	if err != nil {
 		return err
 	}
@@ -644,12 +644,12 @@ func pauseSystem(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	pauseSystemTask, err := client.Esxclient.Deployments.PauseSystem(id)
+	pauseSystemTask, err := client.Photonclient.Deployments.PauseSystem(id)
 	if err != nil {
 		return err
 	}
@@ -659,7 +659,7 @@ func pauseSystem(c *cli.Context) error {
 		return err
 	}
 
-	err = deploymentJsonHelper(c, id, client.Esxclient)
+	err = deploymentJsonHelper(c, id, client.Photonclient)
 	if err != nil {
 		return err
 	}
@@ -674,12 +674,12 @@ func pauseBackgroundTasks(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	pauseBackgroundTask, err := client.Esxclient.Deployments.PauseBackgroundTasks(id)
+	pauseBackgroundTask, err := client.Photonclient.Deployments.PauseBackgroundTasks(id)
 	if err != nil {
 		return err
 	}
@@ -689,7 +689,7 @@ func pauseBackgroundTasks(c *cli.Context) error {
 		return err
 	}
 
-	err = deploymentJsonHelper(c, id, client.Esxclient)
+	err = deploymentJsonHelper(c, id, client.Photonclient)
 	if err != nil {
 		return err
 	}
@@ -704,12 +704,12 @@ func resumeSystem(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	resumeSystemTask, err := client.Esxclient.Deployments.ResumeSystem(id)
+	resumeSystemTask, err := client.Photonclient.Deployments.ResumeSystem(id)
 	if err != nil {
 		return err
 	}
@@ -719,7 +719,7 @@ func resumeSystem(c *cli.Context) error {
 		return err
 	}
 
-	err = deploymentJsonHelper(c, id, client.Esxclient)
+	err = deploymentJsonHelper(c, id, client.Photonclient)
 	if err != nil {
 		return err
 	}
@@ -754,12 +754,12 @@ func setDeploymentSecurityGroups(c *cli.Context) error {
 		Items: items,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.Deployments.SetSecurityGroups(deploymentId, securityGroups)
+	task, err := client.Photonclient.Deployments.SetSecurityGroups(deploymentId, securityGroups)
 	if err != nil {
 		return err
 	}
@@ -769,7 +769,7 @@ func setDeploymentSecurityGroups(c *cli.Context) error {
 		return err
 	}
 
-	err = deploymentJsonHelper(c, deploymentId, client.Esxclient)
+	err = deploymentJsonHelper(c, deploymentId, client.Photonclient)
 	if err != nil {
 		return err
 	}
@@ -811,7 +811,7 @@ func enableClusterType(c *cli.Context) error {
 	}
 
 	if confirmed(c) {
-		client.Esxclient, err = client.GetClient(c)
+		client.Photonclient, err = client.GetClient(c)
 		if err != nil {
 			return err
 		}
@@ -820,7 +820,7 @@ func enableClusterType(c *cli.Context) error {
 			ImageID: imageID,
 		}
 
-		task, err := client.Esxclient.Deployments.EnableClusterType(id, clusterConfigSpec)
+		task, err := client.Photonclient.Deployments.EnableClusterType(id, clusterConfigSpec)
 		if err != nil {
 			return err
 		}
@@ -830,7 +830,7 @@ func enableClusterType(c *cli.Context) error {
 			return err
 		}
 
-		err = deploymentJsonHelper(c, id, client.Esxclient)
+		err = deploymentJsonHelper(c, id, client.Photonclient)
 		if err != nil {
 			return err
 		}
@@ -866,7 +866,7 @@ func disableClusterType(c *cli.Context) error {
 	}
 
 	if confirmed(c) {
-		client.Esxclient, err = client.GetClient(c)
+		client.Photonclient, err = client.GetClient(c)
 		if err != nil {
 			return err
 		}
@@ -875,7 +875,7 @@ func disableClusterType(c *cli.Context) error {
 			Type: clusterType,
 		}
 
-		task, err := client.Esxclient.Deployments.DisableClusterType(id, clusterConfigSpec)
+		task, err := client.Photonclient.Deployments.DisableClusterType(id, clusterConfigSpec)
 		if err != nil {
 			return err
 		}
@@ -885,7 +885,7 @@ func disableClusterType(c *cli.Context) error {
 			return err
 		}
 
-		err = deploymentJsonHelper(c, id, client.Esxclient)
+		err = deploymentJsonHelper(c, id, client.Photonclient)
 		if err != nil {
 			return err
 		}
@@ -908,12 +908,12 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 		return fmt.Errorf("Please provide the API endpoint of the old control plane")
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deployment, err := client.Esxclient.Deployments.Get(id)
+	deployment, err := client.Photonclient.Deployments.Get(id)
 	if err != nil {
 		return err
 	}
@@ -921,7 +921,7 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 	initializeMigrationSpec.SourceNodeGroupReference = sourceAddress
 
 	// Initialize deployment migration
-	initializeMigrate, err := client.Esxclient.Deployments.InitializeDeploymentMigration(&initializeMigrationSpec, deployment.ID)
+	initializeMigrate, err := client.Photonclient.Deployments.InitializeDeploymentMigration(&initializeMigrationSpec, deployment.ID)
 	if err != nil {
 		return err
 	}
@@ -935,7 +935,7 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 		fmt.Printf("Deployment '%s' migration started [source management endpoint: '%s'].\n", deployment.ID, sourceAddress)
 	}
 
-	err = deploymentJsonHelper(c, id, client.Esxclient)
+	err = deploymentJsonHelper(c, id, client.Photonclient)
 	if err != nil {
 		return err
 	}
@@ -955,12 +955,12 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 		return fmt.Errorf("Please provide the API endpoint of the old control plane")
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deployment, err := client.Esxclient.Deployments.Get(id)
+	deployment, err := client.Photonclient.Deployments.Get(id)
 	if err != nil {
 		return err
 	}
@@ -968,7 +968,7 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 	finalizeMigrationSpec.SourceNodeGroupReference = sourceAddress
 
 	// Finalize deployment migration
-	finalizeMigrate, err := client.Esxclient.Deployments.FinalizeDeploymentMigration(&finalizeMigrationSpec, deployment.ID)
+	finalizeMigrate, err := client.Photonclient.Deployments.FinalizeDeploymentMigration(&finalizeMigrationSpec, deployment.ID)
 	if err != nil {
 		return err
 	}
@@ -978,7 +978,7 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 		return err
 	}
 
-	err = deploymentJsonHelper(c, id, client.Esxclient)
+	err = deploymentJsonHelper(c, id, client.Photonclient)
 	if err != nil {
 		return err
 	}
@@ -993,12 +993,12 @@ func showMigrationStatus(c *cli.Context) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deployment, err := client.Esxclient.Deployments.Get(id)
+	deployment, err := client.Photonclient.Deployments.Get(id)
 	if err != nil {
 		return err
 	}
@@ -1019,7 +1019,7 @@ func showMigrationStatus(c *cli.Context) error {
 			migration.DataMigrationCycleSize)
 		fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
 	} else {
-		err = deploymentJsonHelper(c, id, client.Esxclient)
+		err = deploymentJsonHelper(c, id, client.Photonclient)
 		if err != nil {
 			return err
 		}
@@ -1046,12 +1046,12 @@ func getDeploymentId(c *cli.Context) (id string, err error) {
 
 // If there is exactly one deployment, return its id, otherwise return an error
 func getDefaultDeploymentId(c *cli.Context) (id string, err error) {
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return
 	}
 
-	deployments, err := client.Esxclient.Deployments.GetAll()
+	deployments, err := client.Photonclient.Deployments.GetAll()
 	if err != nil {
 		return
 	}

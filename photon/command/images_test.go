@@ -64,7 +64,7 @@ func TestCreateDeleteImage(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	set.String("name", "n", "testname")
@@ -194,7 +194,7 @@ func TestFindImagesByName(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	set.String("name", "test", "image name")
@@ -260,7 +260,7 @@ func TestListImage(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
 	globalFlags.String("output", "json", "output")
@@ -350,7 +350,7 @@ func TestImageTasks(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"1"})

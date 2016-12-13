@@ -109,12 +109,12 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 		ReservedStaticIpSize: staticIpSize,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.VirtualSubnets.Create(projectId, createSpec)
+	task, err := client.Photonclient.VirtualSubnets.Create(projectId, createSpec)
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		network, err := client.Esxclient.Subnets.Get(id)
+		network, err := client.Photonclient.Subnets.Get(id)
 		if err != nil {
 			return err
 		}
@@ -140,7 +140,7 @@ func listVirtualNetworks(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -165,7 +165,7 @@ func listVirtualNetworks(c *cli.Context, w io.Writer) error {
 		projectId = project.ID
 	}
 
-	networks, err := client.Esxclient.VirtualSubnets.GetAll(projectId, options)
+	networks, err := client.Photonclient.VirtualSubnets.GetAll(projectId, options)
 	if err != nil {
 		return err
 	}
@@ -205,12 +205,12 @@ func showVirtualNetwork(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	network, err := client.Esxclient.VirtualSubnets.Get(id)
+	network, err := client.Photonclient.VirtualSubnets.Get(id)
 	if err != nil {
 		return err
 	}

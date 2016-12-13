@@ -61,12 +61,12 @@ func createPhysicalNetwork(c *cli.Context, w io.Writer) error {
 		Description: description,
 		PortGroups:  portGroupList,
 	}
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	task, err := client.Esxclient.Subnets.Create(createSpec)
+	task, err := client.Photonclient.Subnets.Create(createSpec)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func createPhysicalNetwork(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		network, err := client.Esxclient.Subnets.Get(id)
+		network, err := client.Photonclient.Subnets.Get(id)
 		if err != nil {
 			return err
 		}
@@ -92,7 +92,7 @@ func listPhysicalNetworks(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func listPhysicalNetworks(c *cli.Context, w io.Writer) error {
 		Name: name,
 	}
 
-	networks, err := client.Esxclient.Subnets.GetAll(options)
+	networks, err := client.Photonclient.Subnets.GetAll(options)
 	if err != nil {
 		return err
 	}
@@ -138,12 +138,12 @@ func showPhysicalNetwork(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	network, err := client.Esxclient.Subnets.Get(id)
+	network, err := client.Photonclient.Subnets.Get(id)
 	if err != nil {
 		return err
 	}

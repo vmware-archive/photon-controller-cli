@@ -105,12 +105,12 @@ func show(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.Esxclient.Auth.Get()
+	auth, err := client.Photonclient.Auth.Get()
 	if err != nil {
 		return err
 	}
@@ -187,12 +187,12 @@ func getApiTokens(c *cli.Context) error {
 		return fmt.Errorf("Please provide username/password")
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	tokens, err := client.Esxclient.Auth.GetTokensByPassword(username, password)
+	tokens, err := client.Photonclient.Auth.GetTokensByPassword(username, password)
 	if err != nil {
 		return err
 	}

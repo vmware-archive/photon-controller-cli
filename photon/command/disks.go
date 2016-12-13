@@ -169,7 +169,7 @@ func createDisk(c *cli.Context, w io.Writer) error {
 	projectName := c.String("project")
 	tags := c.String("tags")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func createDisk(c *cli.Context, w io.Writer) error {
 	}
 
 	if confirmed(c) {
-		createTask, err := client.Esxclient.Projects.CreateDisk(project.ID, &diskSpec)
+		createTask, err := client.Photonclient.Projects.CreateDisk(project.ID, &diskSpec)
 		if err != nil {
 			return err
 		}
@@ -238,7 +238,7 @@ func createDisk(c *cli.Context, w io.Writer) error {
 		}
 
 		if utils.NeedsFormatting(c) {
-			disk, err := client.Esxclient.Disks.Get(diskID)
+			disk, err := client.Photonclient.Disks.Get(diskID)
 			if err != nil {
 				return err
 			}
@@ -261,12 +261,12 @@ func deleteDisk(c *cli.Context) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deleteTask, err := client.Esxclient.Disks.Delete(id)
+	deleteTask, err := client.Photonclient.Disks.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -288,12 +288,12 @@ func showDisk(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	disk, err := client.Esxclient.Disks.Get(id)
+	disk, err := client.Photonclient.Disks.Get(id)
 	if err != nil {
 		return err
 	}
@@ -337,7 +337,7 @@ func listDisks(c *cli.Context, w io.Writer) error {
 		Name: name,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -351,7 +351,7 @@ func listDisks(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	diskList, err := client.Esxclient.Projects.GetDisks(project.ID, options)
+	diskList, err := client.Photonclient.Projects.GetDisks(project.ID, options)
 	if err != nil {
 		return err
 	}
@@ -403,7 +403,7 @@ func getDiskTasks(c *cli.Context, w io.Writer) error {
 	id := c.Args().First()
 	state := c.String("state")
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -412,7 +412,7 @@ func getDiskTasks(c *cli.Context, w io.Writer) error {
 		State: state,
 	}
 
-	taskList, err := client.Esxclient.Disks.GetTasks(id, options)
+	taskList, err := client.Photonclient.Disks.GetTasks(id, options)
 	if err != nil {
 		return err
 	}

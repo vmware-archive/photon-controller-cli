@@ -187,12 +187,12 @@ func createFlavor(c *cli.Context, w io.Writer) error {
 
 	if confirmed(c) {
 		var err error
-		client.Esxclient, err = client.GetClient(c)
+		client.Photonclient, err = client.GetClient(c)
 		if err != nil {
 			return err
 		}
 
-		createTask, err := client.Esxclient.Flavors.Create(createSpec)
+		createTask, err := client.Photonclient.Flavors.Create(createSpec)
 		if err != nil {
 			return err
 		}
@@ -201,7 +201,7 @@ func createFlavor(c *cli.Context, w io.Writer) error {
 			return err
 		}
 		if utils.NeedsFormatting(c) {
-			flavor, err := client.Esxclient.Flavors.Get(flavorId)
+			flavor, err := client.Photonclient.Flavors.Get(flavorId)
 			if err != nil {
 				return err
 			}
@@ -222,12 +222,12 @@ func deleteFlavor(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	deleteTask, err := client.Esxclient.Flavors.Delete(id)
+	deleteTask, err := client.Photonclient.Flavors.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -246,7 +246,7 @@ func listFlavors(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -258,7 +258,7 @@ func listFlavors(c *cli.Context, w io.Writer) error {
 		Kind: kind,
 	}
 
-	flavors, err := client.Esxclient.Flavors.GetAll(options)
+	flavors, err := client.Photonclient.Flavors.GetAll(options)
 	if err != nil {
 		return err
 	}
@@ -295,12 +295,12 @@ func showFlavor(c *cli.Context, w io.Writer) error {
 	}
 	id := c.Args().First()
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	flavor, err := client.Esxclient.Flavors.Get(id)
+	flavor, err := client.Photonclient.Flavors.Get(id)
 	if err != nil {
 		return err
 	}
@@ -338,12 +338,12 @@ func getFlavorTasks(c *cli.Context, w io.Writer) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	taskList, err := client.Esxclient.Flavors.GetTasks(id, options)
+	taskList, err := client.Photonclient.Flavors.GetTasks(id, options)
 	if err != nil {
 		return err
 	}

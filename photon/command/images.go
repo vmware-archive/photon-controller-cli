@@ -182,7 +182,7 @@ func createImage(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func createImage(c *cli.Context, w io.Writer) error {
 		options = nil
 	}
 
-	uploadTask, err := client.Esxclient.Images.Create(file, name, options)
+	uploadTask, err := client.Photonclient.Images.Create(file, name, options)
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func createImage(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		image, err := client.Esxclient.Images.Get(imageID)
+		image, err := client.Photonclient.Images.Get(imageID)
 		if err != nil {
 			return err
 		}
@@ -229,12 +229,12 @@ func deleteImage(c *cli.Context) error {
 	id := c.Args().First()
 
 	if confirmed(c) {
-		client.Esxclient, err = client.GetClient(c)
+		client.Photonclient, err = client.GetClient(c)
 		if err != nil {
 			return err
 		}
 
-		deleteTask, err := client.Esxclient.Images.Delete(id)
+		deleteTask, err := client.Photonclient.Images.Delete(id)
 		if err != nil {
 			return err
 		}
@@ -256,7 +256,7 @@ func listImages(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
@@ -265,7 +265,7 @@ func listImages(c *cli.Context, w io.Writer) error {
 	options := &photon.ImageGetOptions{
 		Name: name,
 	}
-	images, err := client.Esxclient.Images.GetAll(options)
+	images, err := client.Photonclient.Images.GetAll(options)
 	if err != nil {
 		return err
 	}
@@ -312,12 +312,12 @@ func showImage(c *cli.Context, w io.Writer) error {
 	}
 
 	var err error
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	image, err := client.Esxclient.Images.Get(id)
+	image, err := client.Photonclient.Images.Get(id)
 	if err != nil {
 		return err
 	}
@@ -363,12 +363,12 @@ func getImageTasks(c *cli.Context) error {
 		State: state,
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	taskList, err := client.Esxclient.Images.GetTasks(id, options)
+	taskList, err := client.Photonclient.Images.GetTasks(id, options)
 	if err != nil {
 		return err
 	}

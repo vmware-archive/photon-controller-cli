@@ -127,7 +127,7 @@ func TestCreateDeleteCluster(t *testing.T) {
 	mocks.Activate(true)
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	globalSet := flag.NewFlagSet("test", 0)
 	globalSet.Bool("non-interactive", true, "doc")
@@ -295,7 +295,7 @@ func TestShowCluster(t *testing.T) {
 	mocks.Activate(true)
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
 	err = set.Parse([]string{"fake_cluster_id"})
@@ -389,7 +389,7 @@ func TestListClusters(t *testing.T) {
 	mocks.Activate(true)
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
 	globalFlags.String("output", "json", "output")
@@ -468,7 +468,7 @@ func TestResizeCluster(t *testing.T) {
 	mocks.Activate(true)
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	globalSet := flag.NewFlagSet("test", 0)
 	globalSet.Bool("non-interactive", true, "doc")
@@ -548,7 +548,7 @@ func TestListClusterVms(t *testing.T) {
 
 	mocks.Activate(true)
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
 	globalFlags.String("output", "json", "output")
@@ -617,7 +617,7 @@ func TestClusterTriggerMaintenance(t *testing.T) {
 	mocks.Activate(true)
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
 	err = commandFlags.Parse([]string{"fake_cluster_id"})
@@ -657,7 +657,7 @@ func TestClusterCertToFile(t *testing.T) {
 		mocks.CreateResponder(200, string(clusterResponse[:])))
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Esxclient = photon.NewTestClient(server.URL, nil, httpClient)
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
 	err = commandFlags.Parse([]string{"fake_cluster_id", "test.cert"})

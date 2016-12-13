@@ -24,7 +24,7 @@ import (
 )
 
 // Global variable pointing to photon client, can be assigned to mock client in tests
-var Esxclient *photon.Client
+var Photonclient *photon.Client
 
 var logger *log.Logger = nil
 var logFile *os.File = nil
@@ -64,8 +64,8 @@ func NewClient(config *cf.Configuration) (*photon.Client, error) {
 // Returns the photon client, if not set, it will read a config file.
 func GetClient(c *cli.Context) (*photon.Client, error) {
 	var err error
-	if Esxclient == nil {
-		Esxclient, err = get()
+	if Photonclient == nil {
+		Photonclient, err = get()
 		if err != nil {
 			return nil, err
 		}
@@ -79,7 +79,7 @@ func GetClient(c *cli.Context) (*photon.Client, error) {
 		return nil, err
 	}
 
-	return Esxclient, nil
+	return Photonclient, nil
 }
 
 func printDetail() error {
@@ -89,7 +89,7 @@ func printDetail() error {
 	}
 
 	if config != nil {
-		fmt.Printf("Target: '%s'\n", Esxclient.Endpoint)
+		fmt.Printf("Target: '%s'\n", Photonclient.Endpoint)
 
 		if config.Tenant == nil {
 			fmt.Printf("Tenant: <not-set> \n")

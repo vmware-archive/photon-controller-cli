@@ -191,12 +191,12 @@ func showInfo(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	info, err := client.Esxclient.Info.Get()
+	info, err := client.Photonclient.Info.Get()
 
 	if utils.NeedsFormatting(c) {
 		utils.FormatObject(info, w, c)
@@ -248,12 +248,12 @@ func login(c *cli.Context) error {
 		config.Token = token
 
 	} else {
-		client.Esxclient, err = client.GetClient(c)
+		client.Photonclient, err = client.GetClient(c)
 		if err != nil {
 			return err
 		}
 
-		options, err := client.Esxclient.Auth.GetTokensByPassword(username, password)
+		options, err := client.Photonclient.Auth.GetTokensByPassword(username, password)
 		if err != nil {
 			return err
 		}
@@ -317,12 +317,12 @@ func configureServerCerts(endpoint string, noChertCheck bool, c *cli.Context) (e
 		}
 	}
 
-	client.Esxclient, err = client.GetClient(c)
+	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return
 	}
 
-	authInfo, err := client.Esxclient.Auth.Get()
+	authInfo, err := client.Photonclient.Auth.Get()
 	if err != nil {
 		return
 	}
