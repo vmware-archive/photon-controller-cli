@@ -30,7 +30,7 @@ var imageUrl string = "/images"
 // If options is nil, default options are used.
 func (api *ImagesAPI) CreateFromFile(imagePath string, options *ImageCreateOptions) (task *Task, err error) {
 	params := imageCreateOptionsToMap(options)
-	res, err := api.client.restClient.MultipartUploadFile(api.client.Endpoint+imageUrl, imagePath, params, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.MultipartUploadFile(api.client.Endpoint+imageUrl, imagePath, params, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -43,9 +43,9 @@ func (api *ImagesAPI) CreateFromFile(imagePath string, options *ImageCreateOptio
 // Name is a descriptive name of the image, it is used in the filename field of the Content-Disposition header,
 // and does not need to be unique.
 // If options is nil, default options are used.
-func (api *ImagesAPI) Create(reader io.Reader, name string, options *ImageCreateOptions) (task *Task, err error) {
+func (api *ImagesAPI) Create(reader io.ReadSeeker, name string, options *ImageCreateOptions) (task *Task, err error) {
 	params := imageCreateOptionsToMap(options)
-	res, err := api.client.restClient.MultipartUpload(api.client.Endpoint+imageUrl, reader, name, params, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.MultipartUpload(api.client.Endpoint+imageUrl, reader, name, params, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -60,7 +60,7 @@ func (api *ImagesAPI) GetAll(options *ImageGetOptions) (images *Images, err erro
 	if options != nil {
 		uri += getQueryString(options)
 	}
-	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -72,7 +72,7 @@ func (api *ImagesAPI) GetAll(options *ImageGetOptions) (images *Images, err erro
 
 // Gets details of image with the specified ID.
 func (api *ImagesAPI) Get(imageID string) (image *Image, err error) {
-	res, err := api.client.restClient.Get(api.client.Endpoint+imageUrl+"/"+imageID, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Get(api.client.Endpoint+imageUrl+"/"+imageID, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -88,7 +88,7 @@ func (api *ImagesAPI) Get(imageID string) (image *Image, err error) {
 
 // Deletes image with the specified ID.
 func (api *ImagesAPI) Delete(imageID string) (task *Task, err error) {
-	res, err := api.client.restClient.Delete(api.client.Endpoint+imageUrl+"/"+imageID, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Delete(api.client.Endpoint+imageUrl+"/"+imageID, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -105,7 +105,7 @@ func (api *ImagesAPI) GetTasks(id string, options *TaskGetOptions) (result *Task
 		uri += getQueryString(options)
 	}
 
-	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}

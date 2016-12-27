@@ -27,7 +27,7 @@ func (api *ResourceTicketsAPI) GetTasks(id string, options *TaskGetOptions) (res
 	if options != nil {
 		uri += getQueryString(options)
 	}
-	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -40,7 +40,7 @@ func (api *ResourceTicketsAPI) GetTasks(id string, options *TaskGetOptions) (res
 // Gets the resource ticket with a specified ID.
 func (api *ResourceTicketsAPI) Get(id string) (resourceTicket *ResourceTicket, err error) {
 	res, err := api.client.restClient.Get(api.client.Endpoint+resourceTicketUrl+"/"+id,
-		api.client.options.TokenOptions.AccessToken)
+		api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}

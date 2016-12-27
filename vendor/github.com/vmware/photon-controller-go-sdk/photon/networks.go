@@ -35,8 +35,8 @@ func (api *SubnetsAPI) Create(networkSpec *SubnetCreateSpec) (task *Task, err er
 	res, err := api.client.restClient.Post(
 		api.client.Endpoint+subnetUrl,
 		"application/json",
-		bytes.NewBuffer(body),
-		api.client.options.TokenOptions.AccessToken)
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -47,7 +47,7 @@ func (api *SubnetsAPI) Create(networkSpec *SubnetCreateSpec) (task *Task, err er
 
 // Deletes a network with specified ID.
 func (api *SubnetsAPI) Delete(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Delete(api.client.Endpoint+subnetUrl+"/"+id, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Delete(api.client.Endpoint+subnetUrl+"/"+id, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -58,7 +58,7 @@ func (api *SubnetsAPI) Delete(id string) (task *Task, err error) {
 
 // Gets a network with the specified ID.
 func (api *SubnetsAPI) Get(id string) (network *Subnet, err error) {
-	res, err := api.client.restClient.Get(api.client.Endpoint+subnetUrl+"/"+id, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Get(api.client.Endpoint+subnetUrl+"/"+id, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -78,7 +78,7 @@ func (api *SubnetsAPI) GetAll(options *SubnetGetOptions) (result *Subnets, err e
 	if options != nil {
 		uri += getQueryString(options)
 	}
-	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
 
 	result = &Subnets{}
 	err = json.Unmarshal(res, result)
@@ -90,8 +90,8 @@ func (api *SubnetsAPI) SetDefault(id string) (task *Task, err error) {
 	res, err := api.client.restClient.Post(
 		api.client.Endpoint+subnetUrl+"/"+id+"/set_default",
 		"application/json",
-		bytes.NewBuffer([]byte("")),
-		api.client.options.TokenOptions.AccessToken)
+		bytes.NewReader([]byte("")),
+		api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}

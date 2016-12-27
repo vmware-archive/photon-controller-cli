@@ -38,7 +38,7 @@ const ExtendedPropertyAdminPassword string = "admin_password"
 
 // Deletes a cluster with specified ID.
 func (api *ClustersAPI) Delete(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Delete(api.client.Endpoint+clusterUrl+id, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Delete(api.client.Endpoint+clusterUrl+id, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -49,7 +49,7 @@ func (api *ClustersAPI) Delete(id string) (task *Task, err error) {
 
 // Gets a cluster with the specified ID.
 func (api *ClustersAPI) Get(id string) (cluster *Cluster, err error) {
-	res, err := api.client.restClient.Get(api.client.Endpoint+clusterUrl+id, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Get(api.client.Endpoint+clusterUrl+id, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -66,7 +66,7 @@ func (api *ClustersAPI) Get(id string) (cluster *Cluster, err error) {
 // Gets vms for cluster with the specified ID.
 func (api *ClustersAPI) GetVMs(id string) (result *VMs, err error) {
 	uri := api.client.Endpoint + clusterUrl + id + "/vms"
-	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -86,7 +86,7 @@ func (api *ClustersAPI) Resize(id string, resize *ClusterResizeOperation) (task 
 		api.client.Endpoint+clusterUrl+id+"/resize",
 		"application/json",
 		bytes.NewReader(body),
-		api.client.options.TokenOptions.AccessToken)
+		api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -102,7 +102,7 @@ func (api *ClustersAPI) TriggerMaintenance(id string) (task *Task, err error) {
 		api.client.Endpoint+clusterUrl+id+"/trigger_maintenance",
 		"application/json",
 		bytes.NewReader(body),
-		api.client.options.TokenOptions.AccessToken)
+		api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}

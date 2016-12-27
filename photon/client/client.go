@@ -37,8 +37,10 @@ func NewClient(config *cf.Configuration) (*photon.Client, error) {
 	options := &photon.ClientOptions{
 		IgnoreCertificate: config.IgnoreCertificate,
 		TokenOptions: &photon.TokenOptions{
-			AccessToken: config.Token,
+			AccessToken:  config.Token,
+			RefreshToken: config.RefreshToken,
 		},
+		UpdateAccessTokenCallback: updateToken,
 	}
 
 	//
@@ -148,4 +150,21 @@ func CleanupLogging() error {
 		logger = nil
 	}
 	return nil
+}
+
+func updateToken(newToken string) {
+	config, err := cf.LoadConfig()
+	if err != nil {
+		fmt.Printf("Could not load current config in order to update token: %s", err)
+		return
+	}
+	config.Token = newToken
+	err = cf.SaveConfig(config)
+	if err != nil {
+		fmt.Printf("Could not save new config with refreshed token: %s", err)
+		return
+	}
+	if logger != nil {
+		logger.Printf("Access token has been refreshed\n")
+	}
 }

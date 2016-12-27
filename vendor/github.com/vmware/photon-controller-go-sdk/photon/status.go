@@ -22,7 +22,7 @@ var statusUrl string = "/status"
 
 // Returns the status of an photon endpoint.
 func (api *StatusAPI) Get() (status *Status, err error) {
-	res, err := api.client.restClient.Get(api.client.Endpoint+statusUrl, api.client.options.TokenOptions.AccessToken)
+	res, err := api.client.restClient.Get(api.client.Endpoint+statusUrl, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}

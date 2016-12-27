@@ -35,6 +35,7 @@ type ProjectConfiguration struct {
 type Configuration struct {
 	CloudTarget       string
 	Token             string
+	RefreshToken      string
 	IgnoreCertificate bool
 	Tenant            *TenantConfiguration
 	Project           *ProjectConfiguration

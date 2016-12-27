@@ -259,6 +259,7 @@ func login(c *cli.Context) error {
 		}
 
 		config.Token = options.AccessToken
+		config.RefreshToken = options.RefreshToken
 	}
 
 	err = cf.SaveConfig(config)
