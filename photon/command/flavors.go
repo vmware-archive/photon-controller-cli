@@ -40,8 +40,17 @@ func GetFlavorsCommand() cli.Command {
 				ArgsUsage: " ",
 				Description: "This creates a new flavor. Only system administrators can create flavors.\n" +
 					"   A flavor is defined by a set of costs. Each cost has a type (e.g. vm.memory),\n" +
-					"   a numnber (e.g. 1) and a unit (GB, MB, KB, B, or COUNT). VM flavors must specify at\n" +
+					"   a numnber (e.g. 1) and a unit (e.g. GB). VM flavors must specify at\n" +
 					"   least two costs: vm.memory and vm.cpu.\n\n" +
+					"   Valid units:  GB, MB, KB, B, or COUNT\n" +
+					"   Common costs:\n" +
+					"     vm:                       Total number of VMs (use with COUNT)\n" +
+					"     vm.cpu:                   Total number of vCPUs for a VM (use with COUNT)\n" +
+					"     vm.memory:                Total amount of RAM for a VM (use with GB, MB, KB, or B)\n" +
+					"     persistent-disk:          Number of persistent disks (use with COUNT)\n" +
+					"     persistent-disk.capacity: Total persistent disk capcity (use with GB, MB, KB, or B)\n" +
+					"     ephemeral-disk:           Number of persistent disks (use with COUNT)\n" +
+					"     ephemeral-disk.capacity:  Total persistent disk capcity (use with GB, MB, KB, or B)\n\n" +
 					"   Example VM flavor command:\n" +
 					"      photon flavor create --name f1 --kind vm --cost 'vm.memory 1 GB, vm.cpu 1 COUNT'\n" +
 					"   Example disk flavor:\n" +
