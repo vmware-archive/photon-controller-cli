@@ -39,10 +39,20 @@ func GetResourceTicketCommand() cli.Command {
 				ArgsUsage: " ",
 				Description: "Create a new resource ticket for a tenant.\n" +
 					"   Only system administrators can create new resource tickets.\n" +
-					"   A flavor is defined by a set of maximum resource costs. Each usage has a type (e.g. vm.memory),\n" +
-					"   a numnber (e.g. 1) and a unit (GB, MB, KB, B, or COUNT). You must specify at least one cost\n" +
-					"   Example ticket with 1000 GB of RAM and 500 vCPUs:\n" +
-					"      photon resource-ticket create --name ticket1 --tenant tenant1 --limits 'vm.memory 1000 GB, vm.cpu 500 COUNT'",
+					"   A flavor is defined by a set of maximum resource costs. Each usage has a type (e.g. vm.memory),\n\n" +
+					"   a numnber (e.g. 1) and a unit (e.g. GB). You must specify at least one cost\n" +
+					"   Valid units:  GB, MB, KB, B, or COUNT\n" +
+					"   Common costs:\n" +
+					"     vm.count:                 Total number of VMs (use with COUNT)\n" +
+					"     vm.cpu:                   Total number of vCPUs for a VM (use with COUNT)\n" +
+					"     vm.memory:                Total amount of RAM for a VM (use with GB, MB, KB, or B)\n" +
+					"     persistent-disk.count:    Number of persistent disks (use with COUNT)\n" +
+					"     persistent-disk.capacity: Total persistent disk capacity (use with GB, MB, KB, or B)\n" +
+					"     ephemeral-disk.count:     Number of persistent disks (use with COUNT)\n" +
+					"     ephemeral-disk.capacity:  Total persistent disk capacity (use with GB, MB, KB, or B)\n\n" +
+					"   Example ticket with 100 VMs, 1000 GB of RAM and 500 vCPUs:\n" +
+					"      photon resource-ticket create --name ticket1 --tenant tenant1 \\\n" +
+					"             --limits 'vm.count 100 COUNT, vm.memory 1000 GB, vm.cpu 500 COUNT'",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
