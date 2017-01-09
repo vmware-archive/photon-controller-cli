@@ -126,7 +126,7 @@ func GetDeploymentsCommand() cli.Command {
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "type, k",
-						Usage: "Cluster type (accepted values are KUBERNETES, MESOS, or SWARM)",
+						Usage: "Cluster type (accepted values are KUBERNETES or HARBOR)",
 					},
 					cli.StringFlag{
 						Name:  "image-id, i",
@@ -150,7 +150,7 @@ func GetDeploymentsCommand() cli.Command {
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "type, k",
-						Usage: "Cluster type (accepted values are KUBERNETES, MESOS, or SWARM)",
+						Usage: "Cluster type (accepted values are KUBERNETES or HARBOR)",
 					},
 				},
 				Action: func(c *cli.Context) {
