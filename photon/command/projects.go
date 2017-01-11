@@ -171,7 +171,10 @@ func GetProjectsCommand() cli.Command {
 				ArgsUsage: "<project-id> <comma separated list of groups>",
 				Description: "Set the list of Lightwave groups that can use this project. This may only be\n" +
 					"   be set by a member of the project. Be cautious--you can remove your own access if you specify\n" +
-					"   the wrong set of groups.",
+					"   the wrong set of groups.\n\n" +
+					"   A security group specifies both the Lightwave domain and Lightwave group.\n" +
+					"   For example, a security group may be photon.vmware.com\\group-1\n\n" +
+					"   Example: photon project 3f78619d-20b1-4b86-a7a6-5a9f09e59ef6 set-security-groups 'photon.vmware.com\\group-1,photon.vmware.com\\group-2'",
 				Action: func(c *cli.Context) {
 					err := setSecurityGroupsForProject(c)
 					if err != nil {

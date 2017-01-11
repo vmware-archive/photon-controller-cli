@@ -234,10 +234,13 @@ func GetDeploymentsCommand() cli.Command {
 			{
 				Name:      "set-security-groups",
 				Usage:     "Set security groups for a deployment",
-				ArgsUsage: "<security-groups>",
+				ArgsUsage: "<comma separate list of security groups>",
 				Description: "Provide the list of Lightwave groups that contain the people who are\n" +
 					"   allowed to be system administrators. Be careful: providing the wrong group could remove\n" +
-					"   your access." +
+					"   your access.\n\n" +
+					"   A security group specifies both the Lightwave domain and Lightwave group.\n" +
+					"   For example, a security group may be photon.vmware.com\\group-1\n\n" +
+					"   Example: photon deployment set-security-groups 'photon.vmware.com\\group-1,photon.vmware.com\\group-2'\n\n" +
 					"   Requires system administrator access.",
 				Action: func(c *cli.Context) {
 					err := setDeploymentSecurityGroups(c)
