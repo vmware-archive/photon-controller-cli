@@ -1149,48 +1149,6 @@ func removeDuplicates(a []string) []string {
 	return result
 }
 
-func validateDeploymentArguments(imageDatastoreNames []string, enableAuth bool, authEndpoint string, authPort int, oauthTenant string,
-	oauthUsername string, oauthPassword string, oauthSecurityGroups []string, enableVirtualNetwork bool, networkManagerAddress string,
-	networkManagerUsername string, networkManagerPassword string, enableStats bool, statsStoreEndpoint string, statsStorePort int) error {
-	if len(imageDatastoreNames) == 0 {
-		return fmt.Errorf("Image datastore names cannot be nil.")
-	}
-	if enableAuth {
-		if oauthTenant == "" {
-			return fmt.Errorf("OAuth tenant cannot be nil when auth is enabled.")
-		}
-		if oauthUsername == "" {
-			return fmt.Errorf("OAuth username cannot be nil when auth is enabled.")
-		}
-		if oauthPassword == "" {
-			return fmt.Errorf("OAuth password cannot be nil when auth is enabled.")
-		}
-		if len(oauthSecurityGroups) == 0 {
-			return fmt.Errorf("OAuth security groups cannot be nil when auth is enabled.")
-		}
-	}
-	if enableVirtualNetwork {
-		if networkManagerAddress == "" {
-			return fmt.Errorf("Network manager address cannot be nil when virtual network is enabled.")
-		}
-		if networkManagerUsername == "" {
-			return fmt.Errorf("Network manager username cannot be nil when virtual network is enabled.")
-		}
-		if networkManagerPassword == "" {
-			return fmt.Errorf("Network manager password cannot be nil when virtual network is enabled.")
-		}
-	}
-	if enableStats {
-		if statsStoreEndpoint == "" {
-			return fmt.Errorf("Stats store endpoint cannot be nil when stats is enabled.")
-		}
-		if statsStorePort == 0 {
-			return fmt.Errorf("Stats store port cannot be nil when stats is enabled.")
-		}
-	}
-	return nil
-}
-
 func deploymentJsonHelper(c *cli.Context, id string, client *photon.Client) error {
 	if utils.NeedsFormatting(c) {
 		deployment, err := client.Deployments.Get(id)

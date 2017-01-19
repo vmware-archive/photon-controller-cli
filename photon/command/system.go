@@ -18,9 +18,7 @@ import (
 	"net"
 	"os"
 	"regexp"
-	"strconv"
 	"text/tabwriter"
-	"time"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/manifest"
@@ -32,7 +30,6 @@ import (
 
 // Create a cli.command object for command "system"
 // Subcommand: status; Usage: system status
-// Subcommand: status; Usage: system deploy <dc_map>
 func GetSystemCommand() cli.Command {
 	command := cli.Command{
 		Name:  "system",
@@ -46,17 +43,6 @@ func GetSystemCommand() cli.Command {
 					err := getStatus(c, os.Stdout)
 					if err != nil {
 						log.Fatal(err)
-					}
-				},
-			},
-			{
-				Name:      "deploy",
-				Usage:     "Deploy Photon using DC Map",
-				ArgsUsage: "<dc-map-file>",
-				Action: func(c *cli.Context) {
-					err := deploy(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -79,17 +65,6 @@ func GetSystemCommand() cli.Command {
 				Description: "Deprecated, use add-hosts instead",
 				Action: func(c *cli.Context) {
 					err := addHosts(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:      "destroy",
-				Usage:     "Destroy Photon deployment",
-				ArgsUsage: " ",
-				Action: func(c *cli.Context) {
-					err := destroy(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -180,43 +155,6 @@ func printStatus(status *photon.Status) error {
 	return nil
 }
 
-// Deploy Photon Controller based on DC_map
-func deploy(c *cli.Context) error {
-	err := checkArgCount(c, 1)
-	if err != nil {
-		return err
-	}
-	file := c.Args().First()
-	dcMap, err := manifest.LoadInstallation(file)
-	if err != nil {
-		return err
-	}
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	deploymentID, err := createDeploymentFromDcMap(dcMap)
-	if err != nil {
-		return err
-	}
-
-	// Create Hosts
-	err = createHostsFromDcMap(dcMap, deploymentID)
-	if err != nil {
-		return err
-	}
-
-	// Deploy
-	err = doDeploy(dcMap, deploymentID)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Add most hosts in batch mode
 func addHosts(c *cli.Context) error {
 	err := checkArgCount(c, 0)
@@ -241,90 +179,6 @@ func addHosts(c *cli.Context) error {
 	err = createHostsInBatch(dcMap, deploymentID)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// Destroy a Photon Controller deployment
-func destroy(c *cli.Context) error {
-	err := checkArgCount(c, 0)
-	if err != nil {
-		return err
-	}
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	deployments, err := client.Photonclient.Deployments.GetAll()
-	if err != nil {
-		return err
-	}
-	if deployments == nil {
-		return fmt.Errorf("There is no deployment to destroy")
-	}
-
-	// Destroy deployment
-	for _, deployment := range deployments.Items {
-		err = doDestroy(deployment.ID)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Delete hosts
-	for _, deployment := range deployments.Items {
-		hosts, err := client.Photonclient.Deployments.GetHosts(deployment.ID)
-		if err != nil {
-			return err
-		}
-
-		for _, host := range hosts.Items {
-			deleteTask, err := client.Photonclient.Hosts.Delete(host.ID)
-			if err != nil {
-				return err
-			}
-
-			deleteTask, err = pollTask(deleteTask.ID)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("Host has been deleted: ID = %s\n", deleteTask.Entity.ID)
-		}
-	}
-
-	// Delete availability-zones
-	zones, err := client.Photonclient.AvailabilityZones.GetAll()
-	if err != nil {
-		return err
-	}
-	for _, zone := range zones.Items {
-		deleteTask, err := client.Photonclient.AvailabilityZones.Delete(zone.ID)
-		if err != nil {
-			return err
-		}
-
-		deleteTask, err = pollTask(deleteTask.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("AvailabilityZone has been deleted: ID = %s\n", deleteTask.Entity.ID)
-	}
-
-	// Delete deployment doc
-	for _, deployment := range deployments.Items {
-		deleteTask, err := client.Photonclient.Deployments.Delete(deployment.ID)
-		if err != nil {
-			return err
-		}
-
-		task, err := pollTask(deleteTask.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Deleted deployment %s\n", task.Entity.ID)
 	}
 
 	return nil
@@ -436,98 +290,6 @@ func showMigrationStatusDeprecated(c *cli.Context) error {
 	return nil
 }
 
-func createDeploymentFromDcMap(dcMap *manifest.Installation) (deploymentID string, err error) {
-	err = validateDeploymentArguments(
-		dcMap.Deployment.ImageDatastores, dcMap.Deployment.AuthEnabled,
-		dcMap.Deployment.AuthEndpoint, dcMap.Deployment.AuthPort,
-		dcMap.Deployment.AuthTenant, dcMap.Deployment.AuthUsername, dcMap.Deployment.AuthPassword,
-		dcMap.Deployment.AuthSecurityGroups, dcMap.Deployment.SdnEnabled,
-		dcMap.Deployment.NetworkManagerAddress, dcMap.Deployment.NetworkManagerUsername,
-		dcMap.Deployment.NetworkManagerPassword,
-		dcMap.Deployment.StatsEnabled, dcMap.Deployment.StatsStoreEndpoint,
-		dcMap.Deployment.StatsPort)
-	if err != nil {
-		return "", err
-	}
-
-	lbEnabledString := dcMap.Deployment.LoadBalancerEnabled
-	lbEnabled := true
-	if len(lbEnabledString) > 0 {
-		lbEnabled, err = strconv.ParseBool(lbEnabledString)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	var ipRangeSpec *photon.IpRange
-	if dcMap.Deployment.SdnEnabled {
-		externalIps, err := parseIpRanges(dcMap.Deployment.NetworkExternalIpRange)
-		if err != nil {
-			return "", err
-		}
-
-		if externalIps == nil || len(externalIps) == 0 {
-			return "", errors.New("External IP Range missing in DC Map")
-		}
-
-		ipRangeSpec = &photon.IpRange{
-			Start: externalIps[0],
-			End:   externalIps[len(externalIps)-1],
-		}
-	}
-
-	authInfo := &photon.AuthInfo{
-		Enabled:        dcMap.Deployment.AuthEnabled,
-		Endpoint:       dcMap.Deployment.AuthEndpoint,
-		Port:           dcMap.Deployment.AuthPort,
-		Tenant:         dcMap.Deployment.AuthTenant,
-		Username:       dcMap.Deployment.AuthUsername,
-		Password:       dcMap.Deployment.AuthPassword,
-		SecurityGroups: dcMap.Deployment.AuthSecurityGroups,
-	}
-	networkConfiguration := &photon.NetworkConfigurationCreateSpec{
-		Enabled:         dcMap.Deployment.SdnEnabled,
-		Address:         dcMap.Deployment.NetworkManagerAddress,
-		Username:        dcMap.Deployment.NetworkManagerUsername,
-		Password:        dcMap.Deployment.NetworkManagerPassword,
-		NetworkZoneId:   dcMap.Deployment.NetworkZoneId,
-		TopRouterId:     dcMap.Deployment.NetworkTopRouterId,
-		EdgeIpPoolId:    dcMap.Deployment.NetworkEdgeIpPoolId,
-		HostUplinkPnic:  dcMap.Deployment.NetworkHostUplinkPnic,
-		IpRange:         dcMap.Deployment.NetworkIpRange,
-		ExternalIpRange: ipRangeSpec,
-		DhcpServers:     dcMap.Deployment.NetworkDhcpServers,
-	}
-	statsInfo := &photon.StatsInfo{
-		Enabled:       dcMap.Deployment.StatsEnabled,
-		StoreEndpoint: dcMap.Deployment.StatsStoreEndpoint,
-		StorePort:     dcMap.Deployment.StatsPort,
-	}
-
-	deploymentSpec := &photon.DeploymentCreateSpec{
-		Auth:                 authInfo,
-		NetworkConfiguration: networkConfiguration,
-		ImageDatastores:      dcMap.Deployment.ImageDatastores,
-		NTPEndpoint:          dcMap.Deployment.NTPEndpoint,
-		SyslogEndpoint:       dcMap.Deployment.SyslogEndpoint,
-		Stats:                statsInfo,
-		UseImageDatastoreForVms: dcMap.Deployment.UseImageDatastoreForVms,
-		LoadBalancerEnabled:     lbEnabled,
-	}
-
-	createDeploymentTask, err := client.Photonclient.Deployments.Create(deploymentSpec)
-	if err != nil {
-		return "", err
-	}
-
-	task, err := pollTask(createDeploymentTask.ID)
-	if err != nil {
-		return "", err
-	}
-	fmt.Printf("Created deployment %s\n", task.Entity.ID)
-	return task.Entity.ID, nil
-}
-
 func contains(list []string, value string) bool {
 	for _, item := range list {
 		if item == value {
@@ -560,28 +322,6 @@ func createAvailabilityZonesFromDcMap(dcMap *manifest.Installation) (map[string]
 		}
 	}
 	return availabilityZoneNameToIdMap, nil
-}
-
-func createHostsFromDcMap(dcMap *manifest.Installation, deploymentID string) error {
-	hostSpecs, err := createHostSpecs(dcMap)
-	if err != nil {
-		return err
-	}
-
-	for _, spec := range hostSpecs {
-		createHostTask, err := client.Photonclient.Hosts.Create(&spec, deploymentID)
-		if err != nil {
-			return err
-		}
-
-		task, err := pollTask(createHostTask.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Host with ip '%s' created: ID = %s\n", spec.Address, task.Entity.ID)
-	}
-
-	return nil
 }
 
 func createHostsInBatch(dcMap *manifest.Installation, deploymentID string) error {
@@ -705,43 +445,4 @@ func inc(ip net.IP) {
 			break
 		}
 	}
-}
-
-func doDeploy(installSpec *manifest.Installation, deploymentID string) error {
-	var desiredState string
-	if installSpec.Deployment.ResumeSystem {
-		desiredState = "READY"
-	} else {
-		desiredState = "PAUSED"
-	}
-	deploymentDeployOperation := &photon.DeploymentDeployOperation{
-		DesiredState: desiredState,
-	}
-	deployTask, err := client.Photonclient.Deployments.Deploy(deploymentID, deploymentDeployOperation)
-	if err != nil {
-		return err
-	}
-
-	_, err = pollTaskWithTimeout(client.Photonclient, deployTask.ID, 120*time.Minute)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Deployment '%s' is complete.\n", deploymentID)
-	return nil
-}
-
-func doDestroy(deploymentID string) error {
-	destroyTask, err := client.Photonclient.Deployments.Destroy(deploymentID)
-	if err != nil {
-		return err
-	}
-
-	_, err = pollTask(destroyTask.ID)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Deployment '%s' is destroyed.\n", deploymentID)
-
-	return nil
 }
