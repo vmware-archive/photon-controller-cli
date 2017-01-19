@@ -137,13 +137,13 @@ Usage: `photon target set <PHOTON-CONTROLLER-URL>`
 
 Example:
 
-    % photon target set https://10.118.96.41
-    API target set to 'https://10.118.96.41'
+    % photon target set https://198.51.100.41
+    API target set to 'https://198.51.100.41'
 
 If you are not using HTTPS, specify the port:
 
-    % photon target set http://10.118.96.41:9000
-    API target set to 'http://10.118.96.41:9000'
+    % photon target set http://198.51.100.41:9000
+    API target set to 'http://198.51.100.41:9000'
 
 ### Tenants
 
@@ -200,12 +200,14 @@ Usage `photon resource-ticket create --name <RESOURCE-TICKET-NAME> --limits "<LI
 
 Example:
 
-    % photon -n resource-ticket create --name cloud-dev-resources --limits "vm.memory 2000 GB, vm 1000 COUNT"
+    % photon -n resource-ticket create --name cloud-dev-resources
+             --limits "vm.memory 2000 GB, vm 1000 COUNT"
     32ad527e-d21a-4b2a-a235-b0883bd64354
 
 Creating a ticket with user-defined resources:
 
-    % photon -n resource-ticket create --name cloud-dev-resources --limits "vm.memory 2000 GB, vm 1000 COUNT vm.potrzebie 250 COUNT"
+    % photon -n resource-ticket create --name cloud-dev-resources
+             --limits "vm.memory 2000 GB, vm 1000 COUNT vm.potrzebie 250 COUNT"
     32ad527e-d21a-4b2a-a235-b0883bd64354
 
 
@@ -235,7 +237,8 @@ Creating a project:
 
 Usage: `photon project create --resource-ticket <RESOURCE-TICKET-NAME> --name <PROJECT-NAME> --limits <LIMITS>`
 
-    % photon -n project create --resource-ticket cloud-dev-resources --name cloud-dev-staging --limits "vm.memory 1000 GB, vm 500 COUNT"
+    % photon -n project create --resource-ticket cloud-dev-resources
+             --name cloud-dev-staging --limits "vm.memory 1000 GB, vm 500 COUNT"
     fabb9236-d0a4-4d30-8935-ee65d6729f78
 
 Viewing projects:
@@ -268,17 +271,20 @@ Usage: `photon flavor create --name <FLAVOR-NAME> --kind <KIND> --cost <COST>`
 
 Example:
 
-    % photon -n flavor create --name "cloud-vm-small" --kind "vm" --cost "vm 1.0 COUNT, vm.cpu 1.0 COUNT, vm.memory 2.0 GB"
+    % photon -n flavor create --name "cloud-vm-small" --kind "vm"
+             --cost "vm 1.0 COUNT, vm.cpu 1.0 COUNT, vm.memory 2.0 GB"
     ddfb5be0-3355-46d3-9f2f-e28750eb201b
 
 Creating a VM flavor with user-defined attributes:
 
-    % photon -n flavor create --name "cloud-vm-small" --kind "vm" --cost "vm 1.0 COUNT, vm.cpu 1.0 COUNT, vm.memory 2.0 GB vm.potrzebie 10"
+    % photon -n flavor create --name "cloud-vm-small" --kind "vm"
+             --cost "vm 1.0 COUNT, vm.cpu 1.0 COUNT, vm.memory 2.0 GB vm.potrzebie 10"
     ddfb5be0-3355-46d3-9f2f-e28750eb201b
 
 Creating a disk flavor:
 
-    % photon -n flavor create --name "cloud-disk" --kind "ephemeral-disk" --cost "ephemeral-disk 1.0 COUNT"
+    % photon -n flavor create --name "cloud-disk"
+             --kind "ephemeral-disk" --cost "ephemeral-disk 1.0 COUNT"
     78efc53a-88ce-4f09-9b5d-49662d21e56c
 
 Viewing flavors:
@@ -354,7 +360,8 @@ lists a set of disks, separated by commas. Each disk is described by three value
 
 Usage: `photon -n vm create --name <VM-NAME> --image <IMAGE-ID> --flavor <VM-FLAVOR> --disk <DISK-DESCRIPTION>`
 
-    % photon -n vm create --name vm-1 --image 8d0b9383-ff64-4112-85db-e8111e2269fc --flavor cloud-vm-small --disks "disk-1 cloud-disk boot=true"
+    % photon -n vm create --name vm-1 --image 8d0b9383-ff64-4112-85db-e8111e2269fc
+             --flavor cloud-vm-small --disks "disk-1 cloud-disk boot=true"
     86911d88-a037-4576-9649-4df579abb88c
 
 Starting a VM:
@@ -365,7 +372,7 @@ Starting a VM:
 Viewing VMs. Note that the IP address will only be shown in the VM tools are installed on the VM:
 
     % photon vm list
-    Using target 'http://10.118.96.41:9000'
+    Using target 'http://198.51.100.41:9000'
     ID                                    Name  State
     86911d88-a037-4576-9649-4df579abb88c  vm-1  STARTED
 
@@ -398,7 +405,7 @@ Note that when the VM is created, it consumes some of the resources allocated
 to the project, based on the definitions in the flavor:
 
     % photon project list
-    Using target 'http://10.118.96.41:9000'
+    Using target 'http://198.51.100.41:9000'
     ID                                    Name               Limit              Usage
     fabb9236-d0a4-4d30-8935-ee65d6729f78  cloud-dev-staging  vm.memory 1000 GB  vm.cpu 1 COUNT
                                                              vm 500 COUNT       vm.memory 2 GB
@@ -412,16 +419,17 @@ to the project, based on the definitions in the flavor:
 
 Adding an ESX host:
 
-Usage: `photon host create -u <USER-NAME> -p <PASSWORD> -i <ADDRESS> --tag <CLOUD|MGMT> -d <DEPLOYMENT-ID>``
+Usage: `photon host create -u <USER-NAME> -p <PASSWORD> -i <ADDRESS> --tag <CLOUD|MGMT> -d <DEPLOYMENT-ID>`
 
-    % photon -n host create -u root -p MY-PASSWORD -i 10.160.105.139 --tag 'CLOUD' -d prod-deployment
+    % photon -n host create -u root -p MY-PASSWORD
+             -i 198.51.100.41 --tag 'CLOUD' -d prod-deployment
     3a159e73-854f-4598-937f-909d503b1dc6
 
 Viewing hosts:
 
     % photon deployment list-hosts prod-deployment
     ID                                    State  IP              Tags
-    3a159e73-854f-4598-937f-909d503b1dc6  READY  10.160.105.139  CLOUD
-    a5411f8c-84b6-4b58-9670-7728db7c4cac  READY  10.160.98.190   CLOUD
+    3a159e73-854f-4598-937f-909d503b1dc6  READY  198.51.100.139 CLOUD
+    a5411f8c-84b6-4b58-9670-7728db7c4cac  READY  198.51.100.190   CLOUD
 
     Total: 2
