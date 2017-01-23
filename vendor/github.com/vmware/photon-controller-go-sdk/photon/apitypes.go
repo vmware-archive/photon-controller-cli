@@ -441,23 +441,6 @@ type Hosts struct {
 	Items []Host `json:"items"`
 }
 
-// Creation spec for deployments.
-type DeploymentCreateSpec struct {
-	NTPEndpoint             interface{}                     `json:"ntpEndpoint"`
-	UseImageDatastoreForVms bool                            `json:"useImageDatastoreForVms"`
-	SyslogEndpoint          interface{}                     `json:"syslogEndpoint"`
-	Stats                   *StatsInfo                      `json:"stats"`
-	ImageDatastores         []string                        `json:"imageDatastores"`
-	Auth                    *AuthInfo                       `json:"auth"`
-	NetworkConfiguration    *NetworkConfigurationCreateSpec `json:"networkConfiguration"`
-	LoadBalancerEnabled     bool                            `json:"loadBalancerEnabled"`
-}
-
-// Deployment deploy config.
-type DeploymentDeployOperation struct {
-	DesiredState string `json:"desiredState"`
-}
-
 type MigrationStatus struct {
 	CompletedDataMigrationCycles int `json:"completedDataMigrationCycles"`
 	DataMigrationCycleProgress   int `json:"dataMigrationCycleProgress"`
