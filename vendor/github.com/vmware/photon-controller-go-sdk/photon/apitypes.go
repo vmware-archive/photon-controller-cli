@@ -696,3 +696,18 @@ type Info struct {
 	GitCommitHash string `json:"gitCommitHash"`
 	NetworkType   string `json:"networkType"`
 }
+
+// NSX configuration spec
+type NsxConfigurationSpec struct {
+	NsxAddress             string            `json:"nsxAddress"`
+	NsxUsername            string            `json:"nsxUsername"`
+	NsxPassword            string            `json:"nsxPassword"`
+	DhcpServerAddresses    map[string]string `json:"dhcpServerAddresses"`
+	PrivateIpRootCidr      string            `json:"privateIpRootCidr"`
+	FloatingIpRootRange    IpRange           `json:"floatingIpRootRange"`
+	T0RouterId             string            `json:"t0RouterId"`
+	EdgeClusterId          string            `json:"edgeClusterId"`
+	OverlayTransportZoneId string            `json:"overlayTransportZoneId"`
+	TunnelIpPoolId         string            `json:"tunnelIpPoolId"`
+	HostUplinkPnic         string            `json:"hostUplinkPnic"`
+}
