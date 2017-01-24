@@ -441,6 +441,23 @@ type Hosts struct {
 	Items []Host `json:"items"`
 }
 
+// Creation spec for deployments.
+type DeploymentCreateSpec struct {
+	NTPEndpoint             interface{}                     `json:"ntpEndpoint"`
+	UseImageDatastoreForVms bool                            `json:"useImageDatastoreForVms"`
+	SyslogEndpoint          interface{}                     `json:"syslogEndpoint"`
+	Stats                   *StatsInfo                      `json:"stats"`
+	ImageDatastores         []string                        `json:"imageDatastores"`
+	Auth                    *AuthInfo                       `json:"auth"`
+	NetworkConfiguration    *NetworkConfigurationCreateSpec `json:"networkConfiguration"`
+	LoadBalancerEnabled     bool                            `json:"loadBalancerEnabled"`
+}
+
+// Deployment deploy config.
+type DeploymentDeployOperation struct {
+	DesiredState string `json:"desiredState"`
+}
+
 type MigrationStatus struct {
 	CompletedDataMigrationCycles int `json:"completedDataMigrationCycles"`
 	DataMigrationCycleProgress   int `json:"dataMigrationCycleProgress"`
@@ -695,4 +712,19 @@ type Info struct {
 	FullVersion   string `json:"fullVersion"`
 	GitCommitHash string `json:"gitCommitHash"`
 	NetworkType   string `json:"networkType"`
+}
+
+// NSX configuration spec
+type NsxConfigurationSpec struct {
+	NsxAddress             string            `json:"nsxAddress"`
+	NsxUsername            string            `json:"nsxUsername"`
+	NsxPassword            string            `json:"nsxPassword"`
+	DhcpServerAddresses    map[string]string `json:"dhcpServerAddresses"`
+	PrivateIpRootCidr      string            `json:"privateIpRootCidr"`
+	FloatingIpRootRange    IpRange           `json:"floatingIpRootRange"`
+	T0RouterId             string            `json:"t0RouterId"`
+	EdgeClusterId          string            `json:"edgeClusterId"`
+	OverlayTransportZoneId string            `json:"overlayTransportZoneId"`
+	TunnelIpPoolId         string            `json:"tunnelIpPoolId"`
+	HostUplinkPnic         string            `json:"hostUplinkPnic"`
 }
