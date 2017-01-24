@@ -117,6 +117,72 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
+				Name:        "configure-nsx",
+				Usage:       "Configure NSX for deployment",
+				ArgsUsage:   " ",
+				Description: "Configure NSX for the deployment. Requires system administrator access.",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "nsxAddress",
+						Usage: "IP address of NSX",
+					},
+					cli.StringFlag{
+						Name:  "nsxUsername",
+						Usage: "NSX username",
+					},
+					cli.StringFlag{
+						Name:  "nsxPassword",
+						Usage: "NSX password",
+					},
+					cli.StringFlag{
+						Name:  "dhcpServerPrivateAddress",
+						Usage: "Private IP address of DHCP server",
+					},
+					cli.StringFlag{
+						Name:  "dhcpServerPublicAddress",
+						Usage: "Public IP address of DHCP server",
+					},
+					cli.StringFlag{
+						Name:  "privateIpRootCidr",
+						Usage: "Root CIDR of the private IP pool",
+					},
+					cli.StringFlag{
+						Name:  "floatingIpRootRangeStart",
+						Usage: "Start of the root range of the floating IP pool",
+					},
+					cli.StringFlag{
+						Name:  "floatingIpRootRangeEnd",
+						Usage: "End of the root range of the floating IP pool",
+					},
+					cli.StringFlag{
+						Name:  "t0RouterId",
+						Usage: "ID of the T0-Router",
+					},
+					cli.StringFlag{
+						Name:  "edgeClusterId",
+						Usage: "ID of the Edge cluster",
+					},
+					cli.StringFlag{
+						Name:  "overlayTransportZoneId",
+						Usage: "ID of the OVERLAY transport zone",
+					},
+					cli.StringFlag{
+						Name:  "tunnelIpPoolId",
+						Usage: "ID of the tunnel IP pool",
+					},
+					cli.StringFlag{
+						Name:  "hostUplinkPnic",
+						Usage: "Name of the host uplink pnic",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := configureNsx(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
 				Name:      "enable-cluster-type",
 				Usage:     "Enable cluster type for deployment",
 				ArgsUsage: " ",
@@ -775,6 +841,103 @@ func setDeploymentSecurityGroups(c *cli.Context) error {
 	err = deploymentJsonHelper(c, deploymentId, client.Photonclient)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+//Configure NSX for the specified deployment id
+func configureNsx(c *cli.Context) error {
+	id, err := getDeploymentId(c)
+	if err != nil {
+		return err
+	}
+
+	nsxAddress := c.String("nsxAddress")
+	nsxUsername := c.String("nsxUsername")
+	nsxPassword := c.String("nsxPassword")
+	dhcpServerPrivateAddress := c.String("dhcpServerPrivateAddress")
+	dhcpServerPublicAddress := c.String("dhcpServerPublicAddress")
+	privateIpRootCidr := c.String("privateIpRootCidr")
+	floatingIpRootRangeStart := c.String("floatingIpRootRangeStart")
+	floatingIpRootRangeEnd := c.String("floatingIpRootRangeEnd")
+	t0RouterId := c.String("t0RouterId")
+	edgeClusterId := c.String("edgeClusterId")
+	overlayTransportZoneId := c.String("overlayTransportZoneId")
+	tunnelIpPoolId := c.String("tunnelIpPoolId")
+	hostUplinkPnic := c.String("hostUplinkPnic")
+
+	if len(nsxAddress) == 0 {
+		return fmt.Errorf("Please provide IP address of NSX")
+	}
+	if len(nsxUsername) == 0 {
+		return fmt.Errorf("Please provide NSX username")
+	}
+	if len(nsxPassword) == 0 {
+		return fmt.Errorf("Please provide NSX password")
+	}
+	if len(dhcpServerPrivateAddress) == 0 {
+		return fmt.Errorf("Please provide private IP address of DHCP server")
+	}
+	if len(dhcpServerPublicAddress) == 0 {
+		return fmt.Errorf("Please provide public IP address of DHCP server")
+	}
+	if len(privateIpRootCidr) == 0 {
+		return fmt.Errorf("Please provide root CIDR of the private IP pool")
+	}
+	if len(floatingIpRootRangeStart) == 0 {
+		return fmt.Errorf("Please provide the start of the root range of the floating IP pool")
+	}
+	if len(floatingIpRootRangeEnd) == 0 {
+		return fmt.Errorf("Please provide the end of the root range of the floating IP pool")
+	}
+	if len(t0RouterId) == 0 {
+		return fmt.Errorf("Please provide the ID of the T0-Router")
+	}
+	if len(edgeClusterId) == 0 {
+		return fmt.Errorf("Please provide the ID of the Edge cluster")
+	}
+	if len(overlayTransportZoneId) == 0 {
+		return fmt.Errorf("Please provide the ID of the OVERLAY transport zone")
+	}
+	if len(tunnelIpPoolId) == 0 {
+		return fmt.Errorf("Please provide the ID of the tunnel IP pool")
+	}
+	if len(hostUplinkPnic) == 0 {
+		return fmt.Errorf("Please provide name of the host uplink pnic")
+	}
+
+	if confirmed(c) {
+		client.Photonclient, err = client.GetClient(c)
+		if err != nil {
+			return err
+		}
+
+		nsxConfigSpec := &photon.NsxConfigurationSpec{
+			NsxAddress:             nsxAddress,
+			NsxUsername:            nsxUsername,
+			NsxPassword:            nsxPassword,
+			DhcpServerAddresses:    map[string]string{dhcpServerPrivateAddress: dhcpServerPublicAddress},
+			PrivateIpRootCidr:      privateIpRootCidr,
+			FloatingIpRootRange:    photon.IpRange{floatingIpRootRangeStart, floatingIpRootRangeEnd},
+			T0RouterId:             t0RouterId,
+			EdgeClusterId:          edgeClusterId,
+			OverlayTransportZoneId: overlayTransportZoneId,
+			TunnelIpPoolId:         tunnelIpPoolId,
+			HostUplinkPnic:         hostUplinkPnic,
+		}
+
+		task, err := client.Photonclient.Deployments.ConfigureNsx(id, nsxConfigSpec)
+		if err != nil {
+			return err
+		}
+
+		_, err = waitOnTaskOperation(task.ID, c)
+		if err != nil {
+			return err
+		}
+	} else {
+		fmt.Println("Cancelled")
 	}
 
 	return nil
