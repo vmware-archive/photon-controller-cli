@@ -41,9 +41,7 @@ func TestListDeployment(t *testing.T) {
 }
 
 func TestGetDeployment(t *testing.T) {
-	auth := &photon.AuthInfo{
-		Enabled: false,
-	}
+	auth := &photon.AuthInfo{}
 	stats := &photon.StatsInfo{
 		Enabled: false,
 	}

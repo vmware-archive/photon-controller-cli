@@ -328,10 +328,6 @@ func configureServerCerts(endpoint string, noChertCheck bool, c *cli.Context) (e
 		return
 	}
 
-	if authInfo.Enabled == false {
-		return nil
-	}
-
 	port := authInfo.Port
 	if port == 0 {
 		port = 443
