@@ -497,7 +497,6 @@ type AuthInfo struct {
 	Tenant         string   `json:"tenant,omitempty"`
 	Port           int      `json:"port,omitempty"`
 	SecurityGroups []string `json:"securityGroups,omitempty"`
-	Enabled        bool     `json:"enabled,omitempty"`
 	Username       string   `json:"username,omitempty"`
 }
 
