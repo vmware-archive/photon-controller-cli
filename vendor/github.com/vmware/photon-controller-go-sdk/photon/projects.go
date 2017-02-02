@@ -131,14 +131,14 @@ func (api *ProjectsAPI) GetVMs(projectID string, options *VmGetOptions) (result 
 	return
 }
 
-// Creates a cluster on the specified project.
-func (api *ProjectsAPI) CreateCluster(projectID string, spec *ClusterCreateSpec) (task *Task, err error) {
+// Creates a service on the specified project.
+func (api *ProjectsAPI) CreateService(projectID string, spec *ServiceCreateSpec) (task *Task, err error) {
 	body, err := json.Marshal(spec)
 	if err != nil {
 		return
 	}
 	res, err := api.client.restClient.Post(
-		api.client.Endpoint+projectUrl+projectID+"/clusters",
+		api.client.Endpoint+projectUrl+projectID+"/services",
 		"application/json",
 		bytes.NewReader(body),
 		api.client.options.TokenOptions)
@@ -150,15 +150,15 @@ func (api *ProjectsAPI) CreateCluster(projectID string, spec *ClusterCreateSpec)
 	return
 }
 
-// Gets clusters for project with the specified ID
-func (api *ProjectsAPI) GetClusters(projectID string) (result *Clusters, err error) {
-	uri := api.client.Endpoint + projectUrl + projectID + "/clusters"
+// Gets services for project with the specified ID
+func (api *ProjectsAPI) GetServices(projectID string) (result *Services, err error) {
+	uri := api.client.Endpoint + projectUrl + projectID + "/services"
 	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
 
-	result = &Clusters{}
+	result = &Services{}
 	err = json.Unmarshal(res, result)
 	return
 }

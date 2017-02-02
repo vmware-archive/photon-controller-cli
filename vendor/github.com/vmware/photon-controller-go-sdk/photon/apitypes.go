@@ -480,7 +480,7 @@ type Deployment struct {
 	ImageDatastores         []string               `json:"imageDatastores"`
 	SelfLink                string                 `json:"selfLink"`
 	Migration               *MigrationStatus       `json:"migrationStatus,omitempty"`
-	ClusterConfigurations   []ClusterConfiguration `json:"clusterConfigurations,omitempty"`
+	ServiceConfigurations   []ServiceConfiguration `json:"serviceConfigurations,omitempty"`
 	LoadBalancerEnabled     bool                   `json:"loadBalancerEnabled"`
 	LoadBalancerAddress     string                 `json:"loadBalancerAddress"`
 }
@@ -611,21 +611,21 @@ type VirtualSubnets struct {
 	Items []VirtualSubnet `json:"items"`
 }
 
-// Creation spec for Cluster Configuration.
-type ClusterConfigurationSpec struct {
+// Creation spec for Service Configuration.
+type ServiceConfigurationSpec struct {
 	Type    string `json:"type"`
 	ImageID string `json:"imageId"`
 }
 
-// Represnts a Cluster configuration.
-type ClusterConfiguration struct {
+// Represnts a Service configuration.
+type ServiceConfiguration struct {
 	Kind    string `json:"kind"`
 	Type    string `json:"type"`
 	ImageID string `json:"imageId"`
 }
 
-// Creation spec for clusters.
-type ClusterCreateSpec struct {
+// Creation spec for services.
+type ServiceCreateSpec struct {
 	Name               string            `json:"name"`
 	Type               string            `json:"type"`
 	VMFlavor           string            `json:"vmFlavor,omitempty"`
@@ -636,8 +636,8 @@ type ClusterCreateSpec struct {
 	ExtendedProperties map[string]string `json:"extendedProperties"`
 }
 
-// Represents a cluster
-type Cluster struct {
+// Represents a service
+type Service struct {
 	Kind               string            `json:"kind"`
 	Name               string            `json:"name"`
 	State              string            `json:"state"`
@@ -650,13 +650,13 @@ type Cluster struct {
 	ExtendedProperties map[string]string `json:"extendedProperties"`
 }
 
-// Represents multiple clusters returned by the API
-type Clusters struct {
-	Items []Cluster `json:"items"`
+// Represents multiple services returned by the API
+type Services struct {
+	Items []Service `json:"items"`
 }
 
-// Represents cluster size that can be resized for cluster
-type ClusterResizeOperation struct {
+// Represents service size that can be resized for service
+type ServiceResizeOperation struct {
 	NewWorkerCount int `json:"newWorkerCount"`
 }
 
@@ -712,4 +712,19 @@ type Info struct {
 	FullVersion   string `json:"fullVersion"`
 	GitCommitHash string `json:"gitCommitHash"`
 	NetworkType   string `json:"networkType"`
+}
+
+// NSX configuration spec
+type NsxConfigurationSpec struct {
+	NsxAddress             string            `json:"nsxAddress"`
+	NsxUsername            string            `json:"nsxUsername"`
+	NsxPassword            string            `json:"nsxPassword"`
+	DhcpServerAddresses    map[string]string `json:"dhcpServerAddresses"`
+	PrivateIpRootCidr      string            `json:"privateIpRootCidr"`
+	FloatingIpRootRange    IpRange           `json:"floatingIpRootRange"`
+	T0RouterId             string            `json:"t0RouterId"`
+	EdgeClusterId          string            `json:"edgeClusterId"`
+	OverlayTransportZoneId string            `json:"overlayTransportZoneId"`
+	TunnelIpPoolId         string            `json:"tunnelIpPoolId"`
+	HostUplinkPnic         string            `json:"hostUplinkPnic"`
 }
