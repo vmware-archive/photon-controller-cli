@@ -25,7 +25,7 @@ import (
 	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
-type MockClustersPage struct {
+type MockServicesPage struct {
 	Items            []photon.Service `json:"items"`
 	NextPageLink     string           `json:"nextPageLink"`
 	PreviousPageLink string           `json:"previousPageLink"`
@@ -56,7 +56,7 @@ func TestReadCACert(t *testing.T) {
 	}
 }
 
-func TestCreateDeleteCluster(t *testing.T) {
+func TestCreateDeleteService(t *testing.T) {
 	tenantStruct := photon.Tenants{
 		Items: []photon.Tenant{
 			{
@@ -84,10 +84,10 @@ func TestCreateDeleteCluster(t *testing.T) {
 	}
 
 	queuedCreationTask := &photon.Task{
-		Operation: "CREATE_CLUSTER",
+		Operation: "CREATE_SERVICE",
 		State:     "QUEUED",
-		ID:        "fake_create_cluster_task_id",
-		Entity:    photon.Entity{ID: "fake_cluster_id"},
+		ID:        "fake_create_service_task_id",
+		Entity:    photon.Entity{ID: "fake_service_id"},
 	}
 	queuedCreationTaskResponse, err := json.Marshal(queuedCreationTask)
 	if err != nil {
@@ -95,10 +95,10 @@ func TestCreateDeleteCluster(t *testing.T) {
 	}
 
 	completedCreationTask := &photon.Task{
-		Operation: "CREATE_CLUSTER",
+		Operation: "CREATE_SERVICE",
 		State:     "COMPLETED",
-		ID:        "fake_create_cluster_task_id",
-		Entity:    photon.Entity{ID: "fake_cluster_id"},
+		ID:        "fake_create_service_task_id",
+		Entity:    photon.Entity{ID: "fake_service_id"},
 	}
 	completedCreationTaskResponse, err := json.Marshal(completedCreationTask)
 	if err != nil {
@@ -140,8 +140,8 @@ func TestCreateDeleteCluster(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	set.String("tenant", "fake_tenant_name", "tenant name")
 	set.String("project", "fake_project_name", "project name")
-	set.String("name", "fake_cluster_name", "cluster name")
-	set.String("type", "KUBERNETES", "cluster type")
+	set.String("name", "fake_service_name", "service name")
+	set.String("type", "KUBERNETES", "service type")
 	set.String("vm_flavor", "fake_vm_flavor", "vm flavor name")
 	set.String("disk_flavor", "fake_disk_flavor", "disk flavor name")
 	set.Int("worker_count", 50, "worker count")
@@ -151,16 +151,16 @@ func TestCreateDeleteCluster(t *testing.T) {
 	set.String("ssh-key", "../../testdata/TestKey.pub", "ssh key")
 	ctx := cli.NewContext(nil, set, globalCtx)
 
-	err = createCluster(ctx, os.Stdout)
+	err = createService(ctx, os.Stdout)
 	if err != nil {
-		t.Error("Not expecting error creating cluster: " + err.Error())
+		t.Error("Not expecting error creating service: " + err.Error())
 	}
 
 	queuedDeletionTask := &photon.Task{
-		Operation: "DELETE_CLUSTER",
+		Operation: "DELETE_SERVICE",
 		State:     "QUEUED",
-		ID:        "fake_delete_cluster_task_id",
-		Entity:    photon.Entity{ID: "fake_cluster_id"},
+		ID:        "fake_delete_service_task_id",
+		Entity:    photon.Entity{ID: "fake_service_id"},
 	}
 	queuedDeletionTaskResponse, err := json.Marshal(queuedDeletionTask)
 	if err != nil {
@@ -168,10 +168,10 @@ func TestCreateDeleteCluster(t *testing.T) {
 	}
 
 	completedDeletionTask := &photon.Task{
-		Operation: "DELETE_CLUSTER",
+		Operation: "DELETE_SERVICE",
 		State:     "COMPLETED",
-		ID:        "fake_delete_cluster_task_id",
-		Entity:    photon.Entity{ID: "fake_cluster_id"},
+		ID:        "fake_delete_service_task_id",
+		Entity:    photon.Entity{ID: "fake_service_id"},
 	}
 	completedDeletionTaskResponse, err := json.Marshal(completedDeletionTask)
 	if err != nil {
@@ -180,7 +180,7 @@ func TestCreateDeleteCluster(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/services/fake_cluster_id",
+		server.URL+"/services/fake_service_id",
 		mocks.CreateResponder(200, string(queuedDeletionTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -188,29 +188,29 @@ func TestCreateDeleteCluster(t *testing.T) {
 		mocks.CreateResponder(200, string(completedDeletionTaskResponse[:])))
 
 	set = flag.NewFlagSet("test", 0)
-	err = set.Parse([]string{"fake_cluster_id"})
+	err = set.Parse([]string{"fake_service_id"})
 	if err != nil {
 		t.Error("Not expecting argument parsing to fail")
 	}
 
 	ctx = cli.NewContext(nil, set, globalCtx)
-	err = deleteCluster(ctx)
+	err = deleteService(ctx)
 	if err != nil {
-		t.Error("Not expecting error deleting cluster: " + err.Error())
+		t.Error("Not expecting error deleting service: " + err.Error())
 	}
 }
 
-func TestShowCluster(t *testing.T) {
-	cluster := &photon.Service{
-		Name:        "fake_cluster_name",
+func TestShowService(t *testing.T) {
+	service := &photon.Service{
+		Name:        "fake_service_name",
 		State:       "ERROR",
-		ID:          "fake_cluster_id",
+		ID:          "fake_service_id",
 		Type:        "KUBERNETES",
 		WorkerCount: 50,
 	}
-	clusterResponse, err := json.Marshal(cluster)
+	serviceResponse, err := json.Marshal(service)
 	if err != nil {
-		t.Error("Not expecting error serializing expected cluster")
+		t.Error("Not expecting error serializing expected service")
 	}
 
 	vmListStruct := photon.VMs{
@@ -224,7 +224,7 @@ func TestShowCluster(t *testing.T) {
 				Host:          "fake_host_ip",
 				Datastore:     "fake_datastore_ID",
 				Tags: []string{
-					"cluster:" + cluster.ID + ":master",
+					"service:" + service.ID + ":master",
 				},
 				AttachedDisks: []photon.AttachedDisk{
 					{
@@ -278,11 +278,11 @@ func TestShowCluster(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/services/"+cluster.ID,
-		mocks.CreateResponder(200, string(clusterResponse[:])))
+		server.URL+"/services/"+service.ID,
+		mocks.CreateResponder(200, string(serviceResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/services/"+cluster.ID+"/vms",
+		server.URL+"/services/"+service.ID+"/vms",
 		mocks.CreateResponder(200, string(vmListResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -298,19 +298,19 @@ func TestShowCluster(t *testing.T) {
 	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
-	err = set.Parse([]string{"fake_cluster_id"})
+	err = set.Parse([]string{"fake_service_id"})
 	if err != nil {
 		t.Error("Not expecting argument parsing to fail")
 	}
 	ctx := cli.NewContext(nil, set, nil)
 
-	err = showCluster(ctx, os.Stdout)
+	err = showService(ctx, os.Stdout)
 	if err != nil {
-		t.Error("Not expecting error showing cluster: " + err.Error())
+		t.Error("Not expecting error showing service: " + err.Error())
 	}
 }
 
-func TestListClusters(t *testing.T) {
+func TestListServices(t *testing.T) {
 	tenantStruct := photon.Tenants{
 		Items: []photon.Tenant{
 			{
@@ -337,12 +337,12 @@ func TestListClusters(t *testing.T) {
 		t.Error("Not expecting error serializing expected projectStruct")
 	}
 
-	firstClustersPage := MockClustersPage{
+	firstServicesPage := MockServicesPage{
 		Items: []photon.Service{
 			{
-				Name:        "fake_cluster_name",
+				Name:        "fake_service_name",
 				State:       "READY",
-				ID:          "fake_cluster_id",
+				ID:          "fake_service_id",
 				Type:        "KUBERNETES",
 				WorkerCount: 50,
 			},
@@ -351,20 +351,20 @@ func TestListClusters(t *testing.T) {
 		PreviousPageLink: "",
 	}
 
-	firstClustersPageResponse, err := json.Marshal(firstClustersPage)
+	firstServicesPageResponse, err := json.Marshal(firstServicesPage)
 	if err != nil {
-		t.Error("Not expecting error serializing expected first clusters page")
+		t.Error("Not expecting error serializing expected first services page")
 	}
 
-	secondClustersPage := MockClustersPage{
+	secondServicesPage := MockServicesPage{
 		Items:            []photon.Service{},
 		NextPageLink:     "",
 		PreviousPageLink: "",
 	}
 
-	secondClustersPageResponse, err := json.Marshal(secondClustersPage)
+	secondServicesPageResponse, err := json.Marshal(secondServicesPage)
 	if err != nil {
-		t.Error("Not expecting error serializing expected second clusters page")
+		t.Error("Not expecting error serializing expected second services page")
 	}
 
 	server := mocks.NewTestServer()
@@ -381,11 +381,11 @@ func TestListClusters(t *testing.T) {
 	mocks.RegisterResponder(
 		"GET",
 		server.URL+"/projects/fake_project_id/services",
-		mocks.CreateResponder(200, string(firstClustersPageResponse[:])))
+		mocks.CreateResponder(200, string(firstServicesPageResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
 		server.URL+"/fake-next-page-link",
-		mocks.CreateResponder(200, string(secondClustersPageResponse[:])))
+		mocks.CreateResponder(200, string(secondServicesPageResponse[:])))
 	mocks.Activate(true)
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
@@ -409,34 +409,34 @@ func TestListClusters(t *testing.T) {
 	ctx := cli.NewContext(nil, commandFlags, globalCxt)
 	var output bytes.Buffer
 
-	err = listClusters(ctx, &output)
+	err = listServices(ctx, &output)
 	if err != nil {
-		t.Error("Not expecting error listing clusters: " + err.Error())
+		t.Error("Not expecting error listing services: " + err.Error())
 	}
 
-	// Verify we printed a list of clusters starting with a bracket
+	// Verify we printed a list of services starting with a bracket
 	err = checkRegExp(`^\s*\[`, output)
 	if err != nil {
-		t.Errorf("List clusters didn't produce a JSON list that starts with a bracket (list): %s", err)
+		t.Errorf("List services didn't produce a JSON list that starts with a bracket (list): %s", err)
 	}
 	// and end with a bracket (two regular expressions because it's multiline, it's easier)
 	err = checkRegExp(`\]\s*$`, output)
 	if err != nil {
-		t.Errorf("List clusters didn't produce JSON that ended in a bracket (list): %s", err)
+		t.Errorf("List services didn't produce JSON that ended in a bracket (list): %s", err)
 	}
 	// And spot check that we have the "id" field
 	err = checkRegExp(`\"id\":\s*\".*\"`, output)
 	if err != nil {
-		t.Errorf("List clusters didn't produce a JSON field named 'id': %s", err)
+		t.Errorf("List services didn't produce a JSON field named 'id': %s", err)
 	}
 }
 
-func TestResizeCluster(t *testing.T) {
+func TestResizeService(t *testing.T) {
 	queuedTask := &photon.Task{
-		Operation: "RESIZE_CLUSTER",
+		Operation: "RESIZE_SERVICE",
 		State:     "QUEUED",
-		ID:        "fake_resize_cluster_task_id",
-		Entity:    photon.Entity{ID: "fake_cluster_id"},
+		ID:        "fake_resize_service_task_id",
+		Entity:    photon.Entity{ID: "fake_service_id"},
 	}
 	queuedTaskResponse, err := json.Marshal(queuedTask)
 	if err != nil {
@@ -444,10 +444,10 @@ func TestResizeCluster(t *testing.T) {
 	}
 
 	completedTask := &photon.Task{
-		Operation: "RESIZE_CLUSTER",
+		Operation: "RESIZE_SERVICE",
 		State:     "COMPLETED",
-		ID:        "fake_resize_cluster_task_id",
-		Entity:    photon.Entity{ID: "fake_cluster_id"},
+		ID:        "fake_resize_service_task_id",
+		Entity:    photon.Entity{ID: "fake_service_id"},
 	}
 	completedTaskResponse, err := json.Marshal(completedTask)
 	if err != nil {
@@ -459,11 +459,11 @@ func TestResizeCluster(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/services/fake_cluster_id/resize",
+		server.URL+"/services/fake_service_id/resize",
 		mocks.CreateResponder(200, string(queuedTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/fake_resize_cluster_task_id",
+		server.URL+"/tasks/fake_resize_service_task_id",
 		mocks.CreateResponder(200, string(completedTaskResponse[:])))
 	mocks.Activate(true)
 
@@ -479,19 +479,19 @@ func TestResizeCluster(t *testing.T) {
 	}
 
 	set := flag.NewFlagSet("test", 0)
-	err = set.Parse([]string{"fake_cluster_id", "50"})
+	err = set.Parse([]string{"fake_service_id", "50"})
 	if err != nil {
 		t.Error("Not expecting argument parsing to fail")
 	}
 	ctx := cli.NewContext(nil, set, globalCtx)
 
-	err = resizeCluster(ctx, os.Stdout)
+	err = resizeService(ctx, os.Stdout)
 	if err != nil {
-		t.Error("Not expecting error resizing cluster: " + err.Error())
+		t.Error("Not expecting error resizing service: " + err.Error())
 	}
 }
 
-func TestListClusterVms(t *testing.T) {
+func TestListServiceVms(t *testing.T) {
 	server := mocks.NewTestServer()
 	defer server.Close()
 
@@ -527,7 +527,7 @@ func TestListClusterVms(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/services/fake_cluster_id/vms",
+		server.URL+"/services/fake_service_id/vms",
 		mocks.CreateResponder(200, string(listResponse[:])))
 
 	vmList = MockVMsPage{
@@ -559,7 +559,7 @@ func TestListClusterVms(t *testing.T) {
 	globalCxt := cli.NewContext(nil, globalFlags, nil)
 
 	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
-	err = commandFlags.Parse([]string{"fake_cluster_id"})
+	err = commandFlags.Parse([]string{"fake_service_id"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -568,37 +568,37 @@ func TestListClusterVms(t *testing.T) {
 
 	err = listVms(ctx, &output)
 	if err != nil {
-		t.Error("Not expecting error listing cluster VMs: " + err.Error())
+		t.Error("Not expecting error listing service VMs: " + err.Error())
 	}
 
-	// Verify we printed a list of cluster vms starting with a bracket
+	// Verify we printed a list of service vms starting with a bracket
 	err = checkRegExp(`^\s*\[`, output)
 	if err != nil {
-		t.Errorf("List cluster vms didn't produce a JSON list that starts with a bracket (list): %s", err)
+		t.Errorf("List service vms didn't produce a JSON list that starts with a bracket (list): %s", err)
 	}
 	// and end with a bracket (two regular expressions because it's multiline, it's easier)
 	err = checkRegExp(`\]\s*$`, output)
 	if err != nil {
-		t.Errorf("List cluster vms didn't produce JSON that ended in a bracket (list): %s", err)
+		t.Errorf("List service vms didn't produce JSON that ended in a bracket (list): %s", err)
 	}
 	// And spot check that we have the "id" field
 	err = checkRegExp(`\"id\":\s*\".*\"`, output)
 	if err != nil {
-		t.Errorf("List cluster vms didn't produce a JSON field named 'id': %s", err)
+		t.Errorf("List service vms didn't produce a JSON field named 'id': %s", err)
 	}
 }
 
-func TestClusterTriggerMaintenance(t *testing.T) {
+func TestServiceTriggerMaintenance(t *testing.T) {
 	// Start mock server
 	server := mocks.NewTestServer()
 	defer server.Close()
 
 	// Create mock response
 	completedTask := &photon.Task{
-		Operation: "TRIGGER_CLUSTER_MAINTENANCE",
+		Operation: "TRIGGER_SERVICE_MAINTENANCE",
 		State:     "COMPLETED",
-		ID:        "fake_cluster_task_id",
-		Entity:    photon.Entity{ID: "fake_cluster_id"},
+		ID:        "fake_service_task_id",
+		Entity:    photon.Entity{ID: "fake_service_id"},
 	}
 	completedTaskResponse, err := json.Marshal(completedTask)
 	if err != nil {
@@ -608,11 +608,11 @@ func TestClusterTriggerMaintenance(t *testing.T) {
 	// Register mock response with mock server
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/services/fake_cluster_id/trigger_maintenance",
+		server.URL+"/services/fake_service_id/trigger_maintenance",
 		mocks.CreateResponder(200, string(completedTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/fake_cluster_task_id",
+		server.URL+"/tasks/fake_service_task_id",
 		mocks.CreateResponder(200, string(completedTaskResponse[:])))
 	mocks.Activate(true)
 
@@ -620,7 +620,7 @@ func TestClusterTriggerMaintenance(t *testing.T) {
 	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
-	err = commandFlags.Parse([]string{"fake_cluster_id"})
+	err = commandFlags.Parse([]string{"fake_service_id"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -628,24 +628,24 @@ func TestClusterTriggerMaintenance(t *testing.T) {
 
 	err = triggerMaintenance(ctx)
 	if err != nil {
-		t.Error("Not expecting error for cluster trigger maintenance: " + err.Error())
+		t.Error("Not expecting error for service trigger maintenance: " + err.Error())
 	}
 }
 
-func TestClusterCertToFile(t *testing.T) {
-	cluster := &photon.Service{
-		Name:        "fake_cluster_name",
+func TestServiceCertToFile(t *testing.T) {
+	service := &photon.Service{
+		Name:        "fake_service_name",
 		State:       "ERROR",
-		ID:          "fake_cluster_id",
+		ID:          "fake_service_id",
 		Type:        "KUBERNETES",
 		WorkerCount: 50,
 		ExtendedProperties: map[string]string{
 			photon.ExtendedPropertyRegistryCACert: "-----BEGIN CERTIFICATE-----\nMIIFmzCCA4OgAwIBAgIJAIAZmLcInJMeMA0GCSqGSIb3DQEBCwUAMGQxCzAJBgNV\n-----END CERTIFICATE-----",
 		},
 	}
-	clusterResponse, err := json.Marshal(cluster)
+	serviceResponse, err := json.Marshal(service)
 	if err != nil {
-		t.Error("Not expecting error serializing expected cluster")
+		t.Error("Not expecting error serializing expected service")
 	}
 
 	server = mocks.NewTestServer()
@@ -653,14 +653,14 @@ func TestClusterCertToFile(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/services/"+cluster.ID,
-		mocks.CreateResponder(200, string(clusterResponse[:])))
+		server.URL+"/services/"+service.ID,
+		mocks.CreateResponder(200, string(serviceResponse[:])))
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
 	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
-	err = commandFlags.Parse([]string{"fake_cluster_id", "test.cert"})
+	err = commandFlags.Parse([]string{"fake_service_id", "test.cert"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -668,7 +668,7 @@ func TestClusterCertToFile(t *testing.T) {
 
 	err = certToFile(ctx)
 	if err != nil {
-		t.Error("Not expecting error for cluster trigger maintenance: " + err.Error())
+		t.Error("Not expecting error for service trigger maintenance: " + err.Error())
 	}
 
 	content, err := readCACert("test.cert")

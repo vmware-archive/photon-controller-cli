@@ -529,15 +529,15 @@ func TestSetDeploymentSecurityGroups(t *testing.T) {
 	}
 }
 
-func TestEnableClusterType(t *testing.T) {
+func TestEnableServiceType(t *testing.T) {
 	deploymentId := "deployment1"
 	queuedTask := &photon.Task{
-		Operation: "CONFIGURE_CLUSTER",
+		Operation: "CONFIGURE_SERVICE",
 		State:     "QUEUED",
 		Entity:    photon.Entity{ID: deploymentId},
 	}
 	completedTask := &photon.Task{
-		Operation: "CONFIGURE_CLUSTER",
+		Operation: "CONFIGURE_SERVICE",
 		State:     "COMPLETED",
 		Entity:    photon.Entity{ID: deploymentId},
 	}
@@ -578,26 +578,26 @@ func TestEnableClusterType(t *testing.T) {
 	if err != nil {
 		t.Error("Not expecting arguments parsing to fail")
 	}
-	set.String("type", "SWARM", "Cluster type")
+	set.String("type", "SWARM", "Service type")
 	set.String("image-id", "abcd", "image id")
 
 	cxt := cli.NewContext(nil, set, globalCtx)
-	err = enableClusterType(cxt)
+	err = enableServiceType(cxt)
 	if err != nil {
 		t.Error(err)
 		t.Error("Not expecting deployment list hosts to fail")
 	}
 }
 
-func TestDisableClusterType(t *testing.T) {
+func TestDisableServiceType(t *testing.T) {
 	deploymentId := "deployment1"
 	queuedTask := &photon.Task{
-		Operation: "DELETE_CLUSTER_CONFIGURATION",
+		Operation: "DELETE_SERVICE_CONFIGURATION",
 		State:     "QUEUED",
 		Entity:    photon.Entity{ID: deploymentId},
 	}
 	completedTask := &photon.Task{
-		Operation: "DELETE_CLUSTER_CONFIGURATION",
+		Operation: "DELETE_SERVICE_CONFIGURATION",
 		State:     "COMPLETED",
 		Entity:    photon.Entity{ID: deploymentId},
 	}
@@ -638,10 +638,10 @@ func TestDisableClusterType(t *testing.T) {
 	if err != nil {
 		t.Error("Not expecting arguments parsing to fail")
 	}
-	set.String("type", "SWARM", "Cluster type")
+	set.String("type", "SWARM", "Service type")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
-	err = disableClusterType(cxt)
+	err = disableServiceType(cxt)
 	if err != nil {
 		t.Error(err)
 		t.Error("Not expecting pauseBackgroundTasks to fail")

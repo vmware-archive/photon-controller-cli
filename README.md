@@ -88,7 +88,7 @@ For instance, you can see the top-level commands with:
        disk			options for disk
        vm			options for vm
        network		options for network
-       cluster		Options for clusters
+       service		Options for services
        availability-zone	options for availability-zone
        help, h		Shows a list of commands or help for one command
 
