@@ -69,7 +69,7 @@ func BuildApp() *cli.App {
 		command.GetDiskCommand(),
 		command.GetVMCommand(),
 		command.GetNetworksCommand(),
-		command.GetClusterCommand(),
+		command.GetServiceCommand(),
 		command.GetAvailabilityZonesCommand(),
 	}
 	app.Before = func(c *cli.Context) error {

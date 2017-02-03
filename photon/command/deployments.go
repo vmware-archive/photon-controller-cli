@@ -56,8 +56,8 @@ func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 //              migration finalize;             Usage: deployment finalize migration [<id> <options>]
 //              migration status;               Usage: deployment finalize migration [<id>]
 
-//              enable-cluster-type;            Usage: deployment enable-cluster-type [<id> <options>]
-//              disable-cluster-type;           Usage: deployment disable-cluster-type [<id> <options>]
+//              enable-service-type, enable-cluster-type;            Usage: deployment enable-service-type [<id> <options>]
+//              disable-service-type, disable-cluster-type;           Usage: deployment disable-service-type [<id> <options>]
 
 func GetDeploymentsCommand() cli.Command {
 	command := cli.Command{
@@ -117,44 +117,46 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:      "enable-cluster-type",
-				Usage:     "Enable cluster type for deployment",
+				Name:      "enable-service-type",
+				Aliases:   []string{"enable-cluster-type"},
+				Usage:     "Enable service type for deployment",
 				ArgsUsage: " ",
-				Description: "Enable a cluster type (e.g. Kubernetes) and specify the image to be used\n" +
-					"   when creating the cluster.\n" +
+				Description: "Enable a service type (e.g. Kubernetes) and specify the image to be used\n" +
+					"   when creating the service.\n" +
 					"   Requires system administrator access.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "type, k",
-						Usage: "Cluster type (accepted values are KUBERNETES or HARBOR)",
+						Usage: "Service type (accepted values are KUBERNETES or HARBOR)",
 					},
 					cli.StringFlag{
 						Name:  "image-id, i",
-						Usage: "ID of the cluster image",
+						Usage: "ID of the service image",
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := enableClusterType(c)
+					err := enableServiceType(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
 				},
 			},
 			{
-				Name:      "disable-cluster-type",
-				Usage:     "Disable cluster type for deployment",
+				Name:      "disable-service-type",
+				Aliases:   []string{"disable-cluster-type"},
+				Usage:     "Disable service type for deployment",
 				ArgsUsage: " ",
-				Description: "Disable a cluster type (e.g. Kubernetes). Users will no longer be able\n" +
-					"   to deploy clusters of that type, but existing clusters will be unaffected.\n" +
+				Description: "Disable a service type (e.g. Kubernetes). Users will no longer be able\n" +
+					"   to deploy services of that type, but existing services will be unaffected.\n" +
 					"   Requires system administrator access.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "type, k",
-						Usage: "Cluster type (accepted values are KUBERNETES or HARBOR)",
+						Usage: "Service type (accepted values are KUBERNETES or HARBOR)",
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := disableClusterType(c)
+					err := disableServiceType(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -470,16 +472,16 @@ func showDeployment(c *cli.Context, w io.Writer) error {
 
 	if deployment.ServiceConfigurations != nil && len(deployment.ServiceConfigurations) != 0 {
 		if c.GlobalIsSet("non-interactive") {
-			clusterConfigurations := []string{}
+			serviceConfigurations := []string{}
 			for _, c := range deployment.ServiceConfigurations {
-				clusterConfigurations = append(clusterConfigurations, fmt.Sprintf("%s\t%s", c.Type, c.ImageID))
+				serviceConfigurations = append(serviceConfigurations, fmt.Sprintf("%s\t%s", c.Type, c.ImageID))
 			}
-			scriptClusterConfigurations := strings.Join(clusterConfigurations, ",")
-			fmt.Printf("%s\n", scriptClusterConfigurations)
+			scriptServiceConfigurations := strings.Join(serviceConfigurations, ",")
+			fmt.Printf("%s\n", scriptServiceConfigurations)
 		} else if !utils.NeedsFormatting(c) {
-			fmt.Println("\n  Cluster Configurations:")
+			fmt.Println("\n  Service Configurations:")
 			for i, c := range deployment.ServiceConfigurations {
-				fmt.Printf("    ClusterConfiguration %d:\n", i+1)
+				fmt.Printf("    ServiceConfiguration %d:\n", i+1)
 				fmt.Println("      Kind:     ", c.Kind)
 				fmt.Println("      Type:     ", c.Type)
 				fmt.Println("      ImageID:  ", c.ImageID)
@@ -489,8 +491,8 @@ func showDeployment(c *cli.Context, w io.Writer) error {
 		if c.GlobalIsSet("non-interactive") {
 			fmt.Printf("\n")
 		} else if !utils.NeedsFormatting(c) {
-			fmt.Println("\n  Cluster Configurations:")
-			fmt.Printf("    No cluster is supported")
+			fmt.Println("\n  Service Configurations:")
+			fmt.Printf("    No Service is supported")
 		}
 	}
 
@@ -780,19 +782,19 @@ func setDeploymentSecurityGroups(c *cli.Context) error {
 	return nil
 }
 
-//Enable cluster type for the specified deployment id
-func enableClusterType(c *cli.Context) error {
+//Enable service type for the specified deployment id
+func enableServiceType(c *cli.Context) error {
 	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
 
-	clusterType := c.String("type")
+	serviceType := c.String("type")
 	imageID := c.String("image-id")
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
-		clusterType, err = askForInput("Cluster Type: ", clusterType)
+		serviceType, err = askForInput("Service Type: ", serviceType)
 		if err != nil {
 			return err
 		}
@@ -805,8 +807,8 @@ func enableClusterType(c *cli.Context) error {
 	if len(id) == 0 {
 		return fmt.Errorf("Please provide deployment id")
 	}
-	if len(clusterType) == 0 {
-		return fmt.Errorf("Please provide cluster type using --type flag")
+	if len(serviceType) == 0 {
+		return fmt.Errorf("Please provide service type using --type flag")
 	}
 
 	if len(imageID) == 0 {
@@ -818,12 +820,12 @@ func enableClusterType(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		clusterConfigSpec := &photon.ServiceConfigurationSpec{
-			Type:    clusterType,
+		serviceConfigSpec := &photon.ServiceConfigurationSpec{
+			Type:    serviceType,
 			ImageID: imageID,
 		}
 
-		task, err := client.Photonclient.Deployments.EnableServiceType(id, clusterConfigSpec)
+		task, err := client.Photonclient.Deployments.EnableServiceType(id, serviceConfigSpec)
 		if err != nil {
 			return err
 		}
@@ -844,18 +846,18 @@ func enableClusterType(c *cli.Context) error {
 	return nil
 }
 
-//Disable cluster type for the specified deployment id
-func disableClusterType(c *cli.Context) error {
+//Disable service type for the specified deployment id
+func disableServiceType(c *cli.Context) error {
 	id, err := getDeploymentId(c)
 	if err != nil {
 		return err
 	}
 
-	clusterType := c.String("type")
+	serviceType := c.String("type")
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
-		clusterType, err = askForInput("Cluster Type: ", clusterType)
+		serviceType, err = askForInput("Service Type: ", serviceType)
 		if err != nil {
 			return err
 		}
@@ -864,8 +866,8 @@ func disableClusterType(c *cli.Context) error {
 	if len(id) == 0 {
 		return fmt.Errorf("Please provide deployment id")
 	}
-	if len(clusterType) == 0 {
-		return fmt.Errorf("Please provide cluster type using --type flag")
+	if len(serviceType) == 0 {
+		return fmt.Errorf("Please provide service type using --type flag")
 	}
 
 	if confirmed(c) {
@@ -874,11 +876,11 @@ func disableClusterType(c *cli.Context) error {
 			return err
 		}
 
-		clusterConfigSpec := &photon.ServiceConfigurationSpec{
-			Type: clusterType,
+		serviceConfigSpec := &photon.ServiceConfigurationSpec{
+			Type: serviceType,
 		}
 
-		task, err := client.Photonclient.Deployments.DisableServiceType(id, clusterConfigSpec)
+		task, err := client.Photonclient.Deployments.DisableServiceType(id, serviceConfigSpec)
 		if err != nil {
 			return err
 		}

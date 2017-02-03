@@ -28,8 +28,8 @@ import (
 	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
-type ClusterVM struct {
-	ClusterVM photon.VM `json:"vm"`
+type ServiceVM struct {
+	ServiceVM photon.VM `json:"vm"`
 	IPAddress string    `json:"ipAddress"`
 }
 
@@ -348,34 +348,34 @@ func printVMList(vmList []photon.VM, w io.Writer, c *cli.Context, summaryView bo
 	return nil
 }
 
-func printClusterList(clusterList []photon.Service, w io.Writer, c *cli.Context, summaryView bool) error {
+func printServiceList(serviceList []photon.Service, w io.Writer, c *cli.Context, summaryView bool) error {
 	stateCount := make(map[string]int)
-	for _, cluster := range clusterList {
-		stateCount[cluster.State]++
+	for _, service := range serviceList {
+		stateCount[service.State]++
 	}
 
 	if c.GlobalIsSet("non-interactive") {
 		if !summaryView {
-			for _, cluster := range clusterList {
-				fmt.Printf("%s\t%s\t%s\t%s\t%d\n", cluster.ID, cluster.Name, cluster.Type, cluster.State, cluster.WorkerCount)
+			for _, service := range serviceList {
+				fmt.Printf("%s\t%s\t%s\t%s\t%d\n", service.ID, service.Name, service.Type, service.State, service.WorkerCount)
 			}
 		}
 	} else if c.GlobalString("output") != "" {
-		utils.FormatObjects(clusterList, w, c)
+		utils.FormatObjects(serviceList, w, c)
 	} else {
 		if !summaryView {
 			w := new(tabwriter.Writer)
 			w.Init(os.Stdout, 4, 4, 2, ' ', 0)
 			fmt.Fprintf(w, "ID\tName\tType\tState\tWorker Count\n")
-			for _, cluster := range clusterList {
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\n", cluster.ID, cluster.Name, cluster.Type, cluster.State, cluster.WorkerCount)
+			for _, service := range serviceList {
+				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\n", service.ID, service.Name, service.Type, service.State, service.WorkerCount)
 			}
 			err := w.Flush()
 			if err != nil {
 				return err
 			}
 		}
-		fmt.Printf("\nTotal: %d\n", len(clusterList))
+		fmt.Printf("\nTotal: %d\n", len(serviceList))
 		for key, value := range stateCount {
 			fmt.Printf("%s: %d\n", key, value)
 		}
@@ -384,8 +384,8 @@ func printClusterList(clusterList []photon.Service, w io.Writer, c *cli.Context,
 	return nil
 }
 
-func printClusterVMs(vms []photon.VM, w io.Writer, c *cli.Context) (err error) {
-	clusterVMs := []ClusterVM{}
+func printServiceVMs(vms []photon.VM, w io.Writer, c *cli.Context) (err error) {
+	serviceVMs := []ServiceVM{}
 	for _, vm := range vms {
 		ipAddr := "-"
 		networks, err := getVMNetworks(vm.ID, c)
@@ -402,29 +402,29 @@ func printClusterVMs(vms []photon.VM, w io.Writer, c *cli.Context) (err error) {
 				break
 			}
 		}
-		clusterVM := ClusterVM{
+		serviceVM := ServiceVM{
 			vm,
 			ipAddr,
 		}
-		clusterVMs = append(clusterVMs, clusterVM)
+		serviceVMs = append(serviceVMs, serviceVM)
 
 	}
 
 	if c.GlobalIsSet("non-interactive") {
 		fmt.Printf("%d\n", len(vms))
-		for _, clusterVM := range clusterVMs {
-			fmt.Printf("%s\t%s\t%s\n", clusterVM.ClusterVM.ID,
-				clusterVM.ClusterVM.Name, clusterVM.IPAddress)
+		for _, serviceVM := range serviceVMs {
+			fmt.Printf("%s\t%s\t%s\n", serviceVM.ServiceVM.ID,
+				serviceVM.ServiceVM.Name, serviceVM.IPAddress)
 		}
 	} else if utils.NeedsFormatting(c) {
-		utils.FormatObjects(clusterVMs, w, c)
+		utils.FormatObjects(serviceVMs, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
 		fmt.Fprintf(w, "VM ID\tVM Name\tVM IP\n")
-		for _, clusterVM := range clusterVMs {
-			fmt.Fprintf(w, "%s\t%s\t%s\n", clusterVM.ClusterVM.ID,
-				clusterVM.ClusterVM.Name, clusterVM.IPAddress)
+		for _, serviceVM := range serviceVMs {
+			fmt.Fprintf(w, "%s\t%s\t%s\n", serviceVM.ServiceVM.ID,
+				serviceVM.ServiceVM.Name, serviceVM.IPAddress)
 		}
 		err := w.Flush()
 		if err != nil {

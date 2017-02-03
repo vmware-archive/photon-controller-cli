@@ -31,27 +31,29 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-// Creates a cli.Command for clusters
-// Subcommands: create;              Usage: cluster create [<options>]
-//              show;                Usage: cluster show <id>
-//              list;                Usage: cluster list [<options>]
-//              list_vms;            Usage: cluster list_vms <id>
-//              resize;              Usage: cluster resize <id> <new worker count> [<options>]
-//              delete;              Usage: cluster delete <id>
-//              trigger-maintenance; Usage: cluster trigger-maintenance <id>
-//              cert-to-file;        Usage: cluster cert-to-file <id> <file_path>
-func GetClusterCommand() cli.Command {
+// Creates a cli.Command for services
+// Subcommands: create;              Usage: service create [<options>]
+//              show;                Usage: service show <id>
+//              list;                Usage: service list [<options>]
+//              list_vms;            Usage: service list_vms <id>
+//              resize;              Usage: service resize <id> <new worker count> [<options>]
+//              delete;              Usage: service delete <id>
+//              trigger-maintenance; Usage: service trigger-maintenance <id>
+//              cert-to-file;        Usage: service cert-to-file <id> <file_path>
+
+func GetServiceCommand() cli.Command {
 	command := cli.Command{
-		Name:  "cluster",
-		Usage: "Options for clusters",
+		Name:    "service",
+		Aliases: []string{"cluster"},
+		Usage:   "Options for services",
 		Subcommands: []cli.Command{
 			{
 				Name:      "create",
-				Usage:     "Create a new cluster",
+				Usage:     "Create a new service",
 				ArgsUsage: " ",
-				Description: "Create a new Kubernetes cluster or Harbor Docker registry. \n\n" +
+				Description: "Create a new Kubernetes service or Harbor Docker registry. \n\n" +
 					"   Example: \n" +
-					"   photon cluster create -n k8-cluster -k KUBERNETES --dns 10.0.0.1 \\ \n" +
+					"   photon service create -n k8-service -k KUBERNETES --dns 10.0.0.1 \\ \n" +
 					"     --gateway 192.0.2.1 --netmask 255.255.255.0 --master-ip 192.0.2.20 \\ \n" +
 					"     --container-network 10.2.0.0/16 --etcd1 192.0.2.21 \\ \n" +
 					"     -c 1 -v cluster-vm -d small-disk --ssh-key ~/.ssh/id_dsa.pub",
@@ -66,11 +68,11 @@ func GetClusterCommand() cli.Command {
 					},
 					cli.StringFlag{
 						Name:  "name, n",
-						Usage: "Cluster name",
+						Usage: "Service name",
 					},
 					cli.StringFlag{
 						Name:  "type, k",
-						Usage: "Cluster type (KUBERNETES or HARBOR)",
+						Usage: "Service type (KUBERNETES or HARBOR)",
 					},
 					cli.StringFlag{
 						Name:  "vm_flavor, v",
@@ -102,11 +104,11 @@ func GetClusterCommand() cli.Command {
 					},
 					cli.StringFlag{
 						Name:  "master-ip",
-						Usage: "Kubernetes master IP address (required for Kubernetes clusters)",
+						Usage: "Kubernetes master IP address (required for Kubernetes services)",
 					},
 					cli.StringFlag{
 						Name:  "container-network",
-						Usage: "CIDR representation of the container network, e.g. '10.2.0.0/16' (required for Kubernetes clusters)",
+						Usage: "CIDR representation of the container network, e.g. '10.2.0.0/16' (required for Kubernetes services)",
 					},
 					cli.StringFlag{
 						Name:  "etcd1",
@@ -142,11 +144,11 @@ func GetClusterCommand() cli.Command {
 					},
 					cli.BoolFlag{
 						Name:  "wait-for-ready",
-						Usage: "Wait synchronously for the cluster to become ready and expanded fully",
+						Usage: "Wait synchronously for the service to become ready and expanded fully",
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createCluster(c, os.Stdout)
+					err := createService(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -154,15 +156,15 @@ func GetClusterCommand() cli.Command {
 			},
 			{
 				Name:      "show",
-				Usage:     "Show information about a cluster. ",
-				ArgsUsage: "cluster-id",
-				Description: "List the cluster's name, state, type, workerCount \n" +
+				Usage:     "Show information about a service. ",
+				ArgsUsage: "service-id",
+				Description: "List the service's name, state, type, workerCount \n" +
 					"   and all the extended properties. Also, list the master and \n" +
-					"   etcd VM information about this cluster. For each VM, list the \n" +
+					"   etcd VM information about this service. For each VM, list the \n" +
 					"   vm's ID, name and IP. \n\n" +
-					"   Example: photon cluster show 9b159e92-9495-49a4-af58-53ad4764f616",
+					"   Example: photon service show 9b159e92-9495-49a4-af58-53ad4764f616",
 				Action: func(c *cli.Context) {
-					err := showCluster(c, os.Stdout)
+					err := showService(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -170,11 +172,11 @@ func GetClusterCommand() cli.Command {
 			},
 			{
 				Name:      "list",
-				Usage:     "List clusters",
+				Usage:     "List services",
 				ArgsUsage: " ",
-				Description: "List all clusters in the current project. Attributes include \n" +
+				Description: "List all services in the current project. Attributes include \n" +
 					"   ID, Name, Type, State and Worker Count \n\n" +
-					"   Example: photon cluster list",
+					"   Example: photon service list",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "tenant, t",
@@ -190,7 +192,7 @@ func GetClusterCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := listClusters(c, os.Stdout)
+					err := listServices(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -198,9 +200,9 @@ func GetClusterCommand() cli.Command {
 			},
 			{
 				Name:        "list-vms",
-				Usage:       "List the VMs associated with a cluster",
-				ArgsUsage:   "cluster-id",
-				Description: "Example: photon cluster list_vms 9b159e92-9495-49a4-af58-53ad4764f616",
+				Usage:       "List the VMs associated with a service",
+				ArgsUsage:   "service-id",
+				Description: "Example: photon service list_vms 9b159e92-9495-49a4-af58-53ad4764f616",
 				Action: func(c *cli.Context) {
 					err := listVms(c, os.Stdout)
 					if err != nil {
@@ -211,8 +213,8 @@ func GetClusterCommand() cli.Command {
 			{
 				Hidden:      true,
 				Name:        "list_vms",
-				Usage:       "List the VMs associated with a cluster",
-				ArgsUsage:   "cluster-id",
+				Usage:       "List the VMs associated with a service",
+				ArgsUsage:   "service-id",
 				Description: "Deprecated, use list-vms instead",
 				Action: func(c *cli.Context) {
 					err := listVms(c, os.Stdout)
@@ -223,21 +225,21 @@ func GetClusterCommand() cli.Command {
 			},
 			{
 				Name:      "resize",
-				Usage:     "Resize a cluster",
-				ArgsUsage: "cluster-id new-worker-count",
-				Description: "Resize the cluster worker size to be the desired size. \n" +
-					"   Note: 1.  The cluster's worker size can only be scaled up. \n" +
-					"   2. The cluster is resized by batches with the batchSize parameter \n" +
-					"   that was specified when the cluster was created. \n\n" +
-					"   Example: photon cluster resize 9b159e92-9495-49a4-af58-53ad4764f616 5 ",
+				Usage:     "Resize a service",
+				ArgsUsage: "service-id new-worker-count",
+				Description: "Resize the service worker size to be the desired size. \n" +
+					"   Note: 1.  The service's worker size can only be scaled up. \n" +
+					"   2. The service is resized by batches with the batchSize parameter \n" +
+					"   that was specified when the service was created. \n\n" +
+					"   Example: photon service resize 9b159e92-9495-49a4-af58-53ad4764f616 5 ",
 				Flags: []cli.Flag{
 					cli.BoolFlag{
 						Name:  "wait-for-ready",
-						Usage: "Wait synchronously for the cluster to become ready and expanded fully",
+						Usage: "Wait synchronously for the service to become ready and expanded fully",
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := resizeCluster(c, os.Stdout)
+					err := resizeService(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -245,14 +247,14 @@ func GetClusterCommand() cli.Command {
 			},
 			{
 				Name:      "delete",
-				Usage:     "Delete a cluster",
-				ArgsUsage: "cluster-id",
-				Description: "This call deletes the specified cluster if there are still \n" +
-					"   remaining VMs belong to the specified cluster. The remaining VMs \n" +
+				Usage:     "Delete a service",
+				ArgsUsage: "service-id",
+				Description: "This call deletes the specified service if there are still \n" +
+					"   remaining VMs belong to the specified service. The remaining VMs \n" +
 					"   will be stopped and deleted. \n\n" +
-					"   Example: photon cluster delete 9b159e92-9495-49a4-af58-53ad4764f616",
+					"   Example: photon service delete 9b159e92-9495-49a4-af58-53ad4764f616",
 				Action: func(c *cli.Context) {
-					err := deleteCluster(c)
+					err := deleteService(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -260,9 +262,9 @@ func GetClusterCommand() cli.Command {
 			},
 			{
 				Name:        "trigger-maintenance",
-				Usage:       "Start a background process to recreate failed VMs in a cluster",
-				ArgsUsage:   "cluster-id",
-				Description: "Example: photon cluster trigger-maintenance 9b159e92-9495-49a4-af58-53ad4764f616",
+				Usage:       "Start a background process to recreate failed VMs in a service",
+				ArgsUsage:   "service-id",
+				Description: "Example: photon service trigger-maintenance 9b159e92-9495-49a4-af58-53ad4764f616",
 				Action: func(c *cli.Context) {
 					err := triggerMaintenance(c)
 					if err != nil {
@@ -273,13 +275,13 @@ func GetClusterCommand() cli.Command {
 			{
 				Name:      "cert-to-file",
 				Usage:     "Save the CA Certificate to a file with the specified path if the certificate exists",
-				ArgsUsage: "cluster-id file_path",
-				Description: "If a cluster has a CA certificate, this extracts it and saves \n" +
+				ArgsUsage: "service-id file_path",
+				Description: "If a service has a CA certificate, this extracts it and saves \n" +
 					"   it to a file. If the specified file path doesn't exist, it will create \n" +
 					"   a new file with the specified pathThis is useful when using using Harbor, \n" +
 					"   which uses a self-signed CA certificate. You can extract the CA certificate \n" +
-					"   with this command, and use it as input when creating a Kubernetes cluster. \n\n" +
-					"   Example: photon cluster cert-to-_file 9b159e92-9495-49a4-af58-53ad4764f616 ./user/cert",
+					"   with this command, and use it as input when creating a Kubernetes service. \n\n" +
+					"   Example: photon service cert-to-_file 9b159e92-9495-49a4-af58-53ad4764f616 ./user/cert",
 				Action: func(c *cli.Context) {
 					err := certToFile(c)
 					if err != nil {
@@ -292,9 +294,9 @@ func GetClusterCommand() cli.Command {
 	return command
 }
 
-// Sends a "create cluster" request to the API client based on the cli.Context
+// Sends a "create service" request to the API client based on the cli.Context
 // Returns an error if one occurred
-func createCluster(c *cli.Context, w io.Writer) error {
+func createService(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -303,7 +305,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	tenantName := c.String("tenant")
 	projectName := c.String("project")
 	name := c.String("name")
-	cluster_type := c.String("type")
+	service_type := c.String("type")
 	vm_flavor := c.String("vm_flavor")
 	disk_flavor := c.String("disk_flavor")
 	network_id := c.String("network_id")
@@ -349,15 +351,15 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		name, err = askForInput("Cluster name: ", name)
+		name, err = askForInput("Service name: ", name)
 		if err != nil {
 			return err
 		}
-		cluster_type, err = askForInput("Cluster type: ", cluster_type)
+		service_type, err = askForInput("Service type: ", service_type)
 		if err != nil {
 			return err
 		}
-		if worker_count == 0 && cluster_type != "HARBOR" {
+		if worker_count == 0 && service_type != "HARBOR" {
 			worker_count_string, err := askForInput("Worker count: ", "")
 			if err != nil {
 				return err
@@ -369,28 +371,28 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		}
 	}
 
-	if len(name) == 0 || len(cluster_type) == 0 {
-		return fmt.Errorf("Provide a valid cluster name and type")
+	if len(name) == 0 || len(service_type) == 0 {
+		return fmt.Errorf("Provide a valid service name and type")
 	}
 
-	if worker_count == 0 && cluster_type != "HARBOR" {
+	if worker_count == 0 && service_type != "HARBOR" {
 		worker_count = DEFAULT_WORKER_COUNT
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		dns, err = askForInput("Cluster DNS server: ", dns)
+		dns, err = askForInput("Service DNS server: ", dns)
 		if err != nil {
 			return err
 		}
-		gateway, err = askForInput("Cluster network gateway: ", gateway)
+		gateway, err = askForInput("Service network gateway: ", gateway)
 		if err != nil {
 			return err
 		}
-		netmask, err = askForInput("Cluster network netmask: ", netmask)
+		netmask, err = askForInput("Service network netmask: ", netmask)
 		if err != nil {
 			return err
 		}
-		ssh_key, err = askForInput("Cluster ssh key file path (leave blank for none): ", ssh_key)
+		ssh_key, err = askForInput("Service ssh key file path (leave blank for none): ", ssh_key)
 		if err != nil {
 			return err
 		}
@@ -422,8 +424,8 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		}
 	}
 
-	cluster_type = strings.ToUpper(cluster_type)
-	switch cluster_type {
+	service_type = strings.ToUpper(service_type)
+	switch service_type {
 	case "KUBERNETES":
 		if !c.GlobalIsSet("non-interactive") {
 			master_ip, err = askForInput("Kubernetes master static IP address: ", master_ip)
@@ -485,39 +487,39 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		extended_properties[photon.ExtendedPropertyMasterIP] = master_ip
 		extended_properties[photon.ExtendedPropertyAdminPassword] = admin_password
 	default:
-		return fmt.Errorf("Unsupported cluster type: %s", cluster_type)
+		return fmt.Errorf("Unsupported service type: %s", service_type)
 	}
 
-	clusterSpec := photon.ServiceCreateSpec{}
-	clusterSpec.Name = name
-	clusterSpec.Type = cluster_type
-	clusterSpec.VMFlavor = vm_flavor
-	clusterSpec.DiskFlavor = disk_flavor
-	clusterSpec.NetworkID = network_id
-	clusterSpec.WorkerCount = worker_count
-	clusterSpec.BatchSizeWorker = batch_size
-	clusterSpec.ExtendedProperties = extended_properties
+	serviceSpec := photon.ServiceCreateSpec{}
+	serviceSpec.Name = name
+	serviceSpec.Type = service_type
+	serviceSpec.VMFlavor = vm_flavor
+	serviceSpec.DiskFlavor = disk_flavor
+	serviceSpec.NetworkID = network_id
+	serviceSpec.WorkerCount = worker_count
+	serviceSpec.BatchSizeWorker = batch_size
+	serviceSpec.ExtendedProperties = extended_properties
 
 	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("\n")
-		fmt.Printf("Creating cluster: %s (%s)\n", clusterSpec.Name, clusterSpec.Type)
-		if len(clusterSpec.VMFlavor) != 0 {
-			fmt.Printf("  VM flavor: %s\n", clusterSpec.VMFlavor)
+		fmt.Printf("Creating service: %s (%s)\n", serviceSpec.Name, serviceSpec.Type)
+		if len(serviceSpec.VMFlavor) != 0 {
+			fmt.Printf("  VM flavor: %s\n", serviceSpec.VMFlavor)
 		}
-		if len(clusterSpec.DiskFlavor) != 0 {
-			fmt.Printf("  Disk flavor: %s\n", clusterSpec.DiskFlavor)
+		if len(serviceSpec.DiskFlavor) != 0 {
+			fmt.Printf("  Disk flavor: %s\n", serviceSpec.DiskFlavor)
 		}
-		if clusterSpec.Type != "HARBOR" {
-			fmt.Printf("  Worker count: %d\n", clusterSpec.WorkerCount)
+		if serviceSpec.Type != "HARBOR" {
+			fmt.Printf("  Worker count: %d\n", serviceSpec.WorkerCount)
 		}
-		if clusterSpec.BatchSizeWorker != 0 {
-			fmt.Printf("  Batch size: %d\n", clusterSpec.BatchSizeWorker)
+		if serviceSpec.BatchSizeWorker != 0 {
+			fmt.Printf("  Batch size: %d\n", serviceSpec.BatchSizeWorker)
 		}
 		fmt.Printf("\n")
 	}
 
 	if confirmed(c) {
-		createTask, err := client.Photonclient.Projects.CreateService(project.ID, &clusterSpec)
+		createTask, err := client.Photonclient.Projects.CreateService(project.ID, &serviceSpec)
 		if err != nil {
 			return err
 		}
@@ -529,23 +531,23 @@ func createCluster(c *cli.Context, w io.Writer) error {
 
 		if wait_for_ready {
 			if !utils.NeedsFormatting(c) {
-				fmt.Printf("Waiting for cluster %s to become ready\n", createTask.Entity.ID)
+				fmt.Printf("Waiting for service %s to become ready\n", createTask.Entity.ID)
 			}
-			cluster, err := waitForCluster(createTask.Entity.ID)
+			service, err := waitForService(createTask.Entity.ID)
 			if err != nil {
 				return err
 			}
 
 			if utils.NeedsFormatting(c) {
-				utils.FormatObject(cluster, w, c)
+				utils.FormatObject(service, w, c)
 			} else {
-				fmt.Printf("Cluster %s is ready\n", cluster.ID)
+				fmt.Printf("Service %s is ready\n", service.ID)
 			}
 
 		} else {
-			fmt.Println("Note: the cluster has been created with minimal resources. You can use the cluster now.")
-			fmt.Println("A background task is running to gradually expand the cluster to its target capacity.")
-			fmt.Printf("You can run 'cluster show %s' to see the state of the cluster.\n", createTask.Entity.ID)
+			fmt.Println("Note: the service has been created with minimal resources. You can use the service now.")
+			fmt.Println("A background task is running to gradually expand the service to its target capacity.")
+			fmt.Printf("You can run 'service show %s' to see the state of the service.\n", createTask.Entity.ID)
 		}
 	} else {
 		fmt.Println("Cancelled")
@@ -554,9 +556,9 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	return nil
 }
 
-// Sends a "show cluster" request to the API client based on the cli.Context
+// Sends a "show service" request to the API client based on the cli.Context
 // Returns an error if one occurred
-func showCluster(c *cli.Context, w io.Writer) error {
+func showService(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -568,7 +570,7 @@ func showCluster(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	cluster, err := client.Photonclient.Services.Get(id)
+	service, err := client.Photonclient.Services.Get(id)
 	if err != nil {
 		return err
 	}
@@ -589,30 +591,30 @@ func showCluster(c *cli.Context, w io.Writer) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		extendedProperties := strings.Trim(strings.TrimLeft(fmt.Sprint(cluster.ExtendedProperties), "map"), "[]")
-		if cluster.ErrorReason != "" {
-			fmt.Printf("%s\t%s\t%s\t%s\t%d\t%s\t%s\n", cluster.ID, cluster.Name, cluster.State, cluster.Type,
-				cluster.WorkerCount, cluster.ErrorReason, extendedProperties)
+		extendedProperties := strings.Trim(strings.TrimLeft(fmt.Sprint(service.ExtendedProperties), "map"), "[]")
+		if service.ErrorReason != "" {
+			fmt.Printf("%s\t%s\t%s\t%s\t%d\t%s\t%s\n", service.ID, service.Name, service.State, service.Type,
+				service.WorkerCount, service.ErrorReason, extendedProperties)
 		} else {
-			fmt.Printf("%s\t%s\t%s\t%s\t%d\t%s\n", cluster.ID, cluster.Name, cluster.State, cluster.Type,
-				cluster.WorkerCount, extendedProperties)
+			fmt.Printf("%s\t%s\t%s\t%s\t%d\t%s\n", service.ID, service.Name, service.State, service.Type,
+				service.WorkerCount, extendedProperties)
 		}
 	} else if utils.NeedsFormatting(c) {
-		utils.FormatObject(cluster, w, c)
+		utils.FormatObject(service, w, c)
 	} else {
-		fmt.Println("Cluster ID:            ", cluster.ID)
-		fmt.Println("  Name:                ", cluster.Name)
-		fmt.Println("  State:               ", cluster.State)
-		fmt.Println("  Type:                ", cluster.Type)
-		fmt.Println("  Worker count:        ", cluster.WorkerCount)
-		if cluster.ErrorReason != "" {
-			fmt.Println("  Error Reason:        ", cluster.ErrorReason)
+		fmt.Println("Service ID:            ", service.ID)
+		fmt.Println("  Name:                ", service.Name)
+		fmt.Println("  State:               ", service.State)
+		fmt.Println("  Type:                ", service.Type)
+		fmt.Println("  Worker count:        ", service.WorkerCount)
+		if service.ErrorReason != "" {
+			fmt.Println("  Error Reason:        ", service.ErrorReason)
 		}
-		fmt.Println("  Extended Properties: ", cluster.ExtendedProperties)
+		fmt.Println("  Extended Properties: ", service.ExtendedProperties)
 		fmt.Println()
 	}
 
-	err = printClusterVMs(master_vms, w, c)
+	err = printServiceVMs(master_vms, w, c)
 	if err != nil {
 		return err
 	}
@@ -620,9 +622,9 @@ func showCluster(c *cli.Context, w io.Writer) error {
 	return nil
 }
 
-// Sends a "list clusters" request to the API client based on the cli.Context
+// Sends a "list services" request to the API client based on the cli.Context
 // Returns an error if one occurred
-func listClusters(c *cli.Context, w io.Writer) error {
+func listServices(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -647,12 +649,12 @@ func listClusters(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	clusterList, err := client.Photonclient.Projects.GetServices(project.ID)
+	serviceList, err := client.Photonclient.Projects.GetServices(project.ID)
 	if err != nil {
 		return err
 	}
 
-	err = printClusterList(clusterList.Items, w, c, summaryView)
+	err = printServiceList(serviceList.Items, w, c, summaryView)
 	if err != nil {
 		return err
 	}
@@ -660,21 +662,21 @@ func listClusters(c *cli.Context, w io.Writer) error {
 	return nil
 }
 
-// Sends a "list VMs for cluster" request to the API client based on the cli.Context
+// Sends a "list VMs for service" request to the API client based on the cli.Context
 // Returns an error if one occurred
 func listVms(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
-	cluster_id := c.Args().First()
+	service_id := c.Args().First()
 
 	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	vms, err := client.Photonclient.Services.GetVMs(cluster_id)
+	vms, err := client.Photonclient.Services.GetVMs(service_id)
 	if err != nil {
 		return err
 	}
@@ -687,21 +689,21 @@ func listVms(c *cli.Context, w io.Writer) error {
 	return nil
 }
 
-// Sends a "resize cluster" request to the API client based on the cli.Context
+// Sends a "resize service" request to the API client based on the cli.Context
 // Returns an error if one occurred
-func resizeCluster(c *cli.Context, w io.Writer) error {
+func resizeService(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 2)
 	if err != nil {
 		return err
 	}
 
-	cluster_id := c.Args()[0]
+	service_id := c.Args()[0]
 	worker_count_string := c.Args()[1]
 	worker_count, err := strconv.Atoi(worker_count_string)
 	wait_for_ready := c.IsSet("wait-for-ready")
 
-	if len(cluster_id) == 0 || err != nil || worker_count <= 0 {
-		return fmt.Errorf("Provide a valid cluster ID and worker count")
+	if len(service_id) == 0 || err != nil || worker_count <= 0 {
+		return fmt.Errorf("Provide a valid service ID and worker count")
 	}
 
 	client.Photonclient, err = client.GetClient(c)
@@ -710,13 +712,13 @@ func resizeCluster(c *cli.Context, w io.Writer) error {
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		fmt.Printf("\nResizing cluster %s to worker count %d\n", cluster_id, worker_count)
+		fmt.Printf("\nResizing service %s to worker count %d\n", service_id, worker_count)
 	}
 
 	if confirmed(c) {
 		resizeSpec := photon.ServiceResizeOperation{}
 		resizeSpec.NewWorkerCount = worker_count
-		resizeTask, err := client.Photonclient.Services.Resize(cluster_id, &resizeSpec)
+		resizeTask, err := client.Photonclient.Services.Resize(service_id, &resizeSpec)
 		if err != nil {
 			return err
 		}
@@ -727,20 +729,20 @@ func resizeCluster(c *cli.Context, w io.Writer) error {
 		}
 
 		if wait_for_ready {
-			cluster, err := waitForCluster(cluster_id)
+			service, err := waitForService(service_id)
 			if err != nil {
 				return err
 			}
 			if utils.NeedsFormatting(c) {
-				utils.FormatObject(cluster, w, c)
+				utils.FormatObject(service, w, c)
 			} else {
-				fmt.Printf("Cluster %s is ready\n", cluster.ID)
+				fmt.Printf("Service %s is ready\n", service.ID)
 			}
 		} else {
-			fmt.Println("Note: A background task is running to gradually resize the cluster to its target capacity.")
-			fmt.Printf("You may continue to use the cluster. You can run 'cluster show %s'\n", resizeTask.Entity.ID)
-			fmt.Println("to see the state of the cluster. If the resize operation is still in progress, the cluster state")
-			fmt.Println("will show as RESIZING. Once the cluster is resized, the cluster state will show as READY.")
+			fmt.Println("Note: A background task is running to gradually resize the service to its target capacity.")
+			fmt.Printf("You may continue to use the service. You can run 'service show %s'\n", resizeTask.Entity.ID)
+			fmt.Println("to see the state of the service. If the resize operation is still in progress, the service state")
+			fmt.Println("will show as RESIZING. Once the service is resized, the service state will show as READY.")
 		}
 	} else {
 		fmt.Println("Cancelled")
@@ -749,18 +751,18 @@ func resizeCluster(c *cli.Context, w io.Writer) error {
 	return nil
 }
 
-// Sends a "delete cluster" request to the API client based on the cli.Context
+// Sends a "delete service" request to the API client based on the cli.Context
 // Returns an error if one occurred
-func deleteCluster(c *cli.Context) error {
+func deleteService(c *cli.Context) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return nil
 	}
 
-	cluster_id := c.Args().First()
+	service_id := c.Args().First()
 
-	if len(cluster_id) == 0 {
-		return fmt.Errorf("Please provide a valid cluster ID")
+	if len(service_id) == 0 {
+		return fmt.Errorf("Please provide a valid service ID")
 	}
 
 	client.Photonclient, err = client.GetClient(c)
@@ -769,11 +771,11 @@ func deleteCluster(c *cli.Context) error {
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		fmt.Printf("\nDeleting cluster %s\n", cluster_id)
+		fmt.Printf("\nDeleting service %s\n", service_id)
 	}
 
 	if confirmed(c) {
-		deleteTask, err := client.Photonclient.Services.Delete(cluster_id)
+		deleteTask, err := client.Photonclient.Services.Delete(service_id)
 		if err != nil {
 			return err
 		}
@@ -789,7 +791,7 @@ func deleteCluster(c *cli.Context) error {
 	return nil
 }
 
-// Sends a cluster trigger_maintenance request to the API client based on the cli.Context.
+// Sends a service trigger_maintenance request to the API client based on the cli.Context.
 // Returns an error if one occurred.
 func triggerMaintenance(c *cli.Context) error {
 	err := checkArgCount(c, 1)
@@ -797,10 +799,10 @@ func triggerMaintenance(c *cli.Context) error {
 		return nil
 	}
 
-	clusterId := c.Args().First()
+	serviceId := c.Args().First()
 
-	if len(clusterId) == 0 {
-		return fmt.Errorf("Please provide a valid cluster ID")
+	if len(serviceId) == 0 {
+		return fmt.Errorf("Please provide a valid service ID")
 	}
 
 	client.Photonclient, err = client.GetClient(c)
@@ -809,10 +811,10 @@ func triggerMaintenance(c *cli.Context) error {
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		fmt.Printf("Maintenance triggered for cluster %s\n", clusterId)
+		fmt.Printf("Maintenance triggered for service %s\n", serviceId)
 	}
 
-	task, err := client.Photonclient.Services.TriggerMaintenance(clusterId)
+	task, err := client.Photonclient.Services.TriggerMaintenance(serviceId)
 	if err != nil {
 		return err
 	}
@@ -825,8 +827,8 @@ func triggerMaintenance(c *cli.Context) error {
 	return nil
 }
 
-// Helper routine which waits for a cluster to enter the READY state.
-func waitForCluster(id string) (cluster *photon.Service, err error) {
+// Helper routine which waits for a service to enter the READY state.
+func waitForService(id string) (service *photon.Service, err error) {
 	start := time.Now()
 	numErr := 0
 
@@ -842,7 +844,7 @@ func waitForCluster(id string) (cluster *photon.Service, err error) {
 	}()
 
 	for time.Since(start) < taskPollTimeout {
-		cluster, err = client.Photonclient.Services.Get(id)
+		service, err = client.Photonclient.Services.Get(id)
 		if err != nil {
 			numErr++
 			if numErr > taskRetryCount {
@@ -851,11 +853,11 @@ func waitForCluster(id string) (cluster *photon.Service, err error) {
 				return
 			}
 		}
-		switch strings.ToUpper(cluster.State) {
+		switch strings.ToUpper(service.State) {
 		case "ERROR":
 			endAnimation = true
 			wg.Wait()
-			err = fmt.Errorf("Cluster %s entered ERROR state", id)
+			err = fmt.Errorf("Service %s entered ERROR state", id)
 			return
 		case "READY":
 			endAnimation = true
@@ -868,7 +870,7 @@ func waitForCluster(id string) (cluster *photon.Service, err error) {
 
 	endAnimation = true
 	wg.Wait()
-	err = fmt.Errorf("Timed out while waiting for cluster to enter READY state")
+	err = fmt.Errorf("Timed out while waiting for service to enter READY state")
 	return
 }
 
@@ -947,7 +949,7 @@ func certToFile(c *cli.Context) error {
 		return err
 	}
 
-	cluster, err := client.Photonclient.Services.Get(id)
+	service, err := client.Photonclient.Services.Get(id)
 	if err != nil {
 		return err
 	}
@@ -955,8 +957,8 @@ func certToFile(c *cli.Context) error {
 	cert := ""
 
 	// Case: Kubernetes
-	if cluster.ExtendedProperties["registry_ca_cert"] != "" {
-		cert = cluster.ExtendedProperties["registry_ca_cert"]
+	if service.ExtendedProperties["registry_ca_cert"] != "" {
+		cert = service.ExtendedProperties["registry_ca_cert"]
 		err := ioutil.WriteFile(filePath, []byte(cert), 0644)
 		if err != nil {
 			return err
@@ -965,8 +967,8 @@ func certToFile(c *cli.Context) error {
 	}
 
 	// Case: Harbor
-	if cluster.ExtendedProperties["ca_cert"] != "" {
-		cert = cluster.ExtendedProperties["ca_cert"]
+	if service.ExtendedProperties["ca_cert"] != "" {
+		cert = service.ExtendedProperties["ca_cert"]
 		err := ioutil.WriteFile(filePath, []byte(cert), 0644)
 		if err != nil {
 			return err
@@ -975,7 +977,7 @@ func certToFile(c *cli.Context) error {
 	}
 
 	// Extended Property doesn't contain either registry_ca_cert or ca_cert
-	return fmt.Errorf("There is no certificate associated with this cluster")
+	return fmt.Errorf("There is no certificate associated with this service")
 }
 
 func validateHarborPassword(password string) bool {
