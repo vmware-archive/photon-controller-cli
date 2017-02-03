@@ -271,14 +271,14 @@ func (api *DeploymentsAPI) ResumeSystem(id string) (task *Task, err error) {
 	return
 }
 
-//  Enable cluster type with specified deployment ID.
-func (api *DeploymentsAPI) EnableClusterType(id string, clusterConfigSpec *ClusterConfigurationSpec) (task *Task, err error) {
-	body, err := json.Marshal(clusterConfigSpec)
+//  Enable service type with specified deployment ID.
+func (api *DeploymentsAPI) EnableServiceType(id string, serviceConfigSpec *ServiceConfigurationSpec) (task *Task, err error) {
+	body, err := json.Marshal(serviceConfigSpec)
 	if err != nil {
 		return
 	}
 	res, err := api.client.restClient.Post(
-		api.getEntityUrl(id)+"/enable_cluster_type",
+		api.getEntityUrl(id)+"/enable_service_type",
 		"application/json",
 		bytes.NewReader(body),
 		api.client.options.TokenOptions)
@@ -291,14 +291,35 @@ func (api *DeploymentsAPI) EnableClusterType(id string, clusterConfigSpec *Clust
 	return
 }
 
-//  Disable cluster type with specified deployment ID.
-func (api *DeploymentsAPI) DisableClusterType(id string, clusterConfigSpec *ClusterConfigurationSpec) (task *Task, err error) {
-	body, err := json.Marshal(clusterConfigSpec)
+//  Disable service type with specified deployment ID.
+func (api *DeploymentsAPI) DisableServiceType(id string, serviceConfigSpec *ServiceConfigurationSpec) (task *Task, err error) {
+	body, err := json.Marshal(serviceConfigSpec)
 	if err != nil {
 		return
 	}
 	res, err := api.client.restClient.Post(
-		api.getEntityUrl(id)+"/disable_cluster_type",
+		api.getEntityUrl(id)+"/disable_service_type",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+
+	task, err = getTask(getError(res))
+	return
+}
+
+// Configure NSX.
+func (api *DeploymentsAPI) ConfigureNsx(id string, nsxConfigSpec *NsxConfigurationSpec) (task *Task, err error) {
+	body, err := json.Marshal(nsxConfigSpec)
+	if err != nil {
+		return
+	}
+
+	res, err := api.client.restClient.Post(
+		api.getEntityUrl(id)+"/configure_nsx",
 		"application/json",
 		bytes.NewReader(body),
 		api.client.options.TokenOptions)

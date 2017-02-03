@@ -553,7 +553,7 @@ func TestEnableClusterType(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/"+deploymentId+"/enable_cluster_type",
+		server.URL+"/deployments/"+deploymentId+"/enable_service_type",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -614,7 +614,7 @@ func TestDisableClusterType(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/"+queuedTask.Entity.ID+"/disable_cluster_type",
+		server.URL+"/deployments/"+queuedTask.Entity.ID+"/disable_service_type",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",

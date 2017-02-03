@@ -488,7 +488,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 		return fmt.Errorf("Unsupported cluster type: %s", cluster_type)
 	}
 
-	clusterSpec := photon.ClusterCreateSpec{}
+	clusterSpec := photon.ServiceCreateSpec{}
 	clusterSpec.Name = name
 	clusterSpec.Type = cluster_type
 	clusterSpec.VMFlavor = vm_flavor
@@ -517,7 +517,7 @@ func createCluster(c *cli.Context, w io.Writer) error {
 	}
 
 	if confirmed(c) {
-		createTask, err := client.Photonclient.Projects.CreateCluster(project.ID, &clusterSpec)
+		createTask, err := client.Photonclient.Projects.CreateService(project.ID, &clusterSpec)
 		if err != nil {
 			return err
 		}
@@ -568,12 +568,12 @@ func showCluster(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	cluster, err := client.Photonclient.Clusters.Get(id)
+	cluster, err := client.Photonclient.Services.Get(id)
 	if err != nil {
 		return err
 	}
 
-	vms, err := client.Photonclient.Clusters.GetVMs(id)
+	vms, err := client.Photonclient.Services.GetVMs(id)
 	if err != nil {
 		return err
 	}
@@ -647,7 +647,7 @@ func listClusters(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	clusterList, err := client.Photonclient.Projects.GetClusters(project.ID)
+	clusterList, err := client.Photonclient.Projects.GetServices(project.ID)
 	if err != nil {
 		return err
 	}
@@ -674,7 +674,7 @@ func listVms(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	vms, err := client.Photonclient.Clusters.GetVMs(cluster_id)
+	vms, err := client.Photonclient.Services.GetVMs(cluster_id)
 	if err != nil {
 		return err
 	}
@@ -714,9 +714,9 @@ func resizeCluster(c *cli.Context, w io.Writer) error {
 	}
 
 	if confirmed(c) {
-		resizeSpec := photon.ClusterResizeOperation{}
+		resizeSpec := photon.ServiceResizeOperation{}
 		resizeSpec.NewWorkerCount = worker_count
-		resizeTask, err := client.Photonclient.Clusters.Resize(cluster_id, &resizeSpec)
+		resizeTask, err := client.Photonclient.Services.Resize(cluster_id, &resizeSpec)
 		if err != nil {
 			return err
 		}
@@ -773,7 +773,7 @@ func deleteCluster(c *cli.Context) error {
 	}
 
 	if confirmed(c) {
-		deleteTask, err := client.Photonclient.Clusters.Delete(cluster_id)
+		deleteTask, err := client.Photonclient.Services.Delete(cluster_id)
 		if err != nil {
 			return err
 		}
@@ -812,7 +812,7 @@ func triggerMaintenance(c *cli.Context) error {
 		fmt.Printf("Maintenance triggered for cluster %s\n", clusterId)
 	}
 
-	task, err := client.Photonclient.Clusters.TriggerMaintenance(clusterId)
+	task, err := client.Photonclient.Services.TriggerMaintenance(clusterId)
 	if err != nil {
 		return err
 	}
@@ -826,7 +826,7 @@ func triggerMaintenance(c *cli.Context) error {
 }
 
 // Helper routine which waits for a cluster to enter the READY state.
-func waitForCluster(id string) (cluster *photon.Cluster, err error) {
+func waitForCluster(id string) (cluster *photon.Service, err error) {
 	start := time.Now()
 	numErr := 0
 
@@ -842,7 +842,7 @@ func waitForCluster(id string) (cluster *photon.Cluster, err error) {
 	}()
 
 	for time.Since(start) < taskPollTimeout {
-		cluster, err = client.Photonclient.Clusters.Get(id)
+		cluster, err = client.Photonclient.Services.Get(id)
 		if err != nil {
 			numErr++
 			if numErr > taskRetryCount {
@@ -947,7 +947,7 @@ func certToFile(c *cli.Context) error {
 		return err
 	}
 
-	cluster, err := client.Photonclient.Clusters.Get(id)
+	cluster, err := client.Photonclient.Services.Get(id)
 	if err != nil {
 		return err
 	}

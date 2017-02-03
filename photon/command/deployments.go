@@ -468,17 +468,17 @@ func showDeployment(c *cli.Context, w io.Writer) error {
 		}
 	}
 
-	if deployment.ClusterConfigurations != nil && len(deployment.ClusterConfigurations) != 0 {
+	if deployment.ServiceConfigurations != nil && len(deployment.ServiceConfigurations) != 0 {
 		if c.GlobalIsSet("non-interactive") {
 			clusterConfigurations := []string{}
-			for _, c := range deployment.ClusterConfigurations {
+			for _, c := range deployment.ServiceConfigurations {
 				clusterConfigurations = append(clusterConfigurations, fmt.Sprintf("%s\t%s", c.Type, c.ImageID))
 			}
 			scriptClusterConfigurations := strings.Join(clusterConfigurations, ",")
 			fmt.Printf("%s\n", scriptClusterConfigurations)
 		} else if !utils.NeedsFormatting(c) {
 			fmt.Println("\n  Cluster Configurations:")
-			for i, c := range deployment.ClusterConfigurations {
+			for i, c := range deployment.ServiceConfigurations {
 				fmt.Printf("    ClusterConfiguration %d:\n", i+1)
 				fmt.Println("      Kind:     ", c.Kind)
 				fmt.Println("      Type:     ", c.Type)
@@ -818,12 +818,12 @@ func enableClusterType(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		clusterConfigSpec := &photon.ClusterConfigurationSpec{
+		clusterConfigSpec := &photon.ServiceConfigurationSpec{
 			Type:    clusterType,
 			ImageID: imageID,
 		}
 
-		task, err := client.Photonclient.Deployments.EnableClusterType(id, clusterConfigSpec)
+		task, err := client.Photonclient.Deployments.EnableServiceType(id, clusterConfigSpec)
 		if err != nil {
 			return err
 		}
@@ -874,11 +874,11 @@ func disableClusterType(c *cli.Context) error {
 			return err
 		}
 
-		clusterConfigSpec := &photon.ClusterConfigurationSpec{
+		clusterConfigSpec := &photon.ServiceConfigurationSpec{
 			Type: clusterType,
 		}
 
-		task, err := client.Photonclient.Deployments.DisableClusterType(id, clusterConfigSpec)
+		task, err := client.Photonclient.Deployments.DisableServiceType(id, clusterConfigSpec)
 		if err != nil {
 			return err
 		}

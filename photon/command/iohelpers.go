@@ -348,7 +348,7 @@ func printVMList(vmList []photon.VM, w io.Writer, c *cli.Context, summaryView bo
 	return nil
 }
 
-func printClusterList(clusterList []photon.Cluster, w io.Writer, c *cli.Context, summaryView bool) error {
+func printClusterList(clusterList []photon.Service, w io.Writer, c *cli.Context, summaryView bool) error {
 	stateCount := make(map[string]int)
 	for _, cluster := range clusterList {
 		stateCount[cluster.State]++

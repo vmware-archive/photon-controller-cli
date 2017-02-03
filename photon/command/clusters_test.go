@@ -26,7 +26,7 @@ import (
 )
 
 type MockClustersPage struct {
-	Items            []photon.Cluster `json:"items"`
+	Items            []photon.Service `json:"items"`
 	NextPageLink     string           `json:"nextPageLink"`
 	PreviousPageLink string           `json:"previousPageLink"`
 }
@@ -118,7 +118,7 @@ func TestCreateDeleteCluster(t *testing.T) {
 		mocks.CreateResponder(200, string(projectResponse[:])))
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/projects/fake_project_id/clusters",
+		server.URL+"/projects/fake_project_id/services",
 		mocks.CreateResponder(200, string(queuedCreationTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -180,7 +180,7 @@ func TestCreateDeleteCluster(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/clusters/fake_cluster_id",
+		server.URL+"/services/fake_cluster_id",
 		mocks.CreateResponder(200, string(queuedDeletionTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -201,7 +201,7 @@ func TestCreateDeleteCluster(t *testing.T) {
 }
 
 func TestShowCluster(t *testing.T) {
-	cluster := &photon.Cluster{
+	cluster := &photon.Service{
 		Name:        "fake_cluster_name",
 		State:       "ERROR",
 		ID:          "fake_cluster_id",
@@ -278,11 +278,11 @@ func TestShowCluster(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/clusters/"+cluster.ID,
+		server.URL+"/services/"+cluster.ID,
 		mocks.CreateResponder(200, string(clusterResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/clusters/"+cluster.ID+"/vms",
+		server.URL+"/services/"+cluster.ID+"/vms",
 		mocks.CreateResponder(200, string(vmListResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -338,7 +338,7 @@ func TestListClusters(t *testing.T) {
 	}
 
 	firstClustersPage := MockClustersPage{
-		Items: []photon.Cluster{
+		Items: []photon.Service{
 			{
 				Name:        "fake_cluster_name",
 				State:       "READY",
@@ -357,7 +357,7 @@ func TestListClusters(t *testing.T) {
 	}
 
 	secondClustersPage := MockClustersPage{
-		Items:            []photon.Cluster{},
+		Items:            []photon.Service{},
 		NextPageLink:     "",
 		PreviousPageLink: "",
 	}
@@ -380,7 +380,7 @@ func TestListClusters(t *testing.T) {
 		mocks.CreateResponder(200, string(projectResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/projects/fake_project_id/clusters",
+		server.URL+"/projects/fake_project_id/services",
 		mocks.CreateResponder(200, string(firstClustersPageResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -459,7 +459,7 @@ func TestResizeCluster(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/clusters/fake_cluster_id/resize",
+		server.URL+"/services/fake_cluster_id/resize",
 		mocks.CreateResponder(200, string(queuedTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -527,7 +527,7 @@ func TestListClusterVms(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/clusters/fake_cluster_id/vms",
+		server.URL+"/services/fake_cluster_id/vms",
 		mocks.CreateResponder(200, string(listResponse[:])))
 
 	vmList = MockVMsPage{
@@ -608,7 +608,7 @@ func TestClusterTriggerMaintenance(t *testing.T) {
 	// Register mock response with mock server
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/clusters/fake_cluster_id/trigger_maintenance",
+		server.URL+"/services/fake_cluster_id/trigger_maintenance",
 		mocks.CreateResponder(200, string(completedTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -633,7 +633,7 @@ func TestClusterTriggerMaintenance(t *testing.T) {
 }
 
 func TestClusterCertToFile(t *testing.T) {
-	cluster := &photon.Cluster{
+	cluster := &photon.Service{
 		Name:        "fake_cluster_name",
 		State:       "ERROR",
 		ID:          "fake_cluster_id",
@@ -653,7 +653,7 @@ func TestClusterCertToFile(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/clusters/"+cluster.ID,
+		server.URL+"/services/"+cluster.ID,
 		mocks.CreateResponder(200, string(clusterResponse[:])))
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}

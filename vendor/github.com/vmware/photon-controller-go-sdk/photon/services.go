@@ -14,12 +14,12 @@ import (
 	"encoding/json"
 )
 
-// Contains functionality for clusters API.
-type ClustersAPI struct {
+// Contains functionality for services API.
+type ServicesAPI struct {
 	client *Client
 }
 
-var clusterUrl string = "/clusters/"
+var serviceUrl string = "/services/"
 
 const ExtendedPropertyDNS string = "dns"
 const ExtendedPropertyGateway string = "gateway"
@@ -36,9 +36,9 @@ const ExtendedPropertySSHKey string = "ssh_key"
 const ExtendedPropertyRegistryCACert string = "registry_ca_cert"
 const ExtendedPropertyAdminPassword string = "admin_password"
 
-// Deletes a cluster with specified ID.
-func (api *ClustersAPI) Delete(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Delete(api.client.Endpoint+clusterUrl+id, api.client.options.TokenOptions)
+// Deletes a service with specified ID.
+func (api *ServicesAPI) Delete(id string) (task *Task, err error) {
+	res, err := api.client.restClient.Delete(api.client.Endpoint+serviceUrl+id, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -47,9 +47,9 @@ func (api *ClustersAPI) Delete(id string) (task *Task, err error) {
 	return
 }
 
-// Gets a cluster with the specified ID.
-func (api *ClustersAPI) Get(id string) (cluster *Cluster, err error) {
-	res, err := api.client.restClient.Get(api.client.Endpoint+clusterUrl+id, api.client.options.TokenOptions)
+// Gets a service with the specified ID.
+func (api *ServicesAPI) Get(id string) (service *Service, err error) {
+	res, err := api.client.restClient.Get(api.client.Endpoint+serviceUrl+id, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -58,14 +58,14 @@ func (api *ClustersAPI) Get(id string) (cluster *Cluster, err error) {
 	if err != nil {
 		return
 	}
-	var result Cluster
+	var result Service
 	err = json.NewDecoder(res.Body).Decode(&result)
 	return &result, nil
 }
 
-// Gets vms for cluster with the specified ID.
-func (api *ClustersAPI) GetVMs(id string) (result *VMs, err error) {
-	uri := api.client.Endpoint + clusterUrl + id + "/vms"
+// Gets vms for service with the specified ID.
+func (api *ServicesAPI) GetVMs(id string) (result *VMs, err error) {
+	uri := api.client.Endpoint + serviceUrl + id + "/vms"
 	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
 	if err != nil {
 		return
@@ -76,14 +76,14 @@ func (api *ClustersAPI) GetVMs(id string) (result *VMs, err error) {
 	return
 }
 
-// Resize a cluster to specified count.
-func (api *ClustersAPI) Resize(id string, resize *ClusterResizeOperation) (task *Task, err error) {
+// Resize a service to specified count.
+func (api *ServicesAPI) Resize(id string, resize *ServiceResizeOperation) (task *Task, err error) {
 	body, err := json.Marshal(resize)
 	if err != nil {
 		return
 	}
 	res, err := api.client.restClient.Post(
-		api.client.Endpoint+clusterUrl+id+"/resize",
+		api.client.Endpoint+serviceUrl+id+"/resize",
 		"application/json",
 		bytes.NewReader(body),
 		api.client.options.TokenOptions)
@@ -95,11 +95,11 @@ func (api *ClustersAPI) Resize(id string, resize *ClusterResizeOperation) (task 
 	return
 }
 
-// Start a background process to recreate failed VMs in a cluster with the specified ID.
-func (api *ClustersAPI) TriggerMaintenance(id string) (task *Task, err error) {
+// Start a background process to recreate failed VMs in a service with the specified ID.
+func (api *ServicesAPI) TriggerMaintenance(id string) (task *Task, err error) {
 	body := []byte{}
 	res, err := api.client.restClient.Post(
-		api.client.Endpoint+clusterUrl+id+"/trigger_maintenance",
+		api.client.Endpoint+serviceUrl+id+"/trigger_maintenance",
 		"application/json",
 		bytes.NewReader(body),
 		api.client.options.TokenOptions)
