@@ -17,6 +17,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"syscall"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -172,7 +173,10 @@ func getApiTokens(c *cli.Context, w io.Writer) error {
 		}
 		if len(password) == 0 {
 			fmt.Printf("Password: ")
-			bytePassword, err := terminal.ReadPassword(0)
+			// Casting syscall.Stdin to int because during
+			// Windows cross-compilation syscall.Stdin is incorrectly
+			// treated as a String.
+			bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 			if err != nil {
 				return err
 			}
