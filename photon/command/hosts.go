@@ -10,17 +10,17 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"regexp"
 	"strings"
+	"syscall"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/utils"
-
-	"encoding/json"
 
 	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
@@ -249,7 +249,10 @@ func createHost(c *cli.Context, w io.Writer) error {
 		}
 		if len(password) == 0 {
 			fmt.Printf("Password: ")
-			bytePassword, err := terminal.ReadPassword(0)
+			// Casting syscall.Stdin to int because during
+			// Windows cross-compilation syscall.Stdin is incorrectly
+			// treated as a String.
+			bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 			if err != nil {
 				return err
 			}

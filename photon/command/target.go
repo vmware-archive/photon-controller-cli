@@ -18,6 +18,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"syscall"
 
 	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
@@ -225,8 +226,11 @@ func login(c *cli.Context) error {
 			return err
 		}
 		if len(password) == 0 {
-			fmt.Printf("Password:")
-			bytePassword, err := terminal.ReadPassword(0)
+			fmt.Printf("Password: ")
+			// Casting syscall.Stdin to int because during
+			// Windows cross-compilation syscall.Stdin is incorrectly
+			// treated as a String.
+			bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 			if err != nil {
 				return err
 			}

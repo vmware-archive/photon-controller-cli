@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 	"unicode"
 
@@ -469,7 +470,10 @@ func createService(c *cli.Context, w io.Writer) error {
 			}
 			if len(admin_password) == 0 {
 				fmt.Printf("Harbor registry admin password: ")
-				bytePassword, err := terminal.ReadPassword(0)
+				// Casting syscall.Stdin to int because during
+				// Windows cross-compilation syscall.Stdin is incorrectly
+				// treated as a String.
+				bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 				if err != nil {
 					return err
 				}
