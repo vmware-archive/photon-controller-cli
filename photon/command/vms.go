@@ -72,6 +72,10 @@ func GetVMCommand() cli.Command {
 						Usage: "Image ID",
 					},
 					cli.StringFlag{
+						Name:  "boot-disk-flavor, b",
+						Usage: "Boot disk flavor",
+					},
+					cli.StringFlag{
 						Name:  "disks, d",
 						Usage: "VM disks",
 					},
@@ -425,6 +429,7 @@ func createVM(c *cli.Context, w io.Writer) error {
 	name := c.String("name")
 	flavor := c.String("flavor")
 	imageID := c.String("image")
+	bootDiskFlavor := c.String("boot-disk-flavor")
 	disks := c.String("disks")
 	environment := c.String("environment")
 	affinities := c.String("affinities")
@@ -465,7 +470,11 @@ func createVM(c *cli.Context, w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		disksList, err = askForVMDiskList(disksList)
+		bootDiskFlavor, err = askForInput("Boot disk flavor: ", bootDiskFlavor)
+		if err != nil {
+			return err
+		}
+		disksList, err = askForVMDiskList(disksList, bootDiskFlavor)
 		if err != nil {
 			return err
 		}
@@ -473,6 +482,36 @@ func createVM(c *cli.Context, w io.Writer) error {
 
 	if len(name) == 0 || len(flavor) == 0 || len(imageID) == 0 {
 		return fmt.Errorf("Please provide name, flavor and image")
+	}
+
+	if bootDiskFlavor != "" {
+		bootDiskPrefix := name + "-boot"
+		usedIndices := make(map[string]bool)
+		// with boot-disk-flavor, boot disk should not be specified in disk list
+		for _, disk := range disksList {
+			if disk.BootDisk {
+				return fmt.Errorf("Boot disk %s not allowed as boot-disk-flavor already specified", disk.Name)
+			}
+			if strings.HasPrefix(disk.Name, bootDiskPrefix) {
+				usedIndices[disk.Name[len(bootDiskPrefix):]] = true
+			}
+		}
+		index := 0
+		for {
+			indexStr := fmt.Sprintf("%d", index)
+			if !usedIndices[indexStr] {
+				break
+			}
+			index++
+		}
+		disksList = append([]photon.AttachedDisk{
+			{
+				Name:     fmt.Sprintf("%s%d", bootDiskPrefix, index),
+				Flavor:   bootDiskFlavor,
+				Kind:     "ephemeral-disk",
+				BootDisk: true,
+			},
+		}, disksList...)
 	}
 
 	var environmentMap map[string]string

@@ -242,7 +242,7 @@ func checkArgCount(c *cli.Context, num int) error {
 }
 
 // Prompt for input if disksList is empty
-func askForVMDiskList(disksList []photon.AttachedDisk) ([]photon.AttachedDisk, error) {
+func askForVMDiskList(disksList []photon.AttachedDisk, bootDiskFlavor string) ([]photon.AttachedDisk, error) {
 	if len(disksList) == 0 {
 		for i := 1; ; i++ {
 			fmt.Printf("\nDisk %d (ENTER to finish)\n", i)
@@ -261,19 +261,19 @@ func askForVMDiskList(disksList []photon.AttachedDisk) ([]photon.AttachedDisk, e
 			}
 
 			boot := false
-			response := ""
-			for {
-				response, _ = askForInput("Boot disk? [y/n]: ", response)
-				response = strings.ToLower(response)
-				if response == "y" || response == "yes" {
-					boot = true
+			if bootDiskFlavor == "" {
+				for {
+					response, _ := askForInput("Boot disk? [y/n]: ", "")
+					switch strings.ToLower(response) {
+					case "y", "yes":
+						boot = true
+					case "n", "no":
+					default:
+						fmt.Printf("Please enter \"yes\" or \"no\".\n")
+						continue
+					}
 					break
 				}
-				if response == "n" || response == "no" {
-					break
-				}
-				fmt.Printf("Please enter \"yes\" or \"no\".\n")
-				response = ""
 			}
 
 			var disk photon.AttachedDisk
@@ -306,7 +306,7 @@ func askForVMDiskList(disksList []photon.AttachedDisk) ([]photon.AttachedDisk, e
 		}
 	}
 
-	if len(disksList) == 0 {
+	if len(disksList) == 0 && bootDiskFlavor == "" {
 		return disksList, fmt.Errorf("Please provide at least 1 disk")
 	}
 
