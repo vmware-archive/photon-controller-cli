@@ -112,6 +112,7 @@ func TestCreateDeleteVM(t *testing.T) {
 	set.String("name", "fake_vm_name", "VM name")
 	set.String("flavor", "fake_vm_flavor_name", "VM flavor")
 	set.String("image", "fake_image_ID", "VM image")
+	set.String("boot-disk-flavor", "boot-disk-flavor", "Boot disk flavor")
 	set.String("disks", "d1 fake_ephemeral_flavor_name boot=true", "VM disks")
 	set.String("tenant", "fake_tenant_name", "tenant name")
 	set.String("project", "fake_project_name", "project name")
@@ -119,6 +120,14 @@ func TestCreateDeleteVM(t *testing.T) {
 	set.String("network", "networkid1", "VM Network")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
+	err = createVM(cxt, os.Stdout)
+	if err == nil {
+		t.Error("Expecting error with boot-disk-flavor and boot disk at same time")
+	}
+
+	if err = set.Set("boot-disk-flavor", ""); err != nil {
+		t.Error(err.Error())
+	}
 	err = createVM(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating VM: " + err.Error())
