@@ -108,6 +108,10 @@ func GetServiceCommand() cli.Command {
 						Usage: "Kubernetes master IP address (required for Kubernetes services)",
 					},
 					cli.StringFlag{
+						Name:  "load-balancer-ip",
+						Usage: "Kubernetes load balancer IP address (required for Kubernetes services)",
+					},
+					cli.StringFlag{
 						Name:  "container-network",
 						Usage: "CIDR representation of the container network, e.g. '10.2.0.0/16' (required for Kubernetes services)",
 					},
@@ -314,7 +318,8 @@ func createService(c *cli.Context, w io.Writer) error {
 	dns := c.String("dns")
 	gateway := c.String("gateway")
 	netmask := c.String("netmask")
-	master_ip := c.String("master-ip")
+	masterIP := c.String("master-ip")
+	loadBalancerIP := c.String("load-balancer-ip")
 	container_network := c.String("container-network")
 	etcd1 := c.String("etcd1")
 	etcd2 := c.String("etcd2")
@@ -326,7 +331,7 @@ func createService(c *cli.Context, w io.Writer) error {
 
 	if admin_password != "" {
 		result := validateHarborPassword(admin_password)
-		if result != true {
+		if !result {
 			return fmt.Errorf("The Harbor password is invalid. It should have at least 7 characters " +
 				"with 1 lowercase letter, 1 capital letter and 1 numeric character.")
 		}
@@ -429,7 +434,11 @@ func createService(c *cli.Context, w io.Writer) error {
 	switch service_type {
 	case "KUBERNETES":
 		if !c.GlobalIsSet("non-interactive") {
-			master_ip, err = askForInput("Kubernetes master static IP address: ", master_ip)
+			masterIP, err = askForInput("Kubernetes master static IP address: ", masterIP)
+			if err != nil {
+				return err
+			}
+			loadBalancerIP, err = askForInput("Kubernetes load balancer static IP address: ", loadBalancerIP)
 			if err != nil {
 				return err
 			}
@@ -453,7 +462,8 @@ func createService(c *cli.Context, w io.Writer) error {
 			}
 		}
 
-		extended_properties[photon.ExtendedPropertyMasterIP] = master_ip
+		extended_properties[photon.ExtendedPropertyMasterIP] = masterIP
+		extended_properties[photon.ExtendedPropertyLoadBalancerIP] = loadBalancerIP
 		extended_properties[photon.ExtendedPropertyContainerNetwork] = container_network
 		extended_properties[photon.ExtendedPropertyETCDIP1] = etcd1
 		if len(etcd2) != 0 {
@@ -464,7 +474,7 @@ func createService(c *cli.Context, w io.Writer) error {
 		}
 	case "HARBOR":
 		if !c.GlobalIsSet("non-interactive") {
-			master_ip, err = askForInput("Harbor master static IP address: ", master_ip)
+			masterIP, err = askForInput("Harbor master static IP address: ", masterIP)
 			if err != nil {
 				return err
 			}
@@ -488,7 +498,7 @@ func createService(c *cli.Context, w io.Writer) error {
 				fmt.Printf("\n")
 			}
 		}
-		extended_properties[photon.ExtendedPropertyMasterIP] = master_ip
+		extended_properties[photon.ExtendedPropertyMasterIP] = masterIP
 		extended_properties[photon.ExtendedPropertyAdminPassword] = admin_password
 	default:
 		return fmt.Errorf("Unsupported service type: %s", service_type)
