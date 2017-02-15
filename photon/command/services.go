@@ -286,7 +286,7 @@ func GetServiceCommand() cli.Command {
 					"   a new file with the specified pathThis is useful when using using Harbor, \n" +
 					"   which uses a self-signed CA certificate. You can extract the CA certificate \n" +
 					"   with this command, and use it as input when creating a Kubernetes service. \n\n" +
-					"   Example: photon service cert-to-_file 9b159e92-9495-49a4-af58-53ad4764f616 ./user/cert",
+					"   Example: photon service cert-to-file 9b159e92-9495-49a4-af58-53ad4764f616 ./user/cert",
 				Action: func(c *cli.Context) {
 					err := certToFile(c)
 					if err != nil {
