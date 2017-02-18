@@ -144,6 +144,20 @@ func (client *restClient) Post(url string, contentType string, body io.ReadSeeke
 	return
 }
 
+func (client *restClient) Patch(url string, contentType string, body io.ReadSeeker, tokens *TokenOptions) (res *http.Response, err error) {
+	if contentType == "" {
+		contentType = appJson
+	}
+
+	req := request{"PATCH", url, contentType, body, tokens}
+	rewinder := func() io.Reader {
+		body.Seek(0, 0)
+		return body
+	}
+	res, err = client.SendRequest(&req, rewinder)
+	return
+}
+
 func (client *restClient) Delete(url string, tokens *TokenOptions) (res *http.Response, err error) {
 	req := request{"DELETE", url, "", nil, tokens}
 	res, err = client.SendRequest(&req, nil)

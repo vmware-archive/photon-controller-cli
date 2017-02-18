@@ -138,6 +138,22 @@ func (api *HostsAPI) GetVMs(id string) (result *VMs, err error) {
 	return
 }
 
+// provision the host with the specified id
+func (api *HostsAPI) Provision(id string) (task *Task, err error) {
+	body := []byte{}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+hostUrl+"/"+id+"/provision",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
 // Suspend the host with the specified id
 func (api *HostsAPI) Suspend(id string) (task *Task, err error) {
 	body := []byte{}

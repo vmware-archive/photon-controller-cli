@@ -75,10 +75,6 @@ func (api *AuthAPI) getAuthEndpoint() (endpoint string, err error) {
 		return
 	}
 
-	if !authInfo.Enabled {
-		return "", SdkError{Message: "Authentication not enabled on this endpoint"}
-	}
-
 	if authInfo.Port == 0 {
 		authInfo.Port = 443
 	}

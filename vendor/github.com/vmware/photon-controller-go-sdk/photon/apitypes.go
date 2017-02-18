@@ -514,7 +514,6 @@ type AuthInfo struct {
 	Tenant         string   `json:"tenant,omitempty"`
 	Port           int      `json:"port,omitempty"`
 	SecurityGroups []string `json:"securityGroups,omitempty"`
-	Enabled        bool     `json:"enabled,omitempty"`
 	Username       string   `json:"username,omitempty"`
 }
 
@@ -609,6 +608,24 @@ type VirtualSubnet struct {
 // Represents multiple virtual subnets returned
 type VirtualSubnets struct {
 	Items []VirtualSubnet `json:"items"`
+}
+
+// Represents a router
+type Router struct {
+	ID            string `json:"id"`
+	Kind          string `json:"kind"`
+	Name          string `json:"name"`
+	PrivateIpCidr string `json:"privateIpCidr"`
+}
+
+// Represents multiple routers returned by the API.
+type Routers struct {
+	Items []Router `json:"items"`
+}
+
+// Represents name that can be set for router
+type RouterUpdateSpec struct {
+	RouterName string `json:"name"`
 }
 
 // Creation spec for Service Configuration.

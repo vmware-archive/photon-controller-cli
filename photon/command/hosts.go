@@ -36,6 +36,7 @@ import (
 //              list-vms;              Usage: host list-vms <id>
 //              set-availability-zone; Usage: host set-availability-zone <id> <availability-zone-id>
 //              tasks;                 Usage: host tasks <id> [<options>]
+//              provision;             Usage: host provision <id>
 //              suspend;               Usage: host suspend <id>
 //              resume;                Usage: host resume <id>
 //              enter-maintenance;     Usage: host enter-maintenance <id>
@@ -157,6 +158,19 @@ func GetHostsCommand() cli.Command {
 				},
 				Action: func(c *cli.Context) {
 					err := getHostTasks(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "provision",
+				Usage:     "Provision host with given id",
+				ArgsUsage: "<host-id>",
+				Description: "Provision a host given its id. You must be a system administrator to do this.\n" +
+					"   This will configure photon controller agent and make the host ready.",
+				Action: func(c *cli.Context) {
+					err := provisionHost(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -505,6 +519,32 @@ func listHostVMs(c *cli.Context, w io.Writer) error {
 	}
 
 	err = printVMList(vmList.Items, w, c, false)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Sends a provision host task to client based on the cli.Context
+// Returns an error if one occurred
+func provisionHost(c *cli.Context, w io.Writer) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	resumeTask, err := client.Photonclient.Hosts.Provision(id)
+	if err != nil {
+		return err
+	}
+	_, err = waitOnTaskOperation(resumeTask.ID, c)
 	if err != nil {
 		return err
 	}

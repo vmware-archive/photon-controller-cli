@@ -41,9 +41,7 @@ func TestListDeployment(t *testing.T) {
 }
 
 func TestGetDeployment(t *testing.T) {
-	auth := &photon.AuthInfo{
-		Enabled: false,
-	}
+	auth := &photon.AuthInfo{}
 	stats := &photon.StatsInfo{
 		Enabled: false,
 	}
@@ -526,6 +524,78 @@ func TestSetDeploymentSecurityGroups(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 		t.Error("Not expecting setDeploymentSecurityGroups to fail")
+	}
+}
+
+func TestConfigureNsx(t *testing.T) {
+	deploymentId := "deployment1"
+	queuedTask := &photon.Task{
+		Operation: "CONFIGURE_NSX",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: deploymentId},
+	}
+	completedTask := &photon.Task{
+		Operation: "CONFIGURE_NSX",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: deploymentId},
+	}
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected queuedTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error during serializing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/deployments/"+deploymentId+"/configure_nsx",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", true, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{deploymentId})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	set.String("nsx-address", "nsxAddress", "IP address of NSX")
+	set.String("nsx-username", "nsxUsername", "NSX username")
+	set.String("nsx-password", "nsxPassword", "NSX password")
+	set.String("dhcp-server-private-address", "dhcpServerPrivateAddress", "Private IP address of DHCP server")
+	set.String("dhcp-server-public-address", "dhcpServerPublicAddress", "Public IP address of DHCP server")
+	set.String("private-ip-root-cidr", "privateIpRootCidr", "Root CIDR of the private IP pool")
+	set.String("floating-ip-root-range-start", "floatingIpRootRangeStart",
+		"Start of the root range of the floating IP pool")
+	set.String("floating-ip-root-range-end", "floatingIpRootRangeEnd", "End of the root range of the floating IP pool")
+	set.String("t0-router-id", "t0RouterId", "ID of the T0-Router")
+	set.String("edge-cluster-id", "edgeClusterId", "ID of the Edge cluster")
+	set.String("overlay-transport-zone-id", "overlayTransportZoneId", "ID of the OVERLAY transport zone")
+	set.String("tunnel-ip-pool-id", "tunnelIpPoolId", "ID of the tunnel IP pool")
+	set.String("host-uplink-pnic", "hostUplinkPnic", "Name of the host uplink pnic")
+
+	cxt := cli.NewContext(nil, set, globalCtx)
+	err = configureNsx(cxt)
+	if err != nil {
+		t.Error(err)
+		t.Error("Not expecting deployment configure-nsx to fail")
 	}
 }
 

@@ -218,12 +218,12 @@ func getApiTokens(c *cli.Context, w io.Writer) error {
 // Print out auth info
 func printAuthInfo(auth *photon.AuthInfo, isScripting bool) error {
 	if isScripting {
-		fmt.Printf("%t\t%s\t%d\n", auth.Enabled, auth.Endpoint, auth.Port)
+		fmt.Printf("%s\t%d\n", auth.Endpoint, auth.Port)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w, "Enabled\tEndpoint\tPort\n")
-		fmt.Fprintf(w, "%t\t%s\t%d\n", auth.Enabled, auth.Endpoint, auth.Port)
+		fmt.Fprintf(w, "Endpoint\tPort\n")
+		fmt.Fprintf(w, "%s\t%d\n", auth.Endpoint, auth.Port)
 		err := w.Flush()
 		if err != nil {
 			return err

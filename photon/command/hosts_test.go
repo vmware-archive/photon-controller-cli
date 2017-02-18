@@ -487,6 +487,54 @@ func TestHostGetVMs(t *testing.T) {
 	}
 }
 
+func TestProvisionHost(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "PROVISION_HOST",
+		State:     "QUEUED",
+		ID:        "fake-task-id",
+		Entity:    photon.Entity{ID: "fake-host-id"},
+	}
+	completedTask := &photon.Task{
+		Operation: "PROVISION_HOST",
+		State:     "COMPLETED",
+		ID:        "fake-task-id",
+		Entity:    photon.Entity{ID: "fake-host-id"},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected provisionTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected provisionTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/hosts"+"/fake-host-id"+"/provision",
+		mocks.CreateResponder(202, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake-host-id"})
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = provisionHost(cxt, os.Stdout)
+	if err != nil {
+		t.Error("Error provisioning hosts: " + err.Error())
+	}
+}
+
 func TestSuspendAndResumeHost(t *testing.T) {
 	queuedTask := &photon.Task{
 		Operation: "SUSPEND_HOST",

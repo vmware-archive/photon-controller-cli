@@ -42,6 +42,7 @@ type Client struct {
 	Auth              *AuthAPI
 	AvailabilityZones *AvailabilityZonesAPI
 	Info              *InfoAPI
+	Routers           *RoutersAPI
 }
 
 // Represents Tokens
@@ -167,6 +168,7 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	c.Auth = &AuthAPI{c}
 	c.AvailabilityZones = &AvailabilityZonesAPI{c}
 	c.Info = &InfoAPI{c}
+	c.Routers = &RoutersAPI{c}
 
 	// Tell the restClient about the Auth API so it can request new
 	// acces tokens when they expire
