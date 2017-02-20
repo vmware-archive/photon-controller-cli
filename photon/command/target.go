@@ -422,7 +422,7 @@ func processCert(cert *x509.Certificate, serverName string, host string) (err er
 		err = cf.AddCertToLocalStore(cert)
 		if err == nil {
 			fmt.Printf(
-				"Saved your preference for future communicaition with %s server %s\n", serverName, host)
+				"Saved your preference for future communication with %s server %s\n", serverName, host)
 		}
 	}
 
