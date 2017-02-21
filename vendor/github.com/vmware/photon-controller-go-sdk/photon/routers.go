@@ -44,11 +44,23 @@ func (api *RoutersAPI) UpdateRouter(id string, routerSpec *RouterUpdateSpec) (ta
 		return
 	}
 
-	res, err := api.client.restClient.Patch(
+	res, err := api.client.restClient.Put(
 		api.client.Endpoint+routerUrl+id,
 		"application/json",
 		bytes.NewReader(body),
 		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
+// Deletes a router with specified ID.
+func (api *RoutersAPI) Delete(routerID string) (task *Task, err error) {
+	res, err := api.client.restClient.Delete(api.client.Endpoint+routerUrl+routerID, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
