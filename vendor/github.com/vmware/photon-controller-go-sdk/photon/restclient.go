@@ -144,12 +144,12 @@ func (client *restClient) Post(url string, contentType string, body io.ReadSeeke
 	return
 }
 
-func (client *restClient) Patch(url string, contentType string, body io.ReadSeeker, tokens *TokenOptions) (res *http.Response, err error) {
+func (client *restClient) Put(url string, contentType string, body io.ReadSeeker, tokens *TokenOptions) (res *http.Response, err error) {
 	if contentType == "" {
 		contentType = appJson
 	}
 
-	req := request{"PATCH", url, contentType, body, tokens}
+	req := request{"PUT", url, contentType, body, tokens}
 	rewinder := func() io.Reader {
 		body.Seek(0, 0)
 		return body

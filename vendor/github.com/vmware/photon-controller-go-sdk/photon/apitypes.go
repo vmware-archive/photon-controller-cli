@@ -623,6 +623,11 @@ type Routers struct {
 	Items []Router `json:"items"`
 }
 
+type RouterCreateSpec struct {
+	Name          string `json:"name"`
+	PrivateIpCidr string `json:"privateIpCidr"`
+}
+
 // Represents name that can be set for router
 type RouterUpdateSpec struct {
 	RouterName string `json:"name"`
@@ -646,6 +651,8 @@ type ServiceCreateSpec struct {
 	Name               string            `json:"name"`
 	Type               string            `json:"type"`
 	VMFlavor           string            `json:"vmFlavor,omitempty"`
+	MasterVmFlavor     string            `json:"masterVmFlavor,omitempty"`
+	WorkerVmFlavor     string            `json:"workerVmFlavor,omitempty"`
 	DiskFlavor         string            `json:"diskFlavor,omitempty"`
 	NetworkID          string            `json:"vmNetworkId,omitempty"`
 	ImageID            string            `json:"imageId,omitempty"`
