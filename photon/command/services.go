@@ -306,6 +306,30 @@ func GetServiceCommand() cli.Command {
 					}
 				},
 			},
+			{
+				Name:      "change-version",
+				Usage:     "Configure the service to use specified image id",
+				ArgsUsage: "service-id",
+				Description: "Example: photon service change-version " +
+					"9b159e92-9495-49a4-af58-53ad4764f616 -i 2aeaf034-3b02-4873-a6fc-f92615dca849",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "image-id, i",
+						Usage: "Image ID",
+					},
+					cli.BoolFlag{
+						Name: "wait-for-ready",
+						Usage: "Wait synchronously for the service to become ready and fully " +
+							"upgraded",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := changeVersion(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
 		},
 	}
 	return command
@@ -867,6 +891,79 @@ func triggerMaintenance(c *cli.Context) error {
 	_, err = waitOnTaskOperation(task.ID, c)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// Sends a service change_version request to the API client based on the cli.Context
+// Returns an error if one occurred
+func changeVersion(c *cli.Context, w io.Writer) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+
+	serviceID := c.Args().First()
+	imageID := c.String("image-id")
+	waitForReady := c.IsSet("wait-for-ready")
+
+	if len(serviceID) == 0 {
+		return fmt.Errorf("Provide a valid service ID")
+	}
+
+	if !c.GlobalIsSet("non-interactive") {
+		imageID, err = askForInput("New image ID for service: ", imageID)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(imageID) == 0 {
+		return fmt.Errorf("Please provide image ID to change versions")
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	if confirmed(c) {
+		changeVersionSpec := photon.ServiceChangeVersionOperation{}
+		changeVersionSpec.NewImageID = imageID
+		changeVersionTask, err := client.Photonclient.Services.ChangeVersion(serviceID, &changeVersionSpec)
+		if err != nil {
+			return err
+		}
+
+		_, err = waitOnTaskOperation(changeVersionTask.ID, c)
+		if err != nil {
+			return err
+		}
+
+		if waitForReady {
+			service, err := waitForService(serviceID)
+			if err != nil {
+				return err
+			}
+			if utils.NeedsFormatting(c) {
+				utils.FormatObject(service, w, c)
+			}
+			if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
+				fmt.Printf("Service %s is ready\n", service.ID)
+			}
+		}
+		if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
+			fmt.Println("Note: A background task is running to gradually change the service to use " +
+				"the specific image.")
+			fmt.Printf("You can run 'service show %s'\n", changeVersionTask.Entity.ID)
+			fmt.Println("to see the state of the service. If the change version operation is still in " +
+				"progress, the service state")
+			fmt.Println("will show as UPGRADING. Once the service is using the new image, the service " +
+				"state will show as READY.")
+		}
+	} else {
+		fmt.Println("Cancelled")
 	}
 
 	return nil

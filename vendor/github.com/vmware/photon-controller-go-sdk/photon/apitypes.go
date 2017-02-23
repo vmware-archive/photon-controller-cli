@@ -685,6 +685,11 @@ type ServiceResizeOperation struct {
 	NewWorkerCount int `json:"newWorkerCount"`
 }
 
+// Represents service imageId that can be updated during change version
+type ServiceChangeVersionOperation struct {
+	NewImageID string `json:"newImageId"`
+}
+
 // Represents a security group
 type SecurityGroup struct {
 	Name      string `json:"name"`
@@ -752,4 +757,5 @@ type NsxConfigurationSpec struct {
 	OverlayTransportZoneId string            `json:"overlayTransportZoneId"`
 	TunnelIpPoolId         string            `json:"tunnelIpPoolId"`
 	HostUplinkPnic         string            `json:"hostUplinkPnic"`
+	HostUplinkVlanId       int               `json:"hostUplinkVlanId"`
 }

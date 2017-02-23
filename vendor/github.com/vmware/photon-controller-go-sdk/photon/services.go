@@ -111,3 +111,22 @@ func (api *ServicesAPI) TriggerMaintenance(id string) (task *Task, err error) {
 	task, err = getTask(getError(res))
 	return
 }
+
+// Change a service version to the specified image by destroying and recreating the VMs.
+func (api *ServicesAPI) ChangeVersion(id string, changeVersion *ServiceChangeVersionOperation) (task *Task, err error) {
+	body, err := json.Marshal(changeVersion)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+serviceUrl+id+"/change_version",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
