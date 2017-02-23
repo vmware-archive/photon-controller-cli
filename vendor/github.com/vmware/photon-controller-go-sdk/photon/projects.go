@@ -187,3 +187,22 @@ func (api *ProjectsAPI) SetSecurityGroups(projectID string, securityGroups *Secu
 func (api *ProjectsAPI) getEntityUrl(id string) string {
 	return api.client.Endpoint + projectUrl + id
 }
+
+// Creates a router on the specified project.
+func (api *ProjectsAPI) CreateRouter(projectID string, spec *RouterCreateSpec) (task *Task, err error) {
+	body, err := json.Marshal(spec)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+projectUrl+projectID+"/routers",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}

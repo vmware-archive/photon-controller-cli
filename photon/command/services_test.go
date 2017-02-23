@@ -632,6 +632,67 @@ func TestServiceTriggerMaintenance(t *testing.T) {
 	}
 }
 
+func TestChangeVersionService(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "CHANGE_VERSION_SERVICE",
+		State:     "QUEUED",
+		ID:        "service-id",
+		Entity:    photon.Entity{ID: "service-id"},
+	}
+	queuedTaskResponse, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected queued task")
+	}
+
+	completedTask := &photon.Task{
+		Operation: "CHANGE_VERSION_SERVICE",
+		State:     "COMPLETED",
+		ID:        "service-id",
+		Entity:    photon.Entity{ID: "service-id"},
+	}
+	completedTaskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected completed task")
+	}
+
+	server := mocks.NewTestServer()
+	defer server.Close()
+
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+"/services/service-id/change_version",
+		mocks.CreateResponder(200, string(queuedTaskResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/tasks/service-id",
+		mocks.CreateResponder(200, string(completedTaskResponse[:])))
+	mocks.Activate(true)
+
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", true, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting argument parsing to fail")
+	}
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"service-id"})
+	set.String("image-id", "test-image-id", "image name")
+	if err != nil {
+		t.Error("Not expecting argument parsing to fail")
+	}
+	ctx := cli.NewContext(nil, set, globalCtx)
+
+	err = changeVersion(ctx, os.Stdout)
+	if err != nil {
+		t.Error("Not expecting error change version service: " + err.Error())
+	}
+}
+
 func TestServiceCertToFile(t *testing.T) {
 	service := &photon.Service{
 		Name:        "fake_service_name",
