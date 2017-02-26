@@ -271,7 +271,7 @@ func login(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Println("Token stored in config file")
+	fmt.Println("Login successful")
 
 	return nil
 }
