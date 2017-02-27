@@ -646,6 +646,8 @@ type ServiceCreateSpec struct {
 	Name               string            `json:"name"`
 	Type               string            `json:"type"`
 	VMFlavor           string            `json:"vmFlavor,omitempty"`
+	MasterVmFlavor     string            `json:"masterVmFlavor,omitempty"`
+	WorkerVmFlavor     string            `json:"workerVmFlavor,omitempty"`
 	DiskFlavor         string            `json:"diskFlavor,omitempty"`
 	NetworkID          string            `json:"vmNetworkId,omitempty"`
 	ImageID            string            `json:"imageId,omitempty"`
