@@ -35,9 +35,9 @@ import (
 //   "sub": "ec-admin@esxcloud",
 //   "aud": [
 //     "ec-admin@esxcloud",
-//     "rs_esxcloud"
+//     "rs_photon_platform"
 //   ],
-//   "scope": "openid offline_access rs_esxcloud at_groups",
+//   "scope": "openid offline_access rs_photon_platform at_groups",
 //   "iss": "https:\/\/10.146.64.238\/openidconnect\/esxcloud",
 //   "groups": [
 //     "esxcloud\\ESXCloudAdmins",
@@ -72,7 +72,7 @@ var accessToken = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJlYy1hZG1pbkBlc3hjbG91ZCIsImF1
 // {
 //   "sub": "ec-admin@esxcloud",
 //   "aud": "ec-admin@esxcloud",
-//   "scope": "openid offline_access rs_esxcloud at_groups",
+//   "scope": "openid offline_access rs_photon_platform at_groups",
 //   "iss": "https:\/\/10.146.64.238\/openidconnect\/esxcloud",
 //   "token_class": "refresh_token",
 //   "token_type": "Bearer",
