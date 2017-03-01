@@ -56,7 +56,7 @@ func createPhysicalNetwork(c *cli.Context, w io.Writer) error {
 	}
 
 	portGroupList := regexp.MustCompile(`\s*,\s*`).Split(portGroups, -1)
-	createSpec := &photon.SubnetCreateSpec{
+	createSpec := &photon.NetworkCreateSpec{
 		Name:        name,
 		Description: description,
 		PortGroups:  portGroupList,
@@ -66,7 +66,7 @@ func createPhysicalNetwork(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	task, err := client.Photonclient.Subnets.Create(createSpec)
+	task, err := client.Photonclient.Networks.Create(createSpec)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func createPhysicalNetwork(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		network, err := client.Photonclient.Subnets.Get(id)
+		network, err := client.Photonclient.Networks.Get(id)
 		if err != nil {
 			return err
 		}
@@ -98,11 +98,11 @@ func listPhysicalNetworks(c *cli.Context, w io.Writer) error {
 	}
 
 	name := c.String("name")
-	options := &photon.SubnetGetOptions{
+	options := &photon.NetworkGetOptions{
 		Name: name,
 	}
 
-	networks, err := client.Photonclient.Subnets.GetAll(options)
+	networks, err := client.Photonclient.Networks.GetAll(options)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func showPhysicalNetwork(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	network, err := client.Photonclient.Subnets.Get(id)
+	network, err := client.Photonclient.Networks.Get(id)
 	if err != nil {
 		return err
 	}

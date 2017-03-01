@@ -175,22 +175,22 @@
 		{
 			"checksumSHA1": "x5Bh81NwZmoKkwfUFpo8tTEn/U8=",
 			"path": "github.com/vmware/photon-controller-go-sdk/SSPI",
-			"revision": "481d0a9b3c5c92880d8a1468fe40a3fb57a038d2",
-			"revisionTime": "2017-02-23T23:24:33Z"
+			"revision": "e93a044a25386b88b5f91cf08a53af6d7c2c2dc1",
+			"revisionTime": "2017-03-02T21:29:14Z"
 		},
 		{
-			"checksumSHA1": "GAdCenVrNT8Ixpxv2qFWR2Kf2Ak=",
+			"checksumSHA1": "rr1uoAST1H9RC5Euxn0dDgA3ZiA=",
 			"path": "github.com/vmware/photon-controller-go-sdk/photon",
-			"revision": "481d0a9b3c5c92880d8a1468fe40a3fb57a038d2",
-			"revisionTime": "2017-02-23T23:24:33Z",
+			"revision": "e93a044a25386b88b5f91cf08a53af6d7c2c2dc1",
+			"revisionTime": "2017-03-02T21:29:14Z",
 			"version": "=PROMOTED-395",
 			"versionExact": "PROMOTED-395"
 		},
 		{
 			"checksumSHA1": "CoI+hFM/QR9H6djQBdhnLKqpF58=",
 			"path": "github.com/vmware/photon-controller-go-sdk/photon/lightwave",
-			"revision": "481d0a9b3c5c92880d8a1468fe40a3fb57a038d2",
-			"revisionTime": "2017-02-23T23:24:33Z",
+			"revision": "e93a044a25386b88b5f91cf08a53af6d7c2c2dc1",
+			"revisionTime": "2017-03-02T21:29:14Z",
 			"version": "=PROMOTED-395",
 			"versionExact": "PROMOTED-395"
 		},

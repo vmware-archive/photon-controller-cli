@@ -554,15 +554,15 @@ type NetworkConfiguration struct {
 	DhcpServers     []string `json:"dhcpServers,omitempty"`
 }
 
-// Creation spec for subnets.
-type SubnetCreateSpec struct {
+// Creation spec for networks.
+type NetworkCreateSpec struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description,omitempty"`
 	PortGroups  []string `json:"portGroups"`
 }
 
 // Represents a subnet
-type Subnet struct {
+type Network struct {
 	Kind        string   `json:"kind"`
 	Name        string   `json:"name"`
 	Description string   `json:"description,omitempty"`
@@ -575,8 +575,8 @@ type Subnet struct {
 }
 
 // Represents multiple subnets returned by the API
-type Subnets struct {
-	Items []Subnet `json:"items"`
+type Networks struct {
+	Items []Network `json:"items"`
 }
 
 // Create spec for virtual subnet

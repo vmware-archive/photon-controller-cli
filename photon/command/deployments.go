@@ -176,6 +176,10 @@ func GetDeploymentsCommand() cli.Command {
 						Name:  "host-uplink-pnic",
 						Usage: "Name of the host uplink pnic",
 					},
+					cli.IntFlag{
+						Name:  "host-uplink-vlan-id",
+						Usage: "VLAN ID of the host uplink",
+					},
 				},
 				Action: func(c *cli.Context) {
 					err := configureNsx(c)
@@ -867,6 +871,7 @@ func configureNsx(c *cli.Context) error {
 	overlayTransportZoneId := c.String("overlay-transport-zone-id")
 	tunnelIpPoolId := c.String("tunnel-ip-pool-id")
 	hostUplinkPnic := c.String("host-uplink-pnic")
+	hostUplinkVlanId := c.Int("host-uplink-vlan-id")
 
 	if len(nsxAddress) == 0 {
 		return fmt.Errorf("Please provide IP address of NSX")
@@ -926,6 +931,7 @@ func configureNsx(c *cli.Context) error {
 			OverlayTransportZoneId: overlayTransportZoneId,
 			TunnelIpPoolId:         tunnelIpPoolId,
 			HostUplinkPnic:         hostUplinkPnic,
+			HostUplinkVlanId:       hostUplinkVlanId,
 		}
 
 		task, err := client.Photonclient.Deployments.ConfigureNsx(id, nsxConfigSpec)

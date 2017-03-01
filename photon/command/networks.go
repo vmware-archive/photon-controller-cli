@@ -217,7 +217,7 @@ func deleteNetwork(c *cli.Context) error {
 	if sdnEnabled {
 		task, err = client.Photonclient.VirtualSubnets.Delete(id)
 	} else {
-		task, err = client.Photonclient.Subnets.Delete(id)
+		task, err = client.Photonclient.Networks.Delete(id)
 	}
 	if err != nil {
 		return err
@@ -251,7 +251,7 @@ func setDefaultNetwork(c *cli.Context, w io.Writer) error {
 	if sdnEnabled {
 		task, err = client.Photonclient.VirtualSubnets.SetDefault(id)
 	} else {
-		task, err = client.Photonclient.Subnets.SetDefault(id)
+		task, err = client.Photonclient.Networks.SetDefault(id)
 	}
 
 	if err != nil {
@@ -265,7 +265,7 @@ func setDefaultNetwork(c *cli.Context, w io.Writer) error {
 		}
 
 		if utils.NeedsFormatting(c) {
-			network, err := client.Photonclient.Subnets.Get(id)
+			network, err := client.Photonclient.Networks.Get(id)
 			if err != nil {
 				return err
 			}

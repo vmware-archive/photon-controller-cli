@@ -125,7 +125,7 @@ func createVirtualNetwork(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		network, err := client.Photonclient.Subnets.Get(id)
+		network, err := client.Photonclient.Networks.Get(id)
 		if err != nil {
 			return err
 		}

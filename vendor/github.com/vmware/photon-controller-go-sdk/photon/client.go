@@ -36,7 +36,7 @@ type Client struct {
 	Hosts             *HostsAPI
 	Deployments       *DeploymentsAPI
 	ResourceTickets   *ResourceTicketsAPI
-	Subnets           *SubnetsAPI
+	Networks          *NetworksAPI
 	VirtualSubnets    *VirtualSubnetsAPI
 	Services          *ServicesAPI
 	Auth              *AuthAPI
@@ -162,7 +162,7 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	c.Hosts = &HostsAPI{c}
 	c.Deployments = &DeploymentsAPI{c}
 	c.ResourceTickets = &ResourceTicketsAPI{c}
-	c.Subnets = &SubnetsAPI{c}
+	c.Networks = &NetworksAPI{c}
 	c.VirtualSubnets = &VirtualSubnetsAPI{c}
 	c.Services = &ServicesAPI{c}
 	c.Auth = &AuthAPI{c}

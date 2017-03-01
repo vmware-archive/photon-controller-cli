@@ -25,12 +25,12 @@ import (
 )
 
 type MockNetworksPage struct {
-	Items            []photon.Subnet `json:"items"`
-	NextPageLink     string          `json:"nextPageLink"`
-	PreviousPageLink string          `json:"previousPageLink"`
+	Items            []photon.Network `json:"items"`
+	NextPageLink     string           `json:"nextPageLink"`
+	PreviousPageLink string           `json:"previousPageLink"`
 }
 
-func TestCreateDeletePhysicalSubnet(t *testing.T) {
+func TestCreateDeletePhysicalNetwork(t *testing.T) {
 	queuedTask := &photon.Task{
 		Operation: "CREATE_NETWORK",
 		State:     "QUEUED",
@@ -140,7 +140,7 @@ func TestListPhysicalNetworks(t *testing.T) {
 	defer server.Close()
 
 	expectedList := MockNetworksPage{
-		Items: []photon.Subnet{
+		Items: []photon.Network{
 			{
 				ID:         "network_id",
 				Name:       "network_name",
@@ -163,7 +163,7 @@ func TestListPhysicalNetworks(t *testing.T) {
 		mocks.CreateResponder(200, string(response[:])))
 
 	expectedList = MockNetworksPage{
-		Items:            []photon.Subnet{},
+		Items:            []photon.Network{},
 		NextPageLink:     "",
 		PreviousPageLink: "",
 	}
@@ -220,7 +220,7 @@ func TestListPhysicalNetworks(t *testing.T) {
 }
 
 func TestShowPhysicalNetwork(t *testing.T) {
-	expectedStruct := photon.Subnet{
+	expectedStruct := photon.Network{
 		ID:         "network_id",
 		Name:       "network_name",
 		PortGroups: []string{"port", "group"},
