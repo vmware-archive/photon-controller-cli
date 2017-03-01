@@ -752,4 +752,5 @@ type NsxConfigurationSpec struct {
 	OverlayTransportZoneId string            `json:"overlayTransportZoneId"`
 	TunnelIpPoolId         string            `json:"tunnelIpPoolId"`
 	HostUplinkPnic         string            `json:"hostUplinkPnic"`
+	HostUplinkVlanId       int               `json:"hostUplinkVlanId"`
 }
