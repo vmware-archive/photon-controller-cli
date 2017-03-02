@@ -646,6 +646,11 @@ func showService(c *cli.Context, w io.Writer) error {
 		fmt.Println("  Name:                ", service.Name)
 		fmt.Println("  State:               ", service.State)
 		fmt.Println("  Type:                ", service.Type)
+		if service.Type == "KUBERNETES" {
+			fmt.Println("  Kubernetes IP:       ", service.ExtendedProperties[photon.ExtendedPropertyLoadBalancerIP])
+		} else if service.Type == "HARBOR" {
+			fmt.Println("  Harbor IP:           ", service.ExtendedProperties["master_ips"])
+		}
 		fmt.Println("  Worker count:        ", service.WorkerCount)
 		if service.ErrorReason != "" {
 			fmt.Println("  Error Reason:        ", service.ErrorReason)
