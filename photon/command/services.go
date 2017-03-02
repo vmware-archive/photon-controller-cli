@@ -84,7 +84,7 @@ func GetServiceCommand() cli.Command {
 						Usage: "Override master VM flavor",
 					},
 					cli.StringFlag{
-						Name:  "worker-vm-flavor, w",
+						Name:  "worker-vm-flavor, W",
 						Usage: "Override worker VM flavor",
 					},
 					cli.StringFlag{
