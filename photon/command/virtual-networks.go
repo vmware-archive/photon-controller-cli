@@ -227,7 +227,7 @@ func showVirtualNetwork(c *cli.Context, w io.Writer) error {
 		fmt.Printf("  State:            %s\n", network.State)
 		fmt.Printf("  Description:      %s\n", network.Description)
 		fmt.Printf("  Routing Type:     %s\n", network.RoutingType)
-		fmt.Printf("  Is Default:       %s\n", network.IsDefault)
+		fmt.Printf("  Is Default:       %t\n", network.IsDefault)
 		fmt.Printf("  CIDR:             %s\n", network.Cidr)
 		fmt.Printf("  Start Dynamic IP: %s\n", network.LowIpDynamic)
 		fmt.Printf("  End Dynamic IP:   %s\n", network.HighIpDynamic)
