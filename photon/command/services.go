@@ -120,6 +120,10 @@ func GetServiceCommand() cli.Command {
 						Usage: "Kubernetes master IP address (required for Kubernetes services)",
 					},
 					cli.StringFlag{
+						Name:  "master-ip2",
+						Usage: "Static IP address with which to create Kubernetes node 2",
+					},
+					cli.StringFlag{
 						Name:  "load-balancer-ip",
 						Usage: "Kubernetes load balancer IP address (required for Kubernetes services)",
 					},
@@ -358,6 +362,7 @@ func createService(c *cli.Context, w io.Writer) error {
 	gateway := c.String("gateway")
 	netmask := c.String("netmask")
 	masterIP := c.String("master-ip")
+	masterIP2 := c.String("master-ip2")
 	loadBalancerIP := c.String("load-balancer-ip")
 	container_network := c.String("container-network")
 	etcd1 := c.String("etcd1")
@@ -473,7 +478,12 @@ func createService(c *cli.Context, w io.Writer) error {
 	switch service_type {
 	case "KUBERNETES":
 		if !c.GlobalIsSet("non-interactive") {
-			masterIP, err = askForInput("Kubernetes master static IP address: ", masterIP)
+			masterIP, err = askForInput("Kubernetes master 1 static IP address: ", masterIP)
+			if err != nil {
+				return err
+			}
+			masterIP2, err = askForInput("Kubernetes master 2 static IP address (leave blank for none): ",
+				masterIP2)
 			if err != nil {
 				return err
 			}
@@ -502,6 +512,9 @@ func createService(c *cli.Context, w io.Writer) error {
 		}
 
 		extended_properties[photon.ExtendedPropertyMasterIP] = masterIP
+		if len(masterIP2) != 0 {
+			extended_properties[photon.ExtendedPropertyMasterIP2] = masterIP2
+		}
 		extended_properties[photon.ExtendedPropertyLoadBalancerIP] = loadBalancerIP
 		extended_properties[photon.ExtendedPropertyContainerNetwork] = container_network
 		extended_properties[photon.ExtendedPropertyETCDIP1] = etcd1
