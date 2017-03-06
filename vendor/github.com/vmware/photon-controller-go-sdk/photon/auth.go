@@ -110,7 +110,7 @@ func (api *AuthAPI) buildOIDCClient() (client *lightwave.OIDCClient, err error) 
 		api.client.restClient.logger), nil
 }
 
-const tokenScope string = "openid offline_access rs_esxcloud at_groups"
+const tokenScope string = "openid offline_access rs_photon_platform at_groups"
 
 func (api *AuthAPI) buildOIDCClientOptions(options *ClientOptions) *lightwave.OIDCClientOptions {
 	return &lightwave.OIDCClientOptions{
