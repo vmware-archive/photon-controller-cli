@@ -115,9 +115,13 @@ func GetServiceCommand() cli.Command {
 						Name:  "netmask",
 						Usage: "VM network netmask",
 					},
+					cli.IntFlag{
+						Name:  "number-of-masters",
+						Usage: "Number of Kubernetes masters (required for Kubernetes services with virtual networking)",
+					},
 					cli.StringFlag{
 						Name:  "master-ip",
-						Usage: "Kubernetes master IP address (required for Kubernetes services)",
+						Usage: "Kubernetes master IP address (required for Kubernetes services with physical networking)",
 					},
 					cli.StringFlag{
 						Name:  "master-ip2",
@@ -125,15 +129,19 @@ func GetServiceCommand() cli.Command {
 					},
 					cli.StringFlag{
 						Name:  "load-balancer-ip",
-						Usage: "Kubernetes load balancer IP address (required for Kubernetes services)",
+						Usage: "Kubernetes load balancer IP address (required for Kubernetes services with physical networking)",
 					},
 					cli.StringFlag{
 						Name:  "container-network",
 						Usage: "CIDR representation of the container network, e.g. '10.2.0.0/16' (required for Kubernetes services)",
 					},
+					cli.IntFlag{
+						Name:  "number-of-etcds",
+						Usage: "Number of Etcd instances for Kubernetes (required for Kubernetes services with virtual networking)",
+					},
 					cli.StringFlag{
 						Name:  "etcd1",
-						Usage: "Static IP address with which to create etcd node 1 (required for Kubernetes)",
+						Usage: "Static IP address with which to create etcd node 1 (required for Kubernetes services with physical networking)",
 					},
 					cli.StringFlag{
 						Name:  "etcd2",
@@ -477,51 +485,72 @@ func createService(c *cli.Context, w io.Writer) error {
 	service_type = strings.ToUpper(service_type)
 	switch service_type {
 	case "KUBERNETES":
-		if !c.GlobalIsSet("non-interactive") {
-			masterIP, err = askForInput("Kubernetes master 1 static IP address: ", masterIP)
-			if err != nil {
-				return err
-			}
-			masterIP2, err = askForInput("Kubernetes master 2 static IP address (leave blank for none): ",
-				masterIP2)
-			if err != nil {
-				return err
-			}
-			loadBalancerIP, err = askForInput("Kubernetes load balancer static IP address: ", loadBalancerIP)
-			if err != nil {
-				return err
-			}
-			container_network, err = askForInput("Kubernetes worker network ID: ", container_network)
-			if err != nil {
-				return err
-			}
-			etcd1, err = askForInput("etcd server 1 static IP address: ", etcd1)
-			if err != nil {
-				return err
-			}
-			etcd2, err = askForInput("etcd server 2 static IP address (leave blank for none): ", etcd2)
-			if err != nil {
-				return err
-			}
-			if len(etcd2) != 0 {
-				etcd3, err = askForInput("etcd server 3 static IP address (leave blank for none): ", etcd3)
+		sdn, err := isSoftwareDefinedNetwork(c)
+		if err != nil {
+			return err
+		}
+		if sdn {
+			etcdCount := c.Int("number-of-etcds")
+			masterCount := c.Int("number-of-masters")
+			if !c.GlobalIsSet("non-interactive") {
+				etcdCount, err = askForInputInt("Number of Etcd instances: ", etcdCount)
+				if err != nil {
+					return err
+				}
+				masterCount, err = askForInputInt("Number of master instances: ", masterCount)
 				if err != nil {
 					return err
 				}
 			}
-		}
+			extended_properties[photon.ExtendedPropertyNumberOfETCDs] = strconv.Itoa(etcdCount)
+			extended_properties[photon.ExtendedPropertyNumberOfMasters] = strconv.Itoa(masterCount)
+		} else {
+			if !c.GlobalIsSet("non-interactive") {
+				masterIP, err = askForInput("Kubernetes master 1 static IP address: ", masterIP)
+				if err != nil {
+					return err
+				}
+				masterIP2, err = askForInput("Kubernetes master 2 static IP address (leave blank for none): ",
+					masterIP2)
+				if err != nil {
+					return err
+				}
+				loadBalancerIP, err = askForInput("Kubernetes load balancer static IP address: ", loadBalancerIP)
+				if err != nil {
+					return err
+				}
+				container_network, err = askForInput("Kubernetes worker network ID: ", container_network)
+				if err != nil {
+					return err
+				}
+				etcd1, err = askForInput("etcd server 1 static IP address: ", etcd1)
+				if err != nil {
+					return err
+				}
+				etcd2, err = askForInput("etcd server 2 static IP address (leave blank for none): ", etcd2)
+				if err != nil {
+					return err
+				}
+				if len(etcd2) != 0 {
+					etcd3, err = askForInput("etcd server 3 static IP address (leave blank for none): ", etcd3)
+					if err != nil {
+						return err
+					}
+				}
+			}
 
-		extended_properties[photon.ExtendedPropertyMasterIP] = masterIP
-		if len(masterIP2) != 0 {
-			extended_properties[photon.ExtendedPropertyMasterIP2] = masterIP2
-		}
-		extended_properties[photon.ExtendedPropertyLoadBalancerIP] = loadBalancerIP
-		extended_properties[photon.ExtendedPropertyContainerNetwork] = container_network
-		extended_properties[photon.ExtendedPropertyETCDIP1] = etcd1
-		if len(etcd2) != 0 {
-			extended_properties[photon.ExtendedPropertyETCDIP2] = etcd2
-			if len(etcd3) != 0 {
-				extended_properties[photon.ExtendedPropertyETCDIP3] = etcd3
+			extended_properties[photon.ExtendedPropertyMasterIP] = masterIP
+			if len(masterIP2) != 0 {
+				extended_properties[photon.ExtendedPropertyMasterIP2] = masterIP2
+			}
+			extended_properties[photon.ExtendedPropertyLoadBalancerIP] = loadBalancerIP
+			extended_properties[photon.ExtendedPropertyContainerNetwork] = container_network
+			extended_properties[photon.ExtendedPropertyETCDIP1] = etcd1
+			if len(etcd2) != 0 {
+				extended_properties[photon.ExtendedPropertyETCDIP2] = etcd2
+				if len(etcd3) != 0 {
+					extended_properties[photon.ExtendedPropertyETCDIP3] = etcd3
+				}
 			}
 		}
 	case "HARBOR":
