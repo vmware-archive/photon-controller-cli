@@ -57,6 +57,14 @@ func TestReadCACert(t *testing.T) {
 }
 
 func TestCreateDeleteService(t *testing.T) {
+	info := &photon.Info{
+		NetworkType: PHYSICAL,
+	}
+	infoResponse, err := json.Marshal(info)
+	if err != nil {
+		t.Error("Not expecting error when serializing info")
+	}
+
 	tenantStruct := photon.Tenants{
 		Items: []photon.Tenant{
 			{
@@ -108,6 +116,10 @@ func TestCreateDeleteService(t *testing.T) {
 	server = mocks.NewTestServer()
 	defer server.Close()
 
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/info",
+		mocks.CreateResponder(200, string(infoResponse)))
 	mocks.RegisterResponder(
 		"GET",
 		server.URL+rootUrl+"/tenants",

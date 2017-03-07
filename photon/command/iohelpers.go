@@ -51,6 +51,19 @@ func askForInput(msg string, name string) (string, error) {
 	return strings.TrimSpace(line), nil
 }
 
+// Prompt for input an non-zero integer value if val is zero
+func askForInputInt(msg string, val int) (int, error) {
+	if val != 0 {
+		return val, nil
+	}
+	inputVal, err := askForInput(msg, strconv.Itoa(val))
+	if err != nil {
+		return val, err
+	}
+	parsedVal, err := strconv.ParseInt(inputVal, 0, 0)
+	return int(parsedVal), err
+}
+
 func printHostList(hostList []photon.Host, w io.Writer, c *cli.Context) error {
 	if c.GlobalIsSet("non-interactive") {
 		for _, host := range hostList {
