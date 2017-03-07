@@ -759,3 +759,31 @@ type NsxConfigurationSpec struct {
 	HostUplinkPnic         string            `json:"hostUplinkPnic"`
 	HostUplinkVlanId       int               `json:"hostUplinkVlanId"`
 }
+
+// Represents a subnet
+type Subnet struct {
+	ID            string            `json:"id"`
+	Kind          string            `json:"kind"`
+	Name          string            `json:"name"`
+	Description   string            `json:"description,omitempty"`
+	PrivateIpCidr string            `json:"privateIpCidr"`
+	ReservedIps   map[string]string `json:"reservedIps"`
+	State         string            `json:"state"`
+}
+
+// Represents multiple subnets returned by the API.
+type Subnets struct {
+	Items []Subnet `json:"items"`
+}
+
+// Creation spec for subnets.
+type SubnetCreateSpec struct {
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	PrivateIpCidr string `json:"privateIpCidr"`
+}
+
+// Represents name that can be set for subnet
+type SubnetUpdateSpec struct {
+	SubnetName string `json:"name"`
+}
