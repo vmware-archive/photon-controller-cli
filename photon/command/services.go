@@ -116,7 +116,7 @@ func GetServiceCommand() cli.Command {
 						Usage: "VM network netmask",
 					},
 					cli.StringFlag{
-						Name:  "master-ip",
+						Name:  "master-ip, master-ip1",
 						Usage: "Kubernetes master IP address (required for Kubernetes services)",
 					},
 					cli.StringFlag{
