@@ -69,3 +69,22 @@ func (api *RoutersAPI) Delete(routerID string) (task *Task, err error) {
 	task, err = getTask(getError(res))
 	return
 }
+
+// Creates a subnet on the specified router.
+func (api *RoutersAPI) CreateSubnet(routerID string, spec *SubnetCreateSpec) (task *Task, err error) {
+	body, err := json.Marshal(spec)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+routerUrl+routerID+"/subnets",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
