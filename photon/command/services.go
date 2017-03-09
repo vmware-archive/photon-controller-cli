@@ -978,12 +978,11 @@ func changeVersion(c *cli.Context, w io.Writer) error {
 			return err
 		}
 
-		_, err = waitOnTaskOperation(changeVersionTask.ID, c)
-		if err != nil {
-			return err
-		}
-
 		if waitForReady {
+			_, err = waitOnTaskOperation(changeVersionTask.ID, c)
+			if err != nil {
+				return err
+			}
 			service, err := waitForService(serviceID)
 			if err != nil {
 				return err
@@ -994,15 +993,16 @@ func changeVersion(c *cli.Context, w io.Writer) error {
 			if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
 				fmt.Printf("Service %s is ready\n", service.ID)
 			}
-		}
-		if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
-			fmt.Println("Note: A background task is running to gradually change the service to use " +
-				"the specific image.")
-			fmt.Printf("You can run 'service show %s'\n", changeVersionTask.Entity.ID)
-			fmt.Println("to see the state of the service. If the change version operation is still in " +
-				"progress, the service state")
-			fmt.Println("will show as UPGRADING. Once the service is using the new image, the service " +
-				"state will show as READY.")
+		} else {
+			if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
+				fmt.Println("Note: A background task is running to gradually change the service to use " +
+					"the specific image.")
+				fmt.Printf("You can run 'service show %s'\n", changeVersionTask.Entity.ID)
+				fmt.Println("to see the state of the service. If the change version operation is still in " +
+					"progress, the service state")
+				fmt.Println("will show as UPGRADING. Once the service is using the new image, the service " +
+					"state will show as READY.")
+			}
 		}
 	} else {
 		fmt.Println("Cancelled")
