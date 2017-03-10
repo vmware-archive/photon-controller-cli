@@ -75,19 +75,19 @@ func TestCreateDeleteRouter(t *testing.T) {
 	server = mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(tenantResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
 		mocks.CreateResponder(200, string(projectResponse[:])))
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/projects/"+"fake_project_ID"+"/routers",
+		server.URL+rootUrl+"/projects/"+"fake_project_ID"+"/routers",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -138,11 +138,11 @@ func TestCreateDeleteRouter(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/routers/"+"fake-router-id",
+		server.URL+rootUrl+"/routers/"+"fake-router-id",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -184,11 +184,11 @@ func TestUpdateRouter(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"PUT",
-		server.URL+"/routers"+"/fake-router-id",
+		server.URL+rootUrl+"/routers"+"/fake-router-id",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -223,7 +223,7 @@ func TestShowRouter(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/routers/"+getStruct.ID,
+		server.URL+rootUrl+"/routers/"+getStruct.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 

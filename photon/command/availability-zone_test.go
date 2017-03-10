@@ -53,11 +53,11 @@ func TestCreateDeleteAvailabilityZone(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/availabilityzones",
+		server.URL+rootUrl+"/availabilityzones",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	defer server.Close()
 
@@ -96,11 +96,11 @@ func TestCreateDeleteAvailabilityZone(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/availabilityzones/"+queuedTask.Entity.ID,
+		server.URL+rootUrl+"/availabilityzones/"+queuedTask.Entity.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -129,7 +129,7 @@ func TestShowAvailabilityZone(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/availabilityzones/"+expectedStruct.ID,
+		server.URL+rootUrl+"/availabilityzones/"+expectedStruct.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -172,7 +172,7 @@ func TestListAvailabilityZones(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/availabilityzones",
+		server.URL+rootUrl+"/availabilityzones",
 		mocks.CreateResponder(200, string(response[:])))
 
 	expectedList = MockAvailZonePage{
@@ -253,7 +253,7 @@ func TestAvailabilityZoneTasks(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/availabilityzones/1/tasks",
+		server.URL+rootUrl+"/availabilityzones/1/tasks",
 		mocks.CreateResponder(200, string(response[:])))
 	taskList = MockTasksPage{
 		Items:            []photon.Task{},

@@ -336,7 +336,7 @@ func mockInfo(t *testing.T, server *httptest.Server) error {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/info",
+		server.URL+rootUrl+"/info",
 		mocks.CreateResponder(200, string(response[:])))
 	return nil
 }

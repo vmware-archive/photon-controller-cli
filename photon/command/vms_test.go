@@ -81,19 +81,19 @@ func TestCreateDeleteVM(t *testing.T) {
 	server = mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(tenantResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
 		mocks.CreateResponder(200, string(projectResponse[:])))
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/projects/"+"fake_project_ID"+"/vms",
+		server.URL+rootUrl+"/projects/"+"fake_project_ID"+"/vms",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -157,11 +157,11 @@ func TestCreateDeleteVM(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/vms/"+"fake_vm_ID",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -204,7 +204,7 @@ func TestShowVM(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/vms/"+"fake_vm_ID",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID",
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -245,11 +245,11 @@ func TestStartVM(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/start",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/start",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -290,11 +290,11 @@ func TestStopVM(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/stop",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/stop",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -335,11 +335,11 @@ func TestResumeVM(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/resume",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/resume",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -380,11 +380,11 @@ func TestRestartVM(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/restart",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/restart",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -425,11 +425,11 @@ func TestSuspendVM(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/suspend",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/suspend",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -468,11 +468,11 @@ func TestAttachDisk(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/attach_disk",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/attach_disk",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -512,11 +512,11 @@ func TestDetachDisk(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/detach_disk",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/detach_disk",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -557,11 +557,11 @@ func TestAttachDetachISO(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/attach_iso",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/attach_iso",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -605,11 +605,11 @@ func TestAttachDetachISO(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/detach_iso",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/detach_iso",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -700,15 +700,15 @@ func TestListVMs(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
 		mocks.CreateResponder(200, string(listProjectResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/projects/"+"fake_project_ID"+"/vms",
+		server.URL+rootUrl+"/projects/"+"fake_project_ID"+"/vms",
 		mocks.CreateResponder(200, string(listResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -806,15 +806,15 @@ func TestFindVMsByName(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(tenantResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
 		mocks.CreateResponder(200, string(listProjectResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/projects/"+"fake_project_ID"+"/vms?name="+vmName,
+		server.URL+rootUrl+"/projects/"+"fake_project_ID"+"/vms?name="+vmName,
 		mocks.CreateResponder(200, string(listVmResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -857,7 +857,7 @@ func TestListVMTasks(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/vms/"+"fake_vm_ID"+"/tasks",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/tasks",
 		mocks.CreateResponder(200, string(response[:])))
 	taskList = MockTasksPage{
 		Items:            []photon.Task{},
@@ -919,11 +919,11 @@ func TestSetVMMetadata(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/set_metadata",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/set_metadata",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -980,11 +980,11 @@ func TestVMNetworks(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/vms/"+"fake_vm_ID"+"/subnets",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/subnets",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -1030,11 +1030,11 @@ func TestSetVMTag(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/tags",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/tags",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -1087,11 +1087,11 @@ func TestGetVMMksTicket(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/vms/"+"fake_vm_ID"+"/mks_ticket",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/mks_ticket",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+completedTask.ID,
+		server.URL+rootUrl+"/tasks/"+completedTask.ID,
 		mocks.CreateResponder(200, string(mksresponse[:])))
 	defer server.Close()
 
@@ -1138,11 +1138,11 @@ func TestCreateVMImage(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/create_image",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/create_image",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -1197,11 +1197,11 @@ func TestAcquireFloatingIp(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/vms/"+"fake_vm_ID"+"/acquire_floating_ip",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/acquire_floating_ip",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -1257,11 +1257,11 @@ func TestReleaseFloatingIp(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/vms/"+"fake_vm_ID"+"/release_floating_ip",
+		server.URL+rootUrl+"/vms/"+"fake_vm_ID"+"/release_floating_ip",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 

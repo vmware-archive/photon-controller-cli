@@ -110,19 +110,19 @@ func TestCreateDeleteService(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(tenantResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/fake_tenant_id/projects?name=fake_project_name",
+		server.URL+rootUrl+"/tenants/fake_tenant_id/projects?name=fake_project_name",
 		mocks.CreateResponder(200, string(projectResponse[:])))
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/projects/fake_project_id/services",
+		server.URL+rootUrl+"/projects/fake_project_id/services",
 		mocks.CreateResponder(200, string(queuedCreationTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedCreationTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedCreationTask.ID,
 		mocks.CreateResponder(200, string(completedCreationTaskResponse[:])))
 	mocks.Activate(true)
 
@@ -180,11 +180,11 @@ func TestCreateDeleteService(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/services/fake_service_id",
+		server.URL+rootUrl+"/services/fake_service_id",
 		mocks.CreateResponder(200, string(queuedDeletionTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedDeletionTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedDeletionTask.ID,
 		mocks.CreateResponder(200, string(completedDeletionTaskResponse[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -278,19 +278,19 @@ func TestShowService(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/services/"+service.ID,
+		server.URL+rootUrl+"/services/"+service.ID,
 		mocks.CreateResponder(200, string(serviceResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/services/"+service.ID+"/vms",
+		server.URL+rootUrl+"/services/"+service.ID+"/vms",
 		mocks.CreateResponder(200, string(vmListResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/vms/"+"fake_vm_id"+"/networks",
+		server.URL+rootUrl+"/vms/"+"fake_vm_id"+"/networks",
 		mocks.CreateResponder(200, string(queuedNetworkTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedNetworkTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedNetworkTask.ID,
 		mocks.CreateResponder(200, string(completedNetworkTaskResponse[:])))
 	mocks.Activate(true)
 
@@ -372,15 +372,15 @@ func TestListServices(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(tenantResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/fake_tenant_id/projects?name=fake_project_name",
+		server.URL+rootUrl+"/tenants/fake_tenant_id/projects?name=fake_project_name",
 		mocks.CreateResponder(200, string(projectResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/projects/fake_project_id/services",
+		server.URL+rootUrl+"/projects/fake_project_id/services",
 		mocks.CreateResponder(200, string(firstServicesPageResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -459,11 +459,11 @@ func TestResizeService(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/services/fake_service_id/resize",
+		server.URL+rootUrl+"/services/fake_service_id/resize",
 		mocks.CreateResponder(200, string(queuedTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/fake_resize_service_task_id",
+		server.URL+rootUrl+"/tasks/fake_resize_service_task_id",
 		mocks.CreateResponder(200, string(completedTaskResponse[:])))
 	mocks.Activate(true)
 
@@ -527,7 +527,7 @@ func TestListServiceVms(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/services/fake_service_id/vms",
+		server.URL+rootUrl+"/services/fake_service_id/vms",
 		mocks.CreateResponder(200, string(listResponse[:])))
 
 	vmList = MockVMsPage{
@@ -608,11 +608,11 @@ func TestServiceTriggerMaintenance(t *testing.T) {
 	// Register mock response with mock server
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/services/fake_service_id/trigger_maintenance",
+		server.URL+rootUrl+"/services/fake_service_id/trigger_maintenance",
 		mocks.CreateResponder(200, string(completedTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/fake_service_task_id",
+		server.URL+rootUrl+"/tasks/fake_service_task_id",
 		mocks.CreateResponder(200, string(completedTaskResponse[:])))
 	mocks.Activate(true)
 
@@ -660,11 +660,11 @@ func TestChangeVersionService(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/services/service-id/change_version",
+		server.URL+rootUrl+"/services/service-id/change_version",
 		mocks.CreateResponder(200, string(queuedTaskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/service-id",
+		server.URL+rootUrl+"/tasks/service-id",
 		mocks.CreateResponder(200, string(completedTaskResponse[:])))
 	mocks.Activate(true)
 
@@ -714,7 +714,7 @@ func TestServiceCertToFile(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/services/"+service.ID,
+		server.URL+rootUrl+"/services/"+service.ID,
 		mocks.CreateResponder(200, string(serviceResponse[:])))
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}

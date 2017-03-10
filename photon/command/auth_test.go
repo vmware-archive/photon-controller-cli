@@ -110,7 +110,7 @@ func TestShow(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/auth",
+		server.URL+rootUrl+"/auth",
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 

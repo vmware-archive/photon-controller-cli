@@ -7,33 +7,7 @@
 // license terms. Your use of these subcomponents is subject to the terms and conditions
 // of the subcomponent's license, as noted in the LICENSE file.
 
-package photon
+package command
 
-import (
-	"encoding/json"
-)
-
-type InfoAPI struct {
-	client *Client
-}
-
-var infoUrl = rootUrl + "/info"
-
-// Get info
-func (api *InfoAPI) Get() (info *Info, err error) {
-	res, err := api.client.restClient.Get(api.client.Endpoint+infoUrl, api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-
-	defer res.Body.Close()
-
-	res, err = getError(res)
-	if err != nil {
-		return
-	}
-
-	info = new(Info)
-	err = json.NewDecoder(res.Body).Decode(info)
-	return
-}
+// The root Url specifies the API version. It is used by the CLI tests.
+const rootUrl string = "/v1"

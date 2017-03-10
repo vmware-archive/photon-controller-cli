@@ -54,11 +54,11 @@ func TestCreateDeleteFlavor(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/flavors",
+		server.URL+rootUrl+"/flavors",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	defer server.Close()
 
@@ -102,7 +102,7 @@ func TestCreateDeleteFlavor(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/flavors",
+		server.URL+rootUrl+"/flavors",
 		mocks.CreateResponder(200, string(response[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -130,11 +130,11 @@ func TestCreateDeleteFlavor(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/flavors/"+queuedTask.Entity.ID,
+		server.URL+rootUrl+"/flavors/"+queuedTask.Entity.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -166,7 +166,7 @@ func TestShowFlavor(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/flavors/"+getStruct.ID,
+		server.URL+rootUrl+"/flavors/"+getStruct.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -209,7 +209,7 @@ func TestFlavorTasks(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/flavors/fake-id/tasks",
+		server.URL+rootUrl+"/flavors/fake-id/tasks",
 		mocks.CreateResponder(200, string(response[:])))
 
 	taskList = MockTasksPage{
@@ -269,7 +269,7 @@ func TestListFlavors(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/flavors",
+		server.URL+rootUrl+"/flavors",
 		mocks.CreateResponder(200, string(response[:])))
 
 	flavorLists = MockFlavorsPage{

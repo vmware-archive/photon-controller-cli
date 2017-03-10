@@ -54,11 +54,11 @@ func TestCreateDeleteImage(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/images",
+		server.URL+rootUrl+"/images",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	defer server.Close()
 
@@ -102,11 +102,11 @@ func TestCreateDeleteImage(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/images/"+queuedTask.Entity.ID,
+		server.URL+rootUrl+"/images/"+queuedTask.Entity.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 
 	globalSet := flag.NewFlagSet("global", 0)
@@ -171,7 +171,7 @@ func TestFindImagesByName(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/images?name=test",
+		server.URL+rootUrl+"/images?name=test",
 		mocks.CreateResponder(200, string(response[:])))
 
 	expectedImageList = MockImagesPage{
@@ -237,7 +237,7 @@ func TestListImage(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/images",
+		server.URL+rootUrl+"/images",
 		mocks.CreateResponder(200, string(response[:])))
 
 	expectedImageList = MockImagesPage{
@@ -328,7 +328,7 @@ func TestImageTasks(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/images/1/tasks",
+		server.URL+rootUrl+"/images/1/tasks",
 		mocks.CreateResponder(200, string(response[:])))
 
 	taskList = MockTasksPage{

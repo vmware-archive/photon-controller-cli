@@ -54,11 +54,11 @@ func TestCreateDeleteHost(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments"+"/fake-deployment-id"+"/hosts",
+		server.URL+rootUrl+"/deployments"+"/fake-deployment-id"+"/hosts",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	defer server.Close()
 
@@ -91,7 +91,7 @@ func TestCreateDeleteHost(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/deployments",
+		server.URL+rootUrl+"/deployments",
 		mocks.CreateResponder(200, string(response[:])))
 
 	err = createHost(cxt, os.Stdout)
@@ -123,11 +123,11 @@ func TestCreateDeleteHost(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/hosts/"+queuedTask.Entity.ID,
+		server.URL+rootUrl+"/hosts/"+queuedTask.Entity.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -245,7 +245,7 @@ func mockHostsForList(t *testing.T, server *httptest.Server) error {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/deployments/0/hosts",
+		server.URL+rootUrl+"/deployments/0/hosts",
 		mocks.CreateResponder(200, string(response[:])))
 
 	hostList = MockHostsPage{
@@ -286,7 +286,7 @@ func mockDeploymentsForList(t *testing.T, server *httptest.Server, numDeployment
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/deployments",
+		server.URL+rootUrl+"/deployments",
 		mocks.CreateResponder(200, string(response[:])))
 	return nil
 }
@@ -308,7 +308,7 @@ func TestShowHost(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/hosts/"+expectedStruct.ID,
+		server.URL+rootUrl+"/hosts/"+expectedStruct.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -355,11 +355,11 @@ func TestSetHostAvailabilityZone(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/hosts"+"/fake-host-id"+"/set_availability_zone",
+		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/set_availability_zone",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -399,7 +399,7 @@ func TestHostTasks(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/hosts/1/tasks",
+		server.URL+rootUrl+"/hosts/1/tasks",
 		mocks.CreateResponder(200, string(response[:])))
 
 	taskList = MockTasksPage{
@@ -467,7 +467,7 @@ func TestHostGetVMs(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/hosts/1/vms",
+		server.URL+rootUrl+"/hosts/1/vms",
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -513,11 +513,11 @@ func TestProvisionHost(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/hosts"+"/fake-host-id"+"/provision",
+		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/provision",
 		mocks.CreateResponder(202, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -561,11 +561,11 @@ func TestSuspendAndResumeHost(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/hosts"+"/fake-host-id"+"/suspend",
+		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/suspend",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -606,11 +606,11 @@ func TestSuspendAndResumeHost(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/hosts"+"/fake-host-id"+"/resume",
+		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/resume",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -652,11 +652,11 @@ func TestEnterAndExitMaintenanceMode(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/hosts"+"/fake-host-id"+"/enter_maintenance",
+		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/enter_maintenance",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -697,11 +697,11 @@ func TestEnterAndExitMaintenanceMode(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/hosts"+"/fake-host-id"+"/exit_maintenance",
+		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/exit_maintenance",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 
 	set = flag.NewFlagSet("test", 0)

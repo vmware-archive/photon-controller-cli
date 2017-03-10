@@ -58,15 +58,15 @@ func TestCreateDeleteSubnet(t *testing.T) {
 	server = mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/routers/"+"fake_router_ID",
+		server.URL+rootUrl+"/routers/"+"fake_router_ID",
 		mocks.CreateResponder(200, string(routerResponse[:])))
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/routers/"+"fake_router_ID"+"/subnets",
+		server.URL+rootUrl+"/routers/"+"fake_router_ID"+"/subnets",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -121,7 +121,7 @@ func TestCreateDeleteSubnet(t *testing.T) {
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -167,7 +167,7 @@ func TestUpdateSubnet(t *testing.T) {
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 

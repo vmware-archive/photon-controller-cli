@@ -55,11 +55,11 @@ func TestCreateDeleteTenant(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	defer server.Close()
 
@@ -102,11 +102,11 @@ func TestCreateDeleteTenant(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/tenants/"+queuedTask.Entity.ID,
+		server.URL+rootUrl+"/tenants/"+queuedTask.Entity.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -133,7 +133,7 @@ func TestShowTenant(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants"+"/"+"fake_tenant_ID",
+		server.URL+rootUrl+"/tenants"+"/"+"fake_tenant_ID",
 		mocks.CreateResponder(200, string(response[:])))
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
@@ -176,7 +176,7 @@ func TestListTenant(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(response[:])))
 
 	expectedTenants = MockTenantsPage{
@@ -346,11 +346,11 @@ func TestSetTenantAfterDelete(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/tenants/"+completedTask.Entity.ID,
+		server.URL+rootUrl+"/tenants/"+completedTask.Entity.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+completedTask.ID,
+		server.URL+rootUrl+"/tasks/"+completedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -401,7 +401,7 @@ func TestTenantTasks(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/1/tasks",
+		server.URL+rootUrl+"/tenants/1/tasks",
 		mocks.CreateResponder(200, string(response[:])))
 
 	taskList = MockTasksPage{
@@ -454,11 +454,11 @@ func TestSetSecurityGroups(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/tenants/"+tenantId+"/set_security_groups",
+		server.URL+rootUrl+"/tenants/"+tenantId+"/set_security_groups",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+taskId,
+		server.URL+rootUrl+"/tasks/"+taskId,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 

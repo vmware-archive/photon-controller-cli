@@ -81,19 +81,19 @@ func TestCreateDisk(t *testing.T) {
 	server = mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(tenantResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
 		mocks.CreateResponder(200, string(projectResponse[:])))
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/projects/"+"fake_project_ID"+"/disks",
+		server.URL+rootUrl+"/projects/"+"fake_project_ID"+"/disks",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -143,7 +143,7 @@ func TestShowDisk(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/disks/"+"fake_disk_ID",
+		server.URL+rootUrl+"/disks/"+"fake_disk_ID",
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -182,7 +182,7 @@ func TestListDisks(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/projects/"+"fake_project_ID"+"/disks",
+		server.URL+rootUrl+"/projects/"+"fake_project_ID"+"/disks",
 		mocks.CreateResponder(200, string(listResponse[:])))
 
 	diskList = MockDisksPage{
@@ -230,7 +230,7 @@ func TestListDiskTasks(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/disks/"+"fake_disk_ID"+"/tasks",
+		server.URL+rootUrl+"/disks/"+"fake_disk_ID"+"/tasks",
 		mocks.CreateResponder(200, string(response[:])))
 
 	taskList = MockTasksPage{
@@ -286,11 +286,11 @@ func TestDeleteDisk(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/disks/"+"fake_disk_ID",
+		server.URL+rootUrl+"/disks/"+"fake_disk_ID",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -360,15 +360,15 @@ func TestFindDisksByName(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(tenantResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
 		mocks.CreateResponder(200, string(projectResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/projects/"+"fake_project_ID"+"/disks?name="+diskName,
+		server.URL+rootUrl+"/projects/"+"fake_project_ID"+"/disks?name="+diskName,
 		mocks.CreateResponder(200, string(response[:])))
 
 	diskList = MockDisksPage{

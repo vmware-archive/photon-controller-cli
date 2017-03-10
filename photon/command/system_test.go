@@ -53,7 +53,7 @@ func TestGetStatus(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/status",
+		server.URL+rootUrl+"/status",
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -100,16 +100,16 @@ func TestInitializeMigrateDeployment(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/deployments",
+		server.URL+rootUrl+"/deployments",
 		mocks.CreateResponder(200, string(deploymensResponse[:])),
 	)
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/1/initialize_migration",
+		server.URL+rootUrl+"/deployments/1/initialize_migration",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	defer server.Close()
 
@@ -163,16 +163,16 @@ func TestFinalizeeMigrateDeployment(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/deployments",
+		server.URL+rootUrl+"/deployments",
 		mocks.CreateResponder(200, string(deploymensResponse[:])),
 	)
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/1/finalize_migration",
+		server.URL+rootUrl+"/deployments/1/finalize_migration",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	defer server.Close()
 

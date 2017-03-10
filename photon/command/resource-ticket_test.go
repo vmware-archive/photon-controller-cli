@@ -81,15 +81,15 @@ func TestCreateResourceTicket(t *testing.T) {
 	server = mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(tenantResponse[:])))
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/tenants/"+tenantID+"/resource-tickets",
+		server.URL+rootUrl+"/tenants/"+tenantID+"/resource-tickets",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -134,11 +134,11 @@ func TestShowResourceTicket(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+tenantID+"/resource-tickets",
+		server.URL+rootUrl+"/tenants/"+tenantID+"/resource-tickets",
 		mocks.CreateResponder(200, string(listResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+tenantID+"/resource-tickets?name="+rtName,
+		server.URL+rootUrl+"/tenants/"+tenantID+"/resource-tickets?name="+rtName,
 		mocks.CreateResponder(200, string(listResponse[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -175,7 +175,7 @@ func TestListResourceTickets(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+tenantID+"/resource-tickets",
+		server.URL+rootUrl+"/tenants/"+tenantID+"/resource-tickets",
 		mocks.CreateResponder(200, string(listResponse[:])))
 
 	rtList = MockResourceTicketsPage{
@@ -251,7 +251,7 @@ func TestListResourceTicketTasks(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/resource-tickets/"+rtID+"/tasks",
+		server.URL+rootUrl+"/resource-tickets/"+rtID+"/tasks",
 		mocks.CreateResponder(200, string(response[:])))
 
 	taskList = MockTasksPage{

@@ -61,11 +61,11 @@ func TestGetDeployment(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/deployments/"+getStruct.ID,
+		server.URL+rootUrl+"/deployments/"+getStruct.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/deployments/1/vms",
+		server.URL+rootUrl+"/deployments/1/vms",
 		mocks.CreateResponder(200, string(response[:])))
 
 	defer server.Close()
@@ -111,7 +111,7 @@ func TestListDeploymentHosts(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/deployments/1/hosts",
+		server.URL+rootUrl+"/deployments/1/hosts",
 		mocks.CreateResponder(200, string(response[:])))
 
 	hostList = MockHostsPage{
@@ -183,7 +183,7 @@ func TestListDeploymentVms(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/deployments/1/vms",
+		server.URL+rootUrl+"/deployments/1/vms",
 		mocks.CreateResponder(200, string(response[:])))
 
 	vmList = MockVMsPage{
@@ -243,11 +243,11 @@ func TestUpdateImageDatastores(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/"+deploymentId+"/set_image_datastores",
+		server.URL+rootUrl+"/deployments/"+deploymentId+"/set_image_datastores",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -293,11 +293,11 @@ func TestSyncHostsConfig(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/"+queuedTask.Entity.ID+"/sync_hosts_config",
+		server.URL+rootUrl+"/deployments/"+queuedTask.Entity.ID+"/sync_hosts_config",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -343,11 +343,11 @@ func TestPauseSystem(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/"+queuedTask.Entity.ID+"/pause_system",
+		server.URL+rootUrl+"/deployments/"+queuedTask.Entity.ID+"/pause_system",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -393,11 +393,11 @@ func TestPauseBackgroundTasks(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/"+queuedTask.Entity.ID+"/pause_background_tasks",
+		server.URL+rootUrl+"/deployments/"+queuedTask.Entity.ID+"/pause_background_tasks",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -443,11 +443,11 @@ func TestResumeSystem(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/"+queuedTask.Entity.ID+"/resume_system",
+		server.URL+rootUrl+"/deployments/"+queuedTask.Entity.ID+"/resume_system",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -494,11 +494,11 @@ func TestSetDeploymentSecurityGroups(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/"+deploymentId+"/set_security_groups",
+		server.URL+rootUrl+"/deployments/"+deploymentId+"/set_security_groups",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 
@@ -551,11 +551,11 @@ func TestConfigureNsx(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/"+deploymentId+"/configure_nsx",
+		server.URL+rootUrl+"/deployments/"+deploymentId+"/configure_nsx",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 
 	defer server.Close()
@@ -623,11 +623,11 @@ func TestEnableServiceType(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/"+deploymentId+"/enable_service_type",
+		server.URL+rootUrl+"/deployments/"+deploymentId+"/enable_service_type",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 
 	defer server.Close()
@@ -684,11 +684,11 @@ func TestDisableServiceType(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/deployments/"+queuedTask.Entity.ID+"/disable_service_type",
+		server.URL+rootUrl+"/deployments/"+queuedTask.Entity.ID+"/disable_service_type",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	defer server.Close()
 

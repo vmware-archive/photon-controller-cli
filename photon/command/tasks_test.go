@@ -50,7 +50,7 @@ func TestListTasks(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks",
+		server.URL+rootUrl+"/tasks",
 		mocks.CreateResponder(200, string(response[:])))
 
 	taskList = MockTasksPage{
@@ -84,7 +84,7 @@ func TestListTasks(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks?entityId=fake-flavor-id&entityKind=vm",
+		server.URL+rootUrl+"/tasks?entityId=fake-flavor-id&entityKind=vm",
 		mocks.CreateResponder(200, string(response[:])))
 
 	set = flag.NewFlagSet("test", 0)
@@ -113,7 +113,7 @@ func TestShowMonitorTask(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/fake-flavor-id",
+		server.URL+rootUrl+"/tasks/fake-flavor-id",
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 

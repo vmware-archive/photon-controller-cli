@@ -53,11 +53,11 @@ func TestCreateVirtualSubnet(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/projects/project_id/subnets",
+		server.URL+rootUrl+"/projects/project_id/subnets",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	defer server.Close()
 
@@ -118,15 +118,15 @@ func TestDeleteVirtualSubnet(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/subnets/"+queuedTask.Entity.ID,
+		server.URL+rootUrl+"/subnets/"+queuedTask.Entity.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/info",
+		server.URL+rootUrl+"/info",
 		mocks.CreateResponder(200, string(infoString[:])))
 	defer server.Close()
 
@@ -182,7 +182,7 @@ func TestListVirtualNetworks(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/projects/project_id/subnets",
+		server.URL+rootUrl+"/projects/project_id/subnets",
 		mocks.CreateResponder(200, string(response[:])))
 
 	expectedList = MockVirtualNetworksPage{
@@ -263,7 +263,7 @@ func TestShowVirtuallNetwork(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/subnets/"+expectedVirtualSubnet.ID,
+		server.URL+rootUrl+"/subnets/"+expectedVirtualSubnet.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -304,15 +304,15 @@ func TestSetDefaultVirtualNetwork(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/subnets/"+completedTask.Entity.ID+"/set_default",
+		server.URL+rootUrl+"/subnets/"+completedTask.Entity.ID+"/set_default",
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+completedTask.ID,
+		server.URL+rootUrl+"/tasks/"+completedTask.ID,
 		mocks.CreateResponder(200, string(taskresponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/info",
+		server.URL+rootUrl+"/info",
 		mocks.CreateResponder(200, string(infoString[:])))
 	defer server.Close()
 

@@ -70,15 +70,15 @@ func TestCreateProject(t *testing.T) {
 	server = mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants",
+		server.URL+rootUrl+"/tenants",
 		mocks.CreateResponder(200, string(tenantResponse[:])))
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -125,7 +125,7 @@ func TestShowProject(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/projects/"+"fake_project_ID",
+		server.URL+rootUrl+"/projects/"+"fake_project_ID",
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -166,11 +166,11 @@ func TestSetGetProject(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects",
 		mocks.CreateResponder(200, string(listResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
 		mocks.CreateResponder(200, string(listResponse[:])))
 
 	config := &cf.Configuration{
@@ -229,7 +229,7 @@ func TestListProjects(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tenants/"+"fake_tenant_ID"+"/projects",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects",
 		mocks.CreateResponder(200, string(listResponse[:])))
 
 	projectList = MockProjectsPage{
@@ -313,7 +313,7 @@ func TestListProjectTasks(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/projects/"+"fake_project_ID"+"/tasks",
+		server.URL+rootUrl+"/projects/"+"fake_project_ID"+"/tasks",
 		mocks.CreateResponder(200, string(response[:])))
 
 	taskList = MockTasksPage{
@@ -369,11 +369,11 @@ func TestDeleteProject(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/projects/"+"fake_project_ID",
+		server.URL+rootUrl+"/projects/"+"fake_project_ID",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+queuedTask.ID,
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
 		mocks.CreateResponder(200, string(response[:])))
 
 	set := flag.NewFlagSet("test", 0)
@@ -406,11 +406,11 @@ func TestSetSecurityGroupsForProject(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+"/projects/"+projectId+"/set_security_groups",
+		server.URL+rootUrl+"/projects/"+projectId+"/set_security_groups",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/tasks/"+taskId,
+		server.URL+rootUrl+"/tasks/"+taskId,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
