@@ -173,6 +173,32 @@ func printTaskList(taskList []photon.Task, c *cli.Context) error {
 	return nil
 }
 
+// Prints out IAM policy
+func printIamPolicy(policy []photon.PolicyEntry, c *cli.Context) error {
+	if c.GlobalIsSet("non-interactive") {
+		for _, entry := range policy {
+			fmt.Printf("%s\t%s\n", entry.Principal, entry.Roles)
+		}
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObjects(policy, os.Stdout, c)
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+		fmt.Fprintf(w, "\nPrincipal\tRoles\n")
+
+		for _, entry := range policy {
+			fmt.Fprintf(w, "%s\t%s\n", entry.Principal, entry.Roles)
+			err := w.Flush()
+			if err != nil {
+				return err
+			}
+		}
+		fmt.Printf("Total: %d\n", len(policy))
+	}
+
+	return nil
+}
+
 func printQuotaList(w *tabwriter.Writer, qliList []photon.QuotaLineItem, colEntry ...string) {
 	for i := 0; i < len(qliList); i++ {
 		if i == 0 {
