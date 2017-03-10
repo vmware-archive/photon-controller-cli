@@ -32,6 +32,9 @@ import (
 //              list;   Usage: image list
 //              show;   Usage: image show <id>
 //              tasks;  Usage: image tasks <id> [<options>]
+//              get-iam;  Usage: image get-iam <id> [<options>]
+//              add-role; Usage: image add-role <id> [<options>]
+//              remove-role; Usage: image remove-role <id> [<options>]
 func GetImagesCommand() cli.Command {
 	command := cli.Command{
 		Name:  "image",
@@ -115,6 +118,59 @@ func GetImagesCommand() cli.Command {
 				},
 				Action: func(c *cli.Context) {
 					err := getImageTasks(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "get-iam",
+				Usage:     "Show the Identity and Access Management policy of specified image",
+				ArgsUsage: "<image-id>",
+				Action: func(c *cli.Context) {
+					err := getIam(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "add-role",
+				Usage:     "Grant a role to a user or group on specified image",
+				ArgsUsage: "<image-id>",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "principal, p",
+						Usage: "user or group",
+					},
+					cli.StringFlag{
+						Name:  "role, r",
+						Usage: "role: the role to grant",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := modifyIamPolicy(c, "ADD")
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "remove-role",
+				Usage:     "Remove a role from a user or group on specified image",
+				ArgsUsage: "<image-id>",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "principal, p",
+						Usage: "user or group",
+					},
+					cli.StringFlag{
+						Name:  "role, r",
+						Usage: "role: the role to remove. Use '*' to remove all existing roles.",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := modifyIamPolicy(c, "REMOVE")
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -374,6 +430,87 @@ func getImageTasks(c *cli.Context) error {
 	}
 
 	err = printTaskList(taskList.Items, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Retrieves IAM Policy for specified image
+func getIam(c *cli.Context) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	policy, err := client.Photonclient.Images.GetIam(id)
+	if err != nil {
+		return err
+	}
+
+	err = printIamPolicy(*policy, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Grant or remove a role from a principal on the specified image
+func modifyIamPolicy(c *cli.Context, action string) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args()[0]
+	principal := c.String("principal")
+	role := c.String("role")
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		principal, err = askForInput("Principal: ", principal)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(principal) == 0 {
+		return fmt.Errorf("Please provide principal")
+	}
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		role, err = askForInput("Role: ", role)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(role) == 0 {
+		return fmt.Errorf("Please provide role")
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	var delta photon.PolicyDelta
+	delta = photon.PolicyDelta { Principal: principal, Action: action, Role: role }
+	task, err := client.Photonclient.Images.ModifyIam(id, &delta)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
 	if err != nil {
 		return err
 	}
