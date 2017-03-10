@@ -32,6 +32,9 @@ import (
 //              list;   Usage: image list
 //              show;   Usage: image show <id>
 //              tasks;  Usage: image tasks <id> [<options>]
+//              iam show;  Usage: image iam show <id> [<options>]
+//              iam add; Usage: image iam add <id> [<options>]
+//              iam remove; Usage: image iam remove <id> [<options>]
 func GetImagesCommand() cli.Command {
 	command := cli.Command{
 		Name:  "image",
@@ -118,6 +121,73 @@ func GetImagesCommand() cli.Command {
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
+				},
+			},
+			{
+				Name:  "iam",
+				Usage: "options for Identity and Access Management",
+				Subcommands: []cli.Command{
+					{
+						Name:      "show",
+						Usage:     "Show the IAM policy associated with an image",
+						ArgsUsage: "<image-id>",
+						Action: func(c *cli.Context) {
+							err := getIam(c)
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name:      "add",
+						Usage:     "Grant a role to a user or group on an image",
+						ArgsUsage: "<image-id>",
+						Description: "Grant a role to a user or group on an image. \n\n" +
+							"   Example: \n" +
+							"   photon image iam add <image-id> -p user1@photon.local -r contributor\n" +
+							"   photon image iam add <image-id> -p photon.local\\group1 -r viewer",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "principal, p",
+								Usage: "User or group",
+							},
+							cli.StringFlag{
+								Name:  "role, r",
+								Usage: "'owner', 'contributor' and 'viewer'",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := modifyIamPolicy(c, os.Stdout, "ADD")
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name:      "remove",
+						Usage:     "Remove a role from a user or group on an image",
+						ArgsUsage: "<image-id>",
+						Description: "Remove a role from a user or group on an image. \n\n" +
+							"   Example: \n" +
+							"   photon image iam remove <image-id> -p user1@photon.local -r contributor \n" +
+							"   photon image iam remove <image-id> -p photon.local\\group1 -r viewer",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "principal, p",
+								Usage: "User or group",
+							},
+							cli.StringFlag{
+								Name:  "role, r",
+								Usage: "'owner', 'contributor' and 'viewer'. Or use '*' to remove all existing roles.",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := modifyIamPolicy(c, os.Stdout, "REMOVE")
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
 				},
 			},
 		},
@@ -376,6 +446,95 @@ func getImageTasks(c *cli.Context) error {
 	err = printTaskList(taskList.Items, c)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// Retrieves IAM Policy for specified image
+func getIam(c *cli.Context) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	policy, err := client.Photonclient.Images.GetIam(id)
+	if err != nil {
+		return err
+	}
+
+	err = printIamPolicy(*policy, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Grant or remove a role from a principal on the specified image
+func modifyIamPolicy(c *cli.Context, w io.Writer, action string) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	imageID := c.Args()[0]
+	principal := c.String("principal")
+	role := c.String("role")
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		principal, err = askForInput("Principal: ", principal)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(principal) == 0 {
+		return fmt.Errorf("Please provide principal")
+	}
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		role, err = askForInput("Role: ", role)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(role) == 0 {
+		return fmt.Errorf("Please provide role")
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	var delta photon.PolicyDelta
+	delta = photon.PolicyDelta{Principal: principal, Action: action, Role: role}
+	task, err := client.Photonclient.Images.ModifyIam(imageID, &delta)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		policy, err := client.Photonclient.Images.GetIam(imageID)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(policy, w, c)
 	}
 
 	return nil
