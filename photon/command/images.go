@@ -125,7 +125,7 @@ func GetImagesCommand() cli.Command {
 			},
 			{
 				Name:  "iam",
-				Usage: "options for Identity and Access Management",
+				Usage: "options for identity and access management",
 				Subcommands: []cli.Command{
 					{
 						Name:      "show",
