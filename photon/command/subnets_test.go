@@ -23,6 +23,12 @@ import (
 	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
+type MockSubnetsPage struct {
+	Items            []photon.Subnet `json:"items"`
+	NextPageLink     string          `json:"nextPageLink"`
+	PreviousPageLink string          `json:"previousPageLink"`
+}
+
 func TestCreateDeleteSubnet(t *testing.T) {
 	routerStruct := photon.Router{
 		Name: "fake_router_name",
@@ -221,5 +227,61 @@ func TestShowSubnet(t *testing.T) {
 	err = showSubnet(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting get deployment to fail")
+	}
+}
+
+func TestListSubnets(t *testing.T) {
+	subnetList := MockSubnetsPage{
+		Items: []photon.Subnet{
+			{
+				Name:          "fake_subnet_name",
+				ID:            "fake_subnet_ID",
+				Kind:          "fake_subnet_kind",
+				PrivateIpCidr: "fake_cidr",
+				State:         "READY",
+			},
+		},
+		NextPageLink:     "fake-next-page-link",
+		PreviousPageLink: "",
+	}
+	listResponse, err := json.Marshal(subnetList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected subnetList")
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/routers/"+"fake-router-id"+"/subnets",
+		mocks.CreateResponder(200, string(listResponse[:])))
+
+	subnetList = MockSubnetsPage{
+		Items:            []photon.Subnet{},
+		NextPageLink:     "",
+		PreviousPageLink: "",
+	}
+	listResponse, err = json.Marshal(subnetList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected subnetList")
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"fake-next-page-link",
+		mocks.CreateResponder(200, string(listResponse[:])))
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake-router-id"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = listSubnets(cxt, os.Stdout)
+	if err != nil {
+		t.Error("Not expecting error listing subnets: " + err.Error())
 	}
 }

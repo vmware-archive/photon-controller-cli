@@ -216,7 +216,7 @@ func showVirtualNetwork(c *cli.Context, w io.Writer) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State,
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%t\t%s\t%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State,
 			network.Description, network.RoutingType, network.IsDefault, network.Cidr, network.LowIpDynamic,
 			network.HighIpDynamic, network.LowIpStatic, network.HighIpStatic, network.ReservedIpList)
 	} else if utils.NeedsFormatting(c) {

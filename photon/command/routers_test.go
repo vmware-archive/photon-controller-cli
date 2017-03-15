@@ -23,6 +23,12 @@ import (
 	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
+type MockRoutersPage struct {
+	Items            []photon.Router `json:"items"`
+	NextPageLink     string          `json:"nextPageLink"`
+	PreviousPageLink string          `json:"previousPageLink"`
+}
+
 func TestCreateDeleteRouter(t *testing.T) {
 	tenantStruct := photon.Tenants{
 		Items: []photon.Tenant{
@@ -241,5 +247,95 @@ func TestShowRouter(t *testing.T) {
 	err = showRouter(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting get deployment to fail")
+	}
+}
+
+func TestListRouters(t *testing.T) {
+	tenantStruct := photon.Tenants{
+		Items: []photon.Tenant{
+			{
+				Name: "fake_tenant_name",
+				ID:   "fake_tenant_ID",
+			},
+		},
+	}
+	tenantResponse, err := json.Marshal(tenantStruct)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected tenantStruct")
+	}
+
+	projectStruct := photon.ProjectList{
+		Items: []photon.ProjectCompact{
+			{
+				Name: "fake_project_name",
+				ID:   "fake_project_ID",
+			},
+		},
+	}
+	projectResponse, err := json.Marshal(projectStruct)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected projectStruct")
+	}
+
+	routerList := MockRoutersPage{
+		Items: []photon.Router{
+			{
+				Name:          "fake_router_name",
+				ID:            "fake_router_ID",
+				Kind:          "fake_router_kind",
+				PrivateIpCidr: "fake_cidr",
+			},
+		},
+		NextPageLink:     "fake-next-page-link",
+		PreviousPageLink: "",
+	}
+	listResponse, err := json.Marshal(routerList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected routerList")
+	}
+
+	server := mocks.NewTestServer()
+	defer server.Close()
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/tenants",
+		mocks.CreateResponder(200, string(tenantResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects?name="+"fake_project_name",
+		mocks.CreateResponder(200, string(projectResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/projects/"+"fake_project_ID"+"/routers",
+		mocks.CreateResponder(200, string(listResponse[:])))
+
+	routerList = MockRoutersPage{
+		Items:            []photon.Router{},
+		NextPageLink:     "",
+		PreviousPageLink: "",
+	}
+	listResponse, err = json.Marshal(routerList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected routerList")
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"fake-next-page-link",
+		mocks.CreateResponder(200, string(listResponse[:])))
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	set.String("tenant", "fake_tenant_name", "tenant name")
+	set.String("project", "fake_project_name", "project name")
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = listRouters(cxt, os.Stdout)
+	if err != nil {
+		t.Error("Not expecting error listing routers: " + err.Error())
 	}
 }
