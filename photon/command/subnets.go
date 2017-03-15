@@ -14,6 +14,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/utils"
@@ -25,6 +26,7 @@ import (
 // Creates a cli.Command for subnet
 // Subcommands: create;  Usage: subnet create [<options>]
 //              delete;  Usage: subnet delete <id>
+//              list;    Usage: subnet list <router-id> [<options>]
 //              show;    Usage: subnet show <id>
 //              update;  Usage: subnet update <id> [<options>]
 func GetSubnetsCommand() cli.Command {
@@ -73,6 +75,26 @@ func GetSubnetsCommand() cli.Command {
 					err := deleteSubnet(c)
 					if err != nil {
 						log.Fatal(err)
+					}
+				},
+			},
+			{
+				Name:      "list",
+				Usage:     "List all subnets on a given router in a project",
+				ArgsUsage: "<router-id>",
+				Description: "List all subnets for the specificed router.\n" +
+					"   Example: \n" +
+					"   photon subnet list 4f9caq234 \\ \n",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "name",
+						Usage: "subnet name",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := listSubnets(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -208,6 +230,57 @@ func deleteSubnet(c *cli.Context) error {
 	_, err = waitOnTaskOperation(deleteTask.ID, c)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// Retrieves a list of subnets, returns an error if one occurred
+func listSubnets(c *cli.Context, w io.Writer) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+
+	routerId := c.Args().First()
+	name := c.String("name")
+	options := &photon.SubnetGetOptions{
+		Name: name,
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	subnetList, err := client.Photonclient.Routers.GetSubnets(routerId, options)
+	if err != nil {
+		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		utils.FormatObjects(subnetList, w, c)
+		return nil
+	}
+
+	if c.GlobalIsSet("non-interactive") {
+		for _, subnet := range subnetList.Items {
+			fmt.Printf("%s\t%s\t%s\t%s\n", subnet.ID, subnet.Name, subnet.Kind, subnet.PrivateIpCidr)
+		}
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObjects(subnetList, w, c)
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+		fmt.Fprintf(w, "ID\tName\tKind\tDescription\tPrivateIpCidr\tReservedIps\tState\n")
+		for _, subnet := range subnetList.Items {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", subnet.ID, subnet.Name, subnet.Kind,
+				subnet.Description, subnet.PrivateIpCidr, subnet.ReservedIps, subnet.State)
+		}
+		err := w.Flush()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
