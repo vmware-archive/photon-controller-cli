@@ -29,6 +29,11 @@ type VmGetOptions struct {
 	Name string `urlParam:"name"`
 }
 
+// Options for GetRouters API.
+type RouterGetOptions struct {
+	Name string `urlParam:"name"`
+}
+
 var projectUrl string = rootUrl + "/projects/"
 
 // Deletes the project with specified ID. Any VMs, disks, etc., owned by the project must be deleted first.
@@ -204,5 +209,22 @@ func (api *ProjectsAPI) CreateRouter(projectID string, spec *RouterCreateSpec) (
 	}
 	defer res.Body.Close()
 	task, err = getTask(getError(res))
+	return
+}
+
+// Gets routers for project with the specified ID, using options to filter the results.
+// If options is nil, no filtering will occur.
+func (api *ProjectsAPI) GetRouters(projectID string, options *RouterGetOptions) (result *Routers, err error) {
+	uri := api.client.Endpoint + projectUrl + projectID + "/routers"
+	if options != nil {
+		uri += getQueryString(options)
+	}
+	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+
+	result = &Routers{}
+	err = json.Unmarshal(res, result)
 	return
 }

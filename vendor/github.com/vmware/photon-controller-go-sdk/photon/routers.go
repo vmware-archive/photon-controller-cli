@@ -19,6 +19,11 @@ type RoutersAPI struct {
 	client *Client
 }
 
+// Options for GetSubnets API.
+type SubnetGetOptions struct {
+	Name string `urlParam:"name"`
+}
+
 var routerUrl string = rootUrl + "/routers/"
 
 // Gets a router with the specified ID.
@@ -86,5 +91,22 @@ func (api *RoutersAPI) CreateSubnet(routerID string, spec *SubnetCreateSpec) (ta
 	}
 	defer res.Body.Close()
 	task, err = getTask(getError(res))
+	return
+}
+
+// Gets subnets for router with the specified ID, using options to filter the results.
+// If options is nil, no filtering will occur.
+func (api *RoutersAPI) GetSubnets(routerID string, options *SubnetGetOptions) (result *Subnets, err error) {
+	uri := api.client.Endpoint + routerUrl + routerID + "/subnets"
+	if options != nil {
+		uri += getQueryString(options)
+	}
+	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+
+	result = &Subnets{}
+	err = json.Unmarshal(res, result)
 	return
 }

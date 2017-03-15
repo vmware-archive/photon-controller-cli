@@ -14,6 +14,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
 	"github.com/vmware/photon-controller-cli/photon/utils"
@@ -75,6 +76,35 @@ func GetRoutersCommand() cli.Command {
 					err := deleteRouter(c)
 					if err != nil {
 						log.Fatal(err)
+					}
+				},
+			},
+			{
+				Name:      "list",
+				Usage:     "List all routers",
+				ArgsUsage: " ",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "tenant, t",
+						Usage: "Tenant name",
+					},
+					cli.StringFlag{
+						Name:  "project, p",
+						Usage: "Project name",
+					},
+					cli.BoolFlag{
+						Name:  "summary, s",
+						Usage: "Summary view",
+					},
+					cli.StringFlag{
+						Name:  "name, n",
+						Usage: "router name",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := listRouters(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
 					}
 				},
 			},
@@ -277,6 +307,69 @@ func updateRouter(c *cli.Context, w io.Writer) error {
 			return err
 		}
 		utils.FormatObject(router, w, c)
+	}
+
+	return nil
+}
+
+// Retrieves a list of routers, returns an error if one occurred
+func listRouters(c *cli.Context, w io.Writer) error {
+	err := checkArgCount(c, 0)
+	if err != nil {
+		return err
+	}
+	tenantName := c.String("tenant")
+	projectName := c.String("project")
+	summaryView := c.IsSet("summary")
+
+	name := c.String("name")
+	options := &photon.RouterGetOptions{
+		Name: name,
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	tenant, err := verifyTenant(tenantName)
+	if err != nil {
+		return err
+	}
+	project, err := verifyProject(tenant.ID, projectName)
+	if err != nil {
+		return err
+	}
+
+	routerList, err := client.Photonclient.Projects.GetRouters(project.ID, options)
+	if err != nil {
+		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		utils.FormatObjects(routerList, w, c)
+		return nil
+	}
+
+	if c.GlobalIsSet("non-interactive") {
+		if !summaryView {
+			for _, router := range routerList.Items {
+				fmt.Printf("%s\t%s\t%s\t%s\n", router.ID, router.Name, router.Kind, router.PrivateIpCidr)
+			}
+		}
+	} else if !utils.NeedsFormatting(c) {
+		if !summaryView {
+			w := new(tabwriter.Writer)
+			w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+			fmt.Fprintf(w, "ID\tName\tKind\tPrivateIpCidr\n")
+			for _, router := range routerList.Items {
+				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", router.ID, router.Name, router.Kind, router.PrivateIpCidr)
+			}
+			err := w.Flush()
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
