@@ -654,7 +654,7 @@ type ServiceCreateSpec struct {
 	MasterVmFlavor     string            `json:"masterVmFlavor,omitempty"`
 	WorkerVmFlavor     string            `json:"workerVmFlavor,omitempty"`
 	DiskFlavor         string            `json:"diskFlavor,omitempty"`
-	NetworkID          string            `json:"vmNetworkId,omitempty"`
+	SubnetId           string            `json:"subnetId,omitempty"`
 	ImageID            string            `json:"imageId,omitempty"`
 	WorkerCount        int               `json:"workerCount"`
 	BatchSizeWorker    int               `json:"workerBatchExpansionSize,omitempty"`
@@ -668,6 +668,7 @@ type Service struct {
 	State              string            `json:"state"`
 	ID                 string            `json:"id"`
 	Type               string            `json:"type"`
+	ImageID            string            `json:"imageId"`
 	ProjectID          string            `json:"projectID,omitempty"`
 	WorkerCount        int               `json:"workerCount"`
 	SelfLink           string            `json:"selfLink,omitempty"`
