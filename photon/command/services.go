@@ -489,6 +489,13 @@ func createService(c *cli.Context, w io.Writer) error {
 		if err != nil {
 			return err
 		}
+		if !c.GlobalIsSet("non-interactive") {
+			container_network, err = askForInput("Container network CIDR: ", container_network)
+			if err != nil {
+				return err
+			}
+		}
+		extended_properties[photon.ExtendedPropertyContainerNetwork] = container_network
 		if sdn {
 			etcdCount := c.Int("number-of-etcds")
 			masterCount := c.Int("number-of-masters")
@@ -519,10 +526,6 @@ func createService(c *cli.Context, w io.Writer) error {
 				if err != nil {
 					return err
 				}
-				container_network, err = askForInput("Kubernetes worker network ID: ", container_network)
-				if err != nil {
-					return err
-				}
 				etcd1, err = askForInput("etcd server 1 static IP address: ", etcd1)
 				if err != nil {
 					return err
@@ -544,7 +547,6 @@ func createService(c *cli.Context, w io.Writer) error {
 				extended_properties[photon.ExtendedPropertyMasterIP2] = masterIP2
 			}
 			extended_properties[photon.ExtendedPropertyLoadBalancerIP] = loadBalancerIP
-			extended_properties[photon.ExtendedPropertyContainerNetwork] = container_network
 			extended_properties[photon.ExtendedPropertyETCDIP1] = etcd1
 			if len(etcd2) != 0 {
 				extended_properties[photon.ExtendedPropertyETCDIP2] = etcd2
