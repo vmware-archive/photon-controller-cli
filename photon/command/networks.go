@@ -76,16 +76,7 @@ func GetNetworksCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					sdnEnabled, err := isSoftwareDefinedNetwork(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-
-					if sdnEnabled {
-						err = createVirtualNetwork(c, os.Stdout)
-					} else {
-						err = createPhysicalNetwork(c, os.Stdout)
-					}
+					err := createPhysicalNetwork(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -118,16 +109,7 @@ func GetNetworksCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					sdnEnabled, err := isSoftwareDefinedNetwork(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-
-					if sdnEnabled {
-						err = listVirtualNetworks(c, os.Stdout)
-					} else {
-						err = listPhysicalNetworks(c, os.Stdout)
-					}
+					err := listPhysicalNetworks(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -138,16 +120,7 @@ func GetNetworksCommand() cli.Command {
 				Usage:     "Show network given its id",
 				ArgsUsage: "<network-id>",
 				Action: func(c *cli.Context) {
-					sdnEnabled, err := isSoftwareDefinedNetwork(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-
-					if sdnEnabled {
-						err = showVirtualNetwork(c, os.Stdout)
-					} else {
-						err = showPhysicalNetwork(c, os.Stdout)
-					}
+					err := showPhysicalNetwork(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -203,22 +176,13 @@ func deleteNetwork(c *cli.Context) error {
 		return err
 	}
 
-	sdnEnabled, err := isSoftwareDefinedNetwork(c)
-	if err != nil {
-		log.Fatal("Error: ", err)
-	}
-
 	var task *photon.Task
 	if !confirmed(c) {
 		fmt.Println("Canceled")
 		return nil
 	}
 
-	if sdnEnabled {
-		task, err = client.Photonclient.VirtualSubnets.Delete(id)
-	} else {
-		task, err = client.Photonclient.Networks.Delete(id)
-	}
+	task, err = client.Photonclient.Networks.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -242,17 +206,8 @@ func setDefaultNetwork(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	sdnEnabled, err := isSoftwareDefinedNetwork(c)
-	if err != nil {
-		log.Fatal("Error: ", err)
-	}
-
 	var task *photon.Task
-	if sdnEnabled {
-		task, err = client.Photonclient.VirtualSubnets.SetDefault(id)
-	} else {
-		task, err = client.Photonclient.Networks.SetDefault(id)
-	}
+	task, err = client.Photonclient.Networks.SetDefault(id)
 
 	if err != nil {
 		return err

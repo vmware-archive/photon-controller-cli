@@ -92,10 +92,6 @@ func GetServiceCommand() cli.Command {
 						Usage: "Disk flavor name",
 					},
 					cli.StringFlag{
-						Name:  "network_id, w",
-						Usage: "VM network ID",
-					},
-					cli.StringFlag{
 						Name:  "image-id, i",
 						Usage: "Image ID",
 					},
@@ -363,7 +359,6 @@ func createService(c *cli.Context, w io.Writer) error {
 	master_vm_flavor := c.String("master_vm_flavor")
 	worker_vm_flavor := c.String("worker_vm_flavor")
 	disk_flavor := c.String("disk_flavor")
-	network_id := c.String("network_id")
 	image_id := c.String("image-id")
 	worker_count := c.Int("worker_count")
 	dns := c.String("dns")
@@ -602,7 +597,6 @@ func createService(c *cli.Context, w io.Writer) error {
 		serviceSpec.WorkerVmFlavor = worker_vm_flavor
 	}
 	serviceSpec.DiskFlavor = disk_flavor
-	serviceSpec.NetworkID = network_id
 	serviceSpec.ImageID = image_id
 	serviceSpec.WorkerCount = worker_count
 	serviceSpec.BatchSizeWorker = batch_size
