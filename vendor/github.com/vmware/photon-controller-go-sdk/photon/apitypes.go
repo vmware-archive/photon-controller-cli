@@ -461,6 +461,18 @@ type Hosts struct {
 	Items []Host `json:"items"`
 }
 
+type Datastore struct {
+	Kind     string   `json:"kind"`
+	Type     string   `json:"type"`
+	Tags     []string `json:"tags,omitempty"`
+	ID       string   `json:"id"`
+	SelfLink string   `json:"selfLink"`
+}
+
+type Datastores struct {
+	Items []Datastore `json:"items"`
+}
+
 // Creation spec for deployments.
 type DeploymentCreateSpec struct {
 	NTPEndpoint             interface{}                     `json:"ntpEndpoint"`
@@ -478,14 +490,6 @@ type DeploymentDeployOperation struct {
 	DesiredState string `json:"desiredState"`
 }
 
-type MigrationStatus struct {
-	CompletedDataMigrationCycles int `json:"completedDataMigrationCycles"`
-	DataMigrationCycleProgress   int `json:"dataMigrationCycleProgress"`
-	DataMigrationCycleSize       int `json:"dataMigrationCycleSize"`
-	VibsUploaded                 int `json:"vibsUploaded"`
-	VibsUploading                int `json:"vibsUploading"`
-}
-
 // Represents a deployment
 type Deployment struct {
 	NTPEndpoint             string                 `json:"ntpEndpoint,omitempty"`
@@ -499,7 +503,6 @@ type Deployment struct {
 	ID                      string                 `json:"id"`
 	ImageDatastores         []string               `json:"imageDatastores"`
 	SelfLink                string                 `json:"selfLink"`
-	Migration               *MigrationStatus       `json:"migrationStatus,omitempty"`
 	ServiceConfigurations   []ServiceConfiguration `json:"serviceConfigurations,omitempty"`
 	LoadBalancerEnabled     bool                   `json:"loadBalancerEnabled"`
 	LoadBalancerAddress     string                 `json:"loadBalancerAddress"`
@@ -517,16 +520,6 @@ type DeploymentSize struct {
 // Represents multiple deployments returned by the API.
 type Deployments struct {
 	Items []Deployment `json:"items"`
-}
-
-// Represents source load balacer address to migrate deployment
-type InitializeMigrationOperation struct {
-	SourceNodeGroupReference string `json:"sourceNodeGroupReference"`
-}
-
-// Represents source load balacer address to finish migration of deployment
-type FinalizeMigrationOperation struct {
-	SourceNodeGroupReference string `json:"sourceNodeGroupReference"`
 }
 
 // Represents stats information
@@ -658,19 +651,29 @@ type ServiceCreateSpec struct {
 	ExtendedProperties map[string]string `json:"extendedProperties"`
 }
 
-// Represents a service
+// Represents a service.
 type Service struct {
-	Kind               string            `json:"kind"`
-	Name               string            `json:"name"`
-	State              string            `json:"state"`
-	ID                 string            `json:"id"`
-	Type               string            `json:"type"`
-	ImageID            string            `json:"imageId"`
-	ProjectID          string            `json:"projectID,omitempty"`
-	WorkerCount        int               `json:"workerCount"`
-	SelfLink           string            `json:"selfLink,omitempty"`
-	ErrorReason        string            `json:"errorReason,omitempty"`
-	ExtendedProperties map[string]string `json:"extendedProperties"`
+	Kind               string                `json:"kind"`
+	Name               string                `json:"name"`
+	State              string                `json:"state"`
+	ID                 string                `json:"id"`
+	Type               string                `json:"type"`
+	ImageID            string                `json:"imageId"`
+	UpgradeStatus      *ServiceUpgradeStatus `json:"upgradeStatus,omitempty"`
+	ProjectID          string                `json:"projectID,omitempty"`
+	WorkerCount        int                   `json:"workerCount"`
+	SelfLink           string                `json:"selfLink,omitempty"`
+	ErrorReason        string                `json:"errorReason,omitempty"`
+	ExtendedProperties map[string]string     `json:"extendedProperties"`
+}
+
+// Represents the status of a service during upgrade.
+type ServiceUpgradeStatus struct {
+	NewImageID           string `json:"newImageId"`
+	UpgradeMessage       string `json:"upgradeMessage,omitempty"`
+	TotalNodes           int    `json:"totalNodes,omitempty"`
+	NumNodesUpgraded     int    `json:"numNodesUpgraded"`
+	UpgradeResultMessage string `json:"upgradeResultMessage,omitempty"`
 }
 
 // Represents multiple services returned by the API

@@ -715,6 +715,15 @@ func showService(c *cli.Context, w io.Writer) error {
 		fmt.Println("  State:               ", service.State)
 		fmt.Println("  Type:                ", service.Type)
 		fmt.Println("  Image ID:            ", service.ImageID)
+		if service.UpgradeStatus != nil {
+			fmt.Println("  Upgrade Image ID:    ", service.UpgradeStatus.NewImageID)
+			fmt.Println("  Upgrade Message:     ", service.UpgradeStatus.UpgradeMessage)
+			fmt.Printf("  Upgrading Nodes:      %d/%d\n", service.UpgradeStatus.NumNodesUpgraded,
+				service.UpgradeStatus.TotalNodes)
+			if len(service.UpgradeStatus.UpgradeResultMessage) != 0 {
+				fmt.Println("  Last upgrade result: ", service.UpgradeStatus.UpgradeResultMessage)
+			}
+		}
 		if service.Type == "KUBERNETES" {
 			fmt.Println("  Kubernetes IP:       ", service.ExtendedProperties[photon.ExtendedPropertyLoadBalancerIP])
 		} else if service.Type == "HARBOR" {
