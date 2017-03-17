@@ -181,9 +181,10 @@ type DiskList struct {
 
 // Creation spec for projects.
 type ProjectCreateSpec struct {
-	ResourceTicket ResourceTicketReservation `json:"resourceTicket"`
-	Name           string                    `json:"name"`
-	SecurityGroups []string                  `json:"securityGroups,omitempty"`
+	ResourceTicket             ResourceTicketReservation `json:"resourceTicket"`
+	Name                       string                    `json:"name"`
+	SecurityGroups             []string                  `json:"securityGroups,omitempty"`
+	DefaultRouterPrivateIpCidr string                    `json:"defaultRouterPrivateIpCidr,omitempty"`
 }
 
 // Represents multiple projects returned by the API.
@@ -579,37 +580,6 @@ type Networks struct {
 	Items []Network `json:"items"`
 }
 
-// Create spec for virtual subnet
-type VirtualSubnetCreateSpec struct {
-	Name                 string `json:"name"`
-	Description          string `json:"description,omitempty"`
-	RoutingType          string `json:"routingType"`
-	Size                 int    `json:"size"`
-	ReservedStaticIpSize int    `json:"reservedStaticIpSize,omitempty"`
-}
-
-// Represents a virtual network
-type VirtualSubnet struct {
-	ID             string   `json:"id"`
-	Name           string   `json:"name"`
-	Description    string   `json:"description,omitempty"`
-	State          string   `json:"state"`
-	RoutingType    string   `json:"routingType"`
-	IsDefault      bool     `json:"isDefault"`
-	Cidr           string   `json:"cidr,omitempty"`
-	LowIpDynamic   string   `json:"lowIpDynamic,omitempty"`
-	HighIpDynamic  string   `json:"highIpDynamic,omitempty"`
-	LowIpStatic    string   `json:"lowIpStatic,omitempty"`
-	HighIpStatic   string   `json:"highIpStatic,omitempty"`
-	ReservedIpList []string `json:"reservedIpList"`
-	SelfLink       string   `json:"selfLink"`
-}
-
-// Represents multiple virtual subnets returned
-type VirtualSubnets struct {
-	Items []VirtualSubnet `json:"items"`
-}
-
 // Represents a router
 type Router struct {
 	ID            string `json:"id"`
@@ -654,7 +624,7 @@ type ServiceCreateSpec struct {
 	MasterVmFlavor     string            `json:"masterVmFlavor,omitempty"`
 	WorkerVmFlavor     string            `json:"workerVmFlavor,omitempty"`
 	DiskFlavor         string            `json:"diskFlavor,omitempty"`
-	NetworkID          string            `json:"vmNetworkId,omitempty"`
+	SubnetId           string            `json:"subnetId,omitempty"`
 	ImageID            string            `json:"imageId,omitempty"`
 	WorkerCount        int               `json:"workerCount"`
 	BatchSizeWorker    int               `json:"workerBatchExpansionSize,omitempty"`
@@ -668,6 +638,7 @@ type Service struct {
 	State              string            `json:"state"`
 	ID                 string            `json:"id"`
 	Type               string            `json:"type"`
+	ImageID            string            `json:"imageId"`
 	ProjectID          string            `json:"projectID,omitempty"`
 	WorkerCount        int               `json:"workerCount"`
 	SelfLink           string            `json:"selfLink,omitempty"`

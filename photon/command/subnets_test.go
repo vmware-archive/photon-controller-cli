@@ -123,7 +123,7 @@ func TestCreateDeleteSubnet(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/temp-subnets/"+"fake-subnet-id",
+		server.URL+"/subnets/"+"fake-subnet-id",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -169,7 +169,7 @@ func TestUpdateSubnet(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"PUT",
-		server.URL+"/temp-subnets"+"/fake-subnet-id",
+		server.URL+"/subnets"+"/fake-subnet-id",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -209,7 +209,7 @@ func TestShowSubnet(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/temp-subnets/"+getStruct.ID,
+		server.URL+"/subnets/"+getStruct.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
