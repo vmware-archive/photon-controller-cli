@@ -104,7 +104,7 @@ func show(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	auth, err := client.Photonclient.Auth.Get()
+	auth, err := client.Photonclient.System.GetAuthInfo()
 	if err != nil {
 		return err
 	}
