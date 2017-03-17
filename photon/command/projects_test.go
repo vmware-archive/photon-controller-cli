@@ -99,6 +99,7 @@ func TestCreateProject(t *testing.T) {
 	set.String("tenant", "fake_tenant_name", "tenant name")
 	set.String("limits", "vm.test1 1 B", "project limits")
 	set.String("security-groups", "fake_security_group", "security groups")
+	set.String("default-router-private-ip-cidr", "192.168.0.0/24", "default router private ip cidr")
 	cxt := cli.NewContext(nil, set, globalCtx)
 
 	err = createProject(cxt, os.Stdout)

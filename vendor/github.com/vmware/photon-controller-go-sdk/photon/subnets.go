@@ -19,7 +19,7 @@ type SubnetsAPI struct {
 	client *Client
 }
 
-var subnetUrl string = "/temp-subnets/"
+var subnetUrl string = "/subnets/"
 
 // Deletes a subnet with the specified ID.
 func (api *SubnetsAPI) Delete(id string) (task *Task, err error) {

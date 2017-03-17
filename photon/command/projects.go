@@ -44,7 +44,9 @@ func GetProjectsCommand() cli.Command {
 				Usage:     "Create a new project",
 				ArgsUsage: " ",
 				Description: "Create a new project within a tenant and assigns it some or all of a resource ticket.\n" +
-					"   Only system administrators can create new projects.",
+					"   Only system administrators can create new projects.\n" +
+					"   If default-router-private-ip-cidr option is omitted,\n" +
+					"   it will use 192.168.0.0/16 as default router's private IP CIDR.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -69,6 +71,10 @@ func GetProjectsCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "security-groups, g",
 						Usage: "Security Groups for project",
+					},
+					cli.StringFlag{
+						Name:  "default-router-private-ip-cidr, c",
+						Usage: "Private IP range of the default router in CIDR format. Default value: 192.168.0.0/16",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -213,6 +219,11 @@ func createProject(c *cli.Context, w io.Writer) error {
 	limits := c.String("limits")
 	percent := c.Float64("percent")
 	securityGroups := c.String("security-groups")
+	defaultRouterPrivateIpCidr := c.String("default-router-private-ip-cidr")
+
+	if len(defaultRouterPrivateIpCidr) == 0 {
+		defaultRouterPrivateIpCidr = "192.168.0.0/16"
+	}
 
 	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
@@ -257,6 +268,7 @@ func createProject(c *cli.Context, w io.Writer) error {
 	projectSpec := photon.ProjectCreateSpec{}
 	projectSpec.Name = name
 	projectSpec.ResourceTicket = photon.ResourceTicketReservation{Name: rtName, Limits: limitsList}
+	projectSpec.DefaultRouterPrivateIpCidr = defaultRouterPrivateIpCidr
 
 	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("\nTenant name: %s\n", tenant.Name)
