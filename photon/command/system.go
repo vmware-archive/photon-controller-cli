@@ -26,6 +26,7 @@ import (
 
 	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"strings"
 )
 
 // Create a cli.command object for command "system"
@@ -106,6 +107,78 @@ func GetSystemCommand() cli.Command {
 					},
 				},
 			},
+			{
+				Name:      "info",
+				Usage:     "Show system info",
+				ArgsUsage: " ",
+				Description: "Show detailed information about the system.\n" +
+					"   Requires system administrator access,",
+				Action: func(c *cli.Context) {
+					err := showSystemInfo(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "pause",
+				Usage:     "Pause system",
+				ArgsUsage: " ",
+				Description: "Pause Photon Controller. All incoming requests that modify the system\n" +
+					"   state (other than resume) will be refused. This implies pause-background-states" +
+					"   Requires system administrator access.",
+				Action: func(c *cli.Context) {
+					err := PauseSystem(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "pause-background-tasks",
+				Usage:     "Pause background tasks",
+				ArgsUsage: " ",
+				Description: "Pause all background tasks in Photon Controller, such as image replication." +
+					"   Incoming requests from users will continue to work\n" +
+					"   Requires system administrator access.",
+				Action: func(c *cli.Context) {
+					err := PauseBackgroundTasks(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "resume",
+				Usage:     "Resume system",
+				ArgsUsage: " ",
+				Description: "Resume Photon Controller after it has been paused.\n" +
+					"   Requires system administrator access.",
+				Action: func(c *cli.Context) {
+					err := ResumeSystem(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "set-security-groups",
+				Usage:     "Set security groups for the system",
+				ArgsUsage: "<comma separate list of security groups>",
+				Description: "Provide the list of Lightwave groups that contain the people who are\n" +
+					"   allowed to be system administrators. Be careful: providing the wrong group could remove\n" +
+					"   your access.\n\n" +
+					"   A security group specifies both the Lightwave domain and Lightwave group.\n" +
+					"   For example, a security group may be photon.vmware.com\\group-1\n\n" +
+					"   Example: photon deployment set-security-groups 'photon.vmware.com\\group-1,photon.vmware.com\\group-2'\n\n" +
+					"   Requires system administrator access.",
+				Action: func(c *cli.Context) {
+					err := setSystemSecurityGroups(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
 		},
 	}
 	return command
@@ -122,7 +195,7 @@ func getStatus(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	status, err := client.Photonclient.Status.Get()
+	status, err := client.Photonclient.System.GetSystemStatus()
 	if err != nil {
 		return err
 	}
@@ -132,6 +205,289 @@ func getStatus(c *cli.Context, w io.Writer) error {
 	} else {
 		utils.FormatObject(status, w, c)
 	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Retrieves information about a system
+func showSystemInfo(c *cli.Context, w io.Writer) error {
+	var err error
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	deployment, err := client.Photonclient.System.GetSystemInfo()
+
+	if err != nil {
+		return err
+	}
+
+	vms, err := client.Photonclient.Deployments.GetVms("default")
+	if err != nil {
+		return err
+	}
+
+	var data []VM_NetworkIPs
+
+	for _, vm := range vms.Items {
+		networks, err := getVMNetworks(vm.ID, c)
+		if err != nil {
+			return err
+		}
+		ipAddr := "N/A"
+		for _, nt := range networks {
+			network := nt.(map[string]interface{})
+			if len(network) != 0 && network["network"] != nil {
+				if val, ok := network["ipAddress"]; ok && val != nil {
+					ipAddr = val.(string)
+					break
+				}
+			}
+
+		}
+		data = append(data, VM_NetworkIPs{vm, ipAddr})
+	}
+	if utils.NeedsFormatting(c) {
+		utils.FormatObject(deployment, w, c)
+	} else if c.GlobalIsSet("non-interactive") {
+		imageDataStores := getCommaSeparatedStringFromStringArray(deployment.ImageDatastores)
+		securityGroups := getCommaSeparatedStringFromStringArray(deployment.Auth.SecurityGroups)
+
+		fmt.Printf("%s\t%s\t%s\t%t\t%s\t%s\t%t\t%s\n", deployment.ID, deployment.State,
+			imageDataStores, deployment.UseImageDatastoreForVms, deployment.SyslogEndpoint,
+			deployment.NTPEndpoint, deployment.LoadBalancerEnabled,
+			deployment.LoadBalancerAddress)
+
+		fmt.Printf("%s\t%s\t%d\t%s\n", deployment.Auth.Endpoint,
+			deployment.Auth.Tenant, deployment.Auth.Port, securityGroups)
+
+	} else {
+		syslogEndpoint := deployment.SyslogEndpoint
+		if len(deployment.SyslogEndpoint) == 0 {
+			syslogEndpoint = "-"
+		}
+		ntpEndpoint := deployment.NTPEndpoint
+		if len(deployment.NTPEndpoint) == 0 {
+			ntpEndpoint = "-"
+		}
+
+		fmt.Printf("\n")
+		fmt.Printf("Deployment ID: %s\n", deployment.ID)
+		fmt.Printf("  State:                       %s\n", deployment.State)
+		fmt.Printf("\n  Image Datastores:            %s\n", deployment.ImageDatastores)
+		fmt.Printf("  Use image datastore for vms: %t\n", deployment.UseImageDatastoreForVms)
+		fmt.Printf("\n  Syslog Endpoint:             %s\n", syslogEndpoint)
+		fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
+		fmt.Printf("\n  LoadBalancer:\n")
+		fmt.Printf("    Enabled:                   %t\n", deployment.LoadBalancerEnabled)
+		if deployment.LoadBalancerEnabled {
+			fmt.Printf("    Address:                   %s\n", deployment.LoadBalancerAddress)
+		}
+
+		fmt.Printf("\n  Auth:\n")
+		fmt.Printf("    Endpoint:                  %s\n", deployment.Auth.Endpoint)
+		fmt.Printf("    Tenant:                    %s\n", deployment.Auth.Tenant)
+		fmt.Printf("    Port:                      %d\n", deployment.Auth.Port)
+		fmt.Printf("    SecurityGroups:            %v\n", deployment.Auth.SecurityGroups)
+	}
+
+	if deployment.Stats != nil {
+		stats := deployment.Stats
+		if c.GlobalIsSet("non-interactive") {
+			fmt.Printf("%t\t%s\t%d\n", stats.Enabled, stats.StoreEndpoint, stats.StorePort)
+		} else if !utils.NeedsFormatting(c) {
+
+			fmt.Printf("\n  Stats:\n")
+			fmt.Printf("    Enabled:               %t\n", stats.Enabled)
+			if stats.Enabled {
+				fmt.Printf("    Store Endpoint:        %s\n", stats.StoreEndpoint)
+				fmt.Printf("    Store Port:            %d\n", stats.StorePort)
+			}
+		}
+	} else {
+		if c.GlobalIsSet("non-interactive") {
+			fmt.Printf("\n")
+		}
+	}
+
+	if deployment.Migration != nil {
+		migration := deployment.Migration
+		if c.GlobalIsSet("non-interactive") {
+			fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
+				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
+		} else if !utils.NeedsFormatting(c) {
+			fmt.Printf("\n  Migration status:\n")
+			fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
+			fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
+				migration.DataMigrationCycleSize)
+			fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
+		}
+	} else {
+		if c.GlobalIsSet("non-interactive") {
+			fmt.Printf("\n")
+		}
+	}
+
+	if deployment.ServiceConfigurations != nil && len(deployment.ServiceConfigurations) != 0 {
+		if c.GlobalIsSet("non-interactive") {
+			serviceConfigurations := []string{}
+			for _, c := range deployment.ServiceConfigurations {
+				serviceConfigurations = append(serviceConfigurations, fmt.Sprintf("%s\t%s", c.Type, c.ImageID))
+			}
+			scriptServiceConfigurations := strings.Join(serviceConfigurations, ",")
+			fmt.Printf("%s\n", scriptServiceConfigurations)
+		} else if !utils.NeedsFormatting(c) {
+			fmt.Println("\n  Service Configurations:")
+			for i, c := range deployment.ServiceConfigurations {
+				fmt.Printf("    ServiceConfiguration %d:\n", i+1)
+				fmt.Println("      Kind:     ", c.Kind)
+				fmt.Println("      Type:     ", c.Type)
+				fmt.Println("      ImageID:  ", c.ImageID)
+			}
+		}
+	} else {
+		if c.GlobalIsSet("non-interactive") {
+			fmt.Printf("\n")
+		} else if !utils.NeedsFormatting(c) {
+			fmt.Println("\n  Service Configurations:")
+			fmt.Printf("    No Service is supported")
+		}
+	}
+
+	if !utils.NeedsFormatting(c) {
+		err = displayDeploymentSummary(data, c.GlobalIsSet("non-interactive"))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Sends a pause system task to client
+func PauseSystem(c *cli.Context) error {
+	id, err := getDeploymentId(c)
+	if err != nil {
+		return err
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	pauseSystemTask, err := client.Photonclient.System.PauseSystem()
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(pauseSystemTask.ID, c)
+	if err != nil {
+		return err
+	}
+
+	err = deploymentJsonHelper(c, id, client.Photonclient)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Sends a pause background task to client
+func PauseBackgroundTasks(c *cli.Context) error {
+	id, err := getDeploymentId(c)
+	if err != nil {
+		return err
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	pauseBackgroundTask, err := client.Photonclient.System.PauseBackgroundTasks()
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(pauseBackgroundTask.ID, c)
+	if err != nil {
+		return err
+	}
+
+	err = deploymentJsonHelper(c, id, client.Photonclient)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Sends a resume system task to client
+func ResumeSystem(c *cli.Context) error {
+	id, err := getDeploymentId(c)
+	if err != nil {
+		return err
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	resumeSystemTask, err := client.Photonclient.System.ResumeSystem()
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(resumeSystemTask.ID, c)
+	if err != nil {
+		return err
+	}
+
+	err = deploymentJsonHelper(c, id, client.Photonclient)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Set security groups for the system
+func setSystemSecurityGroups(c *cli.Context) error {
+	var err error
+	var groups string
+
+	if len(c.Args()) != 1 {
+		return fmt.Errorf("Usage: system set-security-group <groups>")
+	}
+
+	items := regexp.MustCompile(`\s*,\s*`).Split(groups, -1)
+	securityGroups := &photon.SecurityGroupsSpec{
+		Items: items,
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	task, err := client.Photonclient.System.SetSecurityGroups(securityGroups)
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	err = systemInfoJsonHelper(c, "default", client.Photonclient)
 	if err != nil {
 		return err
 	}
@@ -445,4 +801,16 @@ func inc(ip net.IP) {
 			break
 		}
 	}
+}
+
+func systemInfoJsonHelper(c *cli.Context, id string, client *photon.Client) error {
+	if utils.NeedsFormatting(c) {
+		deployment, err := client.System.GetSystemInfo()
+		if err != nil {
+			return err
+		}
+
+		utils.FormatObject(deployment, os.Stdout, c)
+	}
+	return nil
 }
