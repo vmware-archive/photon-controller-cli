@@ -486,6 +486,15 @@ type Deployment struct {
 	LoadBalancerAddress     string                 `json:"loadBalancerAddress"`
 }
 
+type DeploymentSize struct {
+	NumberHosts      int `json:"numberHosts"`
+	NumberVMs        int `json:"numberVMs"`
+	NumberTenants    int `json:"numberTenants"`
+	NumberProjects   int `json:"numberProjects"`
+	NumberDatastores int `json:"numberDatastores"`
+	NumberServices   int `json:"numberServices"`
+}
+
 // Represents multiple deployments returned by the API.
 type Deployments struct {
 	Items []Deployment `json:"items"`
