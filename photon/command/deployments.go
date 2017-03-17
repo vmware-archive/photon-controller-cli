@@ -137,14 +137,6 @@ func GetDeploymentsCommand() cli.Command {
 						Usage: "NSX password",
 					},
 					cli.StringFlag{
-						Name:  "dhcp-server-private-address",
-						Usage: "Private IP address of DHCP server",
-					},
-					cli.StringFlag{
-						Name:  "dhcp-server-public-address",
-						Usage: "Public IP address of DHCP server",
-					},
-					cli.StringFlag{
 						Name:  "private-ip-root-cidr",
 						Usage: "Root CIDR of the private IP pool",
 					},
@@ -861,8 +853,6 @@ func configureNsx(c *cli.Context) error {
 	nsxAddress := c.String("nsx-address")
 	nsxUsername := c.String("nsx-username")
 	nsxPassword := c.String("nsx-password")
-	dhcpServerPrivateAddress := c.String("dhcp-server-private-address")
-	dhcpServerPublicAddress := c.String("dhcp-server-public-address")
 	privateIpRootCidr := c.String("private-ip-root-cidr")
 	floatingIpRootRangeStart := c.String("floating-ip-root-range-start")
 	floatingIpRootRangeEnd := c.String("floating-ip-root-range-end")
@@ -881,12 +871,6 @@ func configureNsx(c *cli.Context) error {
 	}
 	if len(nsxPassword) == 0 {
 		return fmt.Errorf("Please provide NSX password")
-	}
-	if len(dhcpServerPrivateAddress) == 0 {
-		return fmt.Errorf("Please provide private IP address of DHCP server")
-	}
-	if len(dhcpServerPublicAddress) == 0 {
-		return fmt.Errorf("Please provide public IP address of DHCP server")
 	}
 	if len(privateIpRootCidr) == 0 {
 		return fmt.Errorf("Please provide root CIDR of the private IP pool")
@@ -923,7 +907,6 @@ func configureNsx(c *cli.Context) error {
 			NsxAddress:             nsxAddress,
 			NsxUsername:            nsxUsername,
 			NsxPassword:            nsxPassword,
-			DhcpServerAddresses:    map[string]string{dhcpServerPrivateAddress: dhcpServerPublicAddress},
 			PrivateIpRootCidr:      privateIpRootCidr,
 			FloatingIpRootRange:    photon.IpRange{Start: floatingIpRootRangeStart, End: floatingIpRootRangeEnd},
 			T0RouterId:             t0RouterId,
