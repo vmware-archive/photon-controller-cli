@@ -123,7 +123,7 @@ func TestCreateDeleteSubnet(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+"/subnets/"+"fake-subnet-id",
+		server.URL+rootUrl+"/subnets/"+"fake-subnet-id",
 		mocks.CreateResponder(200, string(taskResponse[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -168,8 +168,8 @@ func TestUpdateSubnet(t *testing.T) {
 
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
-		"PUT",
-		server.URL+"/subnets"+"/fake-subnet-id",
+		"PATCH",
+		server.URL+rootUrl+"/subnets"+"/fake-subnet-id",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -199,6 +199,7 @@ func TestShowSubnet(t *testing.T) {
 		Description:   "test subnet",
 		Kind:          "subnet",
 		PrivateIpCidr: "cidr1",
+		IsDefault:     false,
 	}
 
 	response, err := json.Marshal(getStruct)
@@ -209,7 +210,7 @@ func TestShowSubnet(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+"/subnets/"+getStruct.ID,
+		server.URL+rootUrl+"/subnets/"+getStruct.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -239,6 +240,7 @@ func TestListSubnets(t *testing.T) {
 				Kind:          "fake_subnet_kind",
 				PrivateIpCidr: "fake_cidr",
 				State:         "READY",
+				IsDefault:     false,
 			},
 		},
 		NextPageLink:     "fake-next-page-link",
@@ -283,5 +285,50 @@ func TestListSubnets(t *testing.T) {
 	err = listSubnets(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error listing subnets: " + err.Error())
+	}
+}
+
+func TestSetDefaultSubnet(t *testing.T) {
+	completedTask := &photon.Task{
+		Operation: "SET_DEFAULT_SUBNET",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: "id"},
+	}
+
+	taskresponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+rootUrl+"/subnets/"+completedTask.Entity.ID+"/set_default",
+		mocks.CreateResponder(200, string(taskresponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/tasks/"+completedTask.ID,
+		mocks.CreateResponder(200, string(taskresponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", true, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{completedTask.Entity.ID})
+	cxt := cli.NewContext(nil, set, globalCtx)
+
+	err = setDefaultSubnet(cxt, os.Stdout)
+	if err != nil {
+		t.Error("Not expecting set default subnet to fail", err)
 	}
 }

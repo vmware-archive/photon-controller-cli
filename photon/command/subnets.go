@@ -29,6 +29,7 @@ import (
 //              list;    Usage: subnet list <router-id> [<options>]
 //              show;    Usage: subnet show <id>
 //              update;  Usage: subnet update <id> [<options>]
+//              set-default; Usage: subnet setDefault <id>
 func GetSubnetsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "subnet",
@@ -127,6 +128,21 @@ func GetSubnetsCommand() cli.Command {
 				},
 				Action: func(c *cli.Context) {
 					err := updateSubnet(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "set-default",
+				Usage:     "Set default subnet",
+				ArgsUsage: "<network-id>",
+				Description: "Set the default subnet to be used in the current project when creating" +
+					" a VM \n" +
+					"   This is not required. When creating a VM you can either specify the \n" +
+					"   subnet to use, or rely on the default subnet.",
+				Action: func(c *cli.Context) {
+					err := setDefaultSubnet(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -265,17 +281,19 @@ func listSubnets(c *cli.Context, w io.Writer) error {
 
 	if c.GlobalIsSet("non-interactive") {
 		for _, subnet := range subnetList.Items {
-			fmt.Printf("%s\t%s\t%s\t%s\n", subnet.ID, subnet.Name, subnet.Kind, subnet.PrivateIpCidr)
+			fmt.Printf("%s\t%s\t%s\t%s\t%t\n", subnet.ID, subnet.Name, subnet.Kind, subnet.PrivateIpCidr,
+				subnet.IsDefault)
 		}
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObjects(subnetList, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w, "ID\tName\tKind\tDescription\tPrivateIpCidr\tReservedIps\tState\n")
+		fmt.Fprintf(w, "ID\tName\tKind\tDescription\tPrivateIpCidr\tReservedIps\tState\tIsDefault\n")
 		for _, subnet := range subnetList.Items {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", subnet.ID, subnet.Name, subnet.Kind,
-				subnet.Description, subnet.PrivateIpCidr, subnet.ReservedIps, subnet.State)
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%t\n", subnet.ID, subnet.Name, subnet.Kind,
+				subnet.Description, subnet.PrivateIpCidr, subnet.ReservedIps, subnet.State,
+				subnet.IsDefault)
 		}
 		err := w.Flush()
 		if err != nil {
@@ -305,8 +323,8 @@ func showSubnet(c *cli.Context, w io.Writer) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%s\n",
-			subnet.ID, subnet.Name, subnet.Description, subnet.PrivateIpCidr)
+		fmt.Printf("%s\t%s\t%s\t%s\t%t\n",
+			subnet.ID, subnet.Name, subnet.Description, subnet.PrivateIpCidr, subnet.IsDefault)
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(subnet, w, c)
 	} else {
@@ -314,6 +332,7 @@ func showSubnet(c *cli.Context, w io.Writer) error {
 		fmt.Println("  name:                 ", subnet.Name)
 		fmt.Println("  description:          ", subnet.Description)
 		fmt.Println("  privateIpCidr:        ", subnet.PrivateIpCidr)
+		fmt.Println("  isDefault:            ", subnet.IsDefault)
 	}
 
 	return nil
@@ -356,5 +375,43 @@ func updateSubnet(c *cli.Context, w io.Writer) error {
 		utils.FormatObject(router, w, c)
 	}
 
+	return nil
+}
+
+func setDefaultSubnet(c *cli.Context, w io.Writer) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	var task *photon.Task
+	task, err = client.Photonclient.Subnets.SetDefault(id)
+
+	if err != nil {
+		return err
+	}
+
+	if confirmed(c) {
+		id, err := waitOnTaskOperation(task.ID, c)
+		if err != nil {
+			return err
+		}
+
+		if utils.NeedsFormatting(c) {
+			subnet, err := client.Photonclient.Subnets.Get(id)
+			if err != nil {
+				return err
+			}
+			utils.FormatObject(subnet, w, c)
+		}
+	} else {
+		fmt.Println("OK. Canceled")
+	}
 	return nil
 }

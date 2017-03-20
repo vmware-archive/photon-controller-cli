@@ -19,7 +19,7 @@ type SubnetsAPI struct {
 	client *Client
 }
 
-var subnetUrl string = "/subnets/"
+var subnetUrl string = rootUrl + "/subnets/"
 
 // Deletes a subnet with the specified ID.
 func (api *SubnetsAPI) Delete(id string) (task *Task, err error) {
@@ -57,7 +57,7 @@ func (api *SubnetsAPI) Update(id string, subnetSpec *SubnetUpdateSpec) (task *Ta
 		return
 	}
 
-	res, err := api.client.restClient.Put(
+	res, err := api.client.restClient.Patch(
 		api.client.Endpoint+subnetUrl+id,
 		"application/json",
 		bytes.NewReader(body),
@@ -66,6 +66,21 @@ func (api *SubnetsAPI) Update(id string, subnetSpec *SubnetUpdateSpec) (task *Ta
 		return
 	}
 
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
+// Sets default subnet.
+func (api *SubnetsAPI) SetDefault(id string) (task *Task, err error) {
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+subnetUrl+id+"/set_default",
+		"application/json",
+		bytes.NewReader([]byte("")),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
 	defer res.Body.Close()
 	task, err = getTask(getError(res))
 	return

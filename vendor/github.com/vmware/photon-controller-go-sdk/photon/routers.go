@@ -49,7 +49,7 @@ func (api *RoutersAPI) UpdateRouter(id string, routerSpec *RouterUpdateSpec) (ta
 		return
 	}
 
-	res, err := api.client.restClient.Put(
+	res, err := api.client.restClient.Patch(
 		api.client.Endpoint+routerUrl+id,
 		"application/json",
 		bytes.NewReader(body),
