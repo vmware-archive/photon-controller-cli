@@ -62,6 +62,8 @@ func BuildApp() *cli.App {
 		command.GetHostsCommand(),
 		command.GetDeploymentsCommand(),
 		command.GetResourceTicketCommand(),
+		command.GetTenantQuotaCommand(),
+		command.GetProjectQuotaCommand(),
 		command.GetImagesCommand(),
 		command.GetTasksCommand(),
 		command.GetFlavorsCommand(),
