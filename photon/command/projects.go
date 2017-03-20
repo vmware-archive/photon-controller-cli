@@ -34,6 +34,7 @@ import (
 //              get;    Usage: project get
 //              list;   Usage: project list [<options>]
 //              tasks;  Usage: project tasks <id> [<options>]
+//              quota;  Usage: project quota <operation> <name> [<options>]
 func GetProjectsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "project",
@@ -201,6 +202,8 @@ func GetProjectsCommand() cli.Command {
 					}
 				},
 			},
+			// Load Project Quota related logic from separated file.
+			getProjectQuotaCommand(),
 		},
 	}
 	return command
