@@ -108,3 +108,15 @@ func parseMapFromFlag(cmdFlag string) (map[string]string, error) {
 	}
 	return newMap, nil
 }
+
+// Convert the QuotaLineItems into QuotaSpec
+func convertQuotaSpecFromQuotaLineItems(quotaLineItems []photon.QuotaLineItem) photon.QuotaSpec {
+	quotaSpec := photon.QuotaSpec{}
+
+	if quotaLineItems != nil {
+		for _, element := range quotaLineItems {
+			quotaSpec[element.Key] = photon.QuotaStatusLineItem{Unit: element.Unit, Limit: element.Value, Usage: 0}
+		}
+	}
+	return quotaSpec
+}

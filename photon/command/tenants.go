@@ -34,6 +34,7 @@ import (
 //              set;    Usage: tenant set <name>
 //              get;    Usage: tenant get
 //              tasks;  Usage: tenant tasks <id> [<options>]
+//              quota;  Usage: tenant quota <operation> <name> [<options>]
 func GetTenantsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "tenant",
@@ -162,6 +163,8 @@ func GetTenantsCommand() cli.Command {
 					}
 				},
 			},
+			// Load Tenant Quota related logic from separated file.
+			getTenantQuotaCommand(),
 		},
 	}
 	return command
