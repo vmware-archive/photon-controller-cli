@@ -189,7 +189,7 @@ func TestUpdateRouter(t *testing.T) {
 
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
-		"PUT",
+		"PATCH",
 		server.URL+rootUrl+"/routers"+"/fake-router-id",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
@@ -219,6 +219,7 @@ func TestShowRouter(t *testing.T) {
 		ID:            "1",
 		Kind:          "router",
 		PrivateIpCidr: "cidr1",
+		IsDefault:     false,
 	}
 
 	response, err := json.Marshal(getStruct)
@@ -284,6 +285,7 @@ func TestListRouters(t *testing.T) {
 				ID:            "fake_router_ID",
 				Kind:          "fake_router_kind",
 				PrivateIpCidr: "fake_cidr",
+				IsDefault:     false,
 			},
 		},
 		NextPageLink:     "fake-next-page-link",
