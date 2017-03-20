@@ -286,14 +286,16 @@ func listRouters(c *cli.Context, w io.Writer) error {
 
 	if c.GlobalIsSet("non-interactive") {
 		for _, router := range routerList.Items {
-			fmt.Printf("%s\t%s\t%s\t%s\n", router.ID, router.Name, router.Kind, router.PrivateIpCidr)
+			fmt.Printf("%s\t%s\t%s\t%s\t%t\n", router.ID, router.Name, router.Kind, router.PrivateIpCidr,
+				router.IsDefault)
 		}
 	} else if !utils.NeedsFormatting(c) {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w, "ID\tName\tKind\tPrivateIpCidr\n")
+		fmt.Fprintf(w, "ID\tName\tKind\tPrivateIpCidr\tIsDefault\n")
 		for _, router := range routerList.Items {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", router.ID, router.Name, router.Kind, router.PrivateIpCidr)
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%t\n", router.ID, router.Name, router.Kind,
+				router.PrivateIpCidr, router.IsDefault)
 		}
 		err := w.Flush()
 		if err != nil {
@@ -323,13 +325,14 @@ func showRouter(c *cli.Context, w io.Writer) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\n", router.ID, router.Name, router.PrivateIpCidr)
+		fmt.Printf("%s\t%s\t%s\t%t\n", router.ID, router.Name, router.PrivateIpCidr, router.IsDefault)
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(router, w, c)
 	} else {
 		fmt.Println("Router ID: ", router.ID)
 		fmt.Println("  name:                 ", router.Name)
 		fmt.Println("  privateIpCidr:        ", router.PrivateIpCidr)
+		fmt.Println("  isDefault:            ", router.IsDefault)
 	}
 
 	return nil
