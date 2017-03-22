@@ -291,7 +291,7 @@ func createHost(c *cli.Context, w io.Writer) error {
 	hostSpec.Username = username
 	hostSpec.Password = password
 	hostSpec.Address = address
-	hostSpec.AvailabilityZone = availabilityZone
+	hostSpec.Zone = availabilityZone
 	hostSpec.Tags = regexp.MustCompile(`\s*,\s*`).Split(tags, -1)
 
 	if len(metadata) == 0 {
@@ -419,7 +419,7 @@ func showHost(c *cli.Context, w io.Writer) error {
 		metadata := strings.Trim(strings.TrimLeft(fmt.Sprint(host.Metadata), "map"), "[]")
 		scriptMetadata := strings.Replace(metadata, " ", ",", -1)
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", host.ID, host.Username, host.Address,
-			scriptTag, host.State, scriptMetadata, host.AvailabilityZone, host.EsxVersion)
+			scriptTag, host.State, scriptMetadata, host.Zone, host.EsxVersion)
 	} else if utils.NeedsFormatting(c) {
 		host.Password = ""
 		utils.FormatObject(host, w, c)
@@ -430,7 +430,7 @@ func showHost(c *cli.Context, w io.Writer) error {
 		fmt.Println("  Tags:              ", host.Tags)
 		fmt.Println("  State:             ", host.State)
 		fmt.Println("  Metadata:          ", host.Metadata)
-		fmt.Println("  AvailabilityZone:  ", host.AvailabilityZone)
+		fmt.Println("  AvailabilityZone:  ", host.Zone)
 		fmt.Println("  Version:           ", host.EsxVersion)
 	}
 
