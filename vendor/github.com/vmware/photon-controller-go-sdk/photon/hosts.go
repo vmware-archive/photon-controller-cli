@@ -105,6 +105,28 @@ func (api *HostsAPI) SetAvailabilityZone(id string, availabilityZone *HostSetAva
 	return
 }
 
+// Sets host's zone.
+func (api *HostsAPI) SetZone(id string, zone *HostSetZoneOperation) (task *Task, err error) {
+	body, err := json.Marshal(zone)
+	if err != nil {
+		return
+	}
+
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+hostUrl+"/"+id+"/set_zone",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+
+	if err != nil {
+		return
+	}
+
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
 // Gets all tasks with the specified host ID, using options to filter the results.
 // If options is nil, no filtering will occur.
 func (api *HostsAPI) GetTasks(id string, options *TaskGetOptions) (result *TaskList, err error) {

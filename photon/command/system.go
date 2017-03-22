@@ -754,12 +754,12 @@ func createHostSpecs(dcMap *manifest.Installation) ([]photon.HostCreateSpec, err
 				}
 			}
 			hostSpec := photon.HostCreateSpec{
-				Username:         host.Username,
-				Password:         host.Password,
-				Address:          hostIp,
-				AvailabilityZone: availabilityZoneNameToIdMap[host.AvailabilityZone],
-				Tags:             host.Tags,
-				Metadata:         metaData,
+				Username: host.Username,
+				Password: host.Password,
+				Address:  hostIp,
+				Zone:     availabilityZoneNameToIdMap[host.AvailabilityZone],
+				Tags:     host.Tags,
+				Metadata: metaData,
 			}
 			hostSpecs = append(hostSpecs, hostSpec)
 		}
