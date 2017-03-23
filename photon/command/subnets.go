@@ -85,7 +85,7 @@ func GetSubnetsCommand() cli.Command {
 				ArgsUsage: "<router-id>",
 				Description: "List all subnets for the specificed router.\n" +
 					"   Example: \n" +
-					"   photon subnet list 4f9caq234 \\ \n",
+					"   photon subnet list 4f9caq234 \n",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name",
@@ -323,8 +323,9 @@ func showSubnet(c *cli.Context, w io.Writer) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%s\t%t\n",
-			subnet.ID, subnet.Name, subnet.Description, subnet.PrivateIpCidr, subnet.IsDefault)
+		portGroups := getCommaSeparatedStringFromStringArray(subnet.PortGroups.PortGroups)
+		fmt.Printf("%s\t%s\t%s\t%s\t%t\t%s\n",
+			subnet.ID, subnet.Name, subnet.Description, subnet.PrivateIpCidr, subnet.IsDefault, portGroups)
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(subnet, w, c)
 	} else {
@@ -333,6 +334,7 @@ func showSubnet(c *cli.Context, w io.Writer) error {
 		fmt.Println("  description:          ", subnet.Description)
 		fmt.Println("  privateIpCidr:        ", subnet.PrivateIpCidr)
 		fmt.Println("  isDefault:            ", subnet.IsDefault)
+		fmt.Println("  Port Groups:          ", subnet.PortGroups.PortGroups)
 	}
 
 	return nil

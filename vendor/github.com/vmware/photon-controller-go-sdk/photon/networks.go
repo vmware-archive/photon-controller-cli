@@ -45,57 +45,15 @@ func (api *NetworksAPI) Create(networkSpec *NetworkCreateSpec) (task *Task, err 
 	return
 }
 
-// Deletes a network with specified ID.
-func (api *NetworksAPI) Delete(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Delete(api.client.Endpoint+networkUrl+"/"+id, api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	task, err = getTask(getError(res))
-	return
-}
-
-// Gets a network with the specified ID.
-func (api *NetworksAPI) Get(id string) (network *Network, err error) {
-	res, err := api.client.restClient.Get(api.client.Endpoint+networkUrl+"/"+id, api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	res, err = getError(res)
-	if err != nil {
-		return
-	}
-	var result Network
-	err = json.NewDecoder(res.Body).Decode(&result)
-	return &result, nil
-}
-
-// Returns all networks
-func (api *NetworksAPI) GetAll(options *NetworkGetOptions) (result *Networks, err error) {
+// Returns all subnets
+func (api *NetworksAPI) GetAll(options *NetworkGetOptions) (result *Subnets, err error) {
 	uri := api.client.Endpoint + networkUrl
 	if options != nil {
 		uri += getQueryString(options)
 	}
 	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
 
-	result = &Networks{}
+	result = &Subnets{}
 	err = json.Unmarshal(res, result)
-	return
-}
-
-// Sets default network.
-func (api *NetworksAPI) SetDefault(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Post(
-		api.client.Endpoint+networkUrl+"/"+id+"/set_default",
-		"application/json",
-		bytes.NewReader([]byte("")),
-		api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	task, err = getTask(getError(res))
 	return
 }

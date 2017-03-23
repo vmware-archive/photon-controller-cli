@@ -25,9 +25,9 @@ import (
 )
 
 type MockNetworksPage struct {
-	Items            []photon.Network `json:"items"`
-	NextPageLink     string           `json:"nextPageLink"`
-	PreviousPageLink string           `json:"previousPageLink"`
+	Items            []photon.Subnet `json:"items"`
+	NextPageLink     string          `json:"nextPageLink"`
+	PreviousPageLink string          `json:"previousPageLink"`
 }
 
 func TestCreateDeletePhysicalNetwork(t *testing.T) {
@@ -129,7 +129,7 @@ func TestCreateDeletePhysicalNetwork(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	cxt = cli.NewContext(nil, set, globalCtx)
-	err = deleteNetwork(cxt)
+	err = deleteSubnet(cxt)
 	if err != nil {
 		t.Error("Not expecting delete network to fail")
 	}
@@ -140,11 +140,11 @@ func TestListPhysicalNetworks(t *testing.T) {
 	defer server.Close()
 
 	expectedList := MockNetworksPage{
-		Items: []photon.Network{
+		Items: []photon.Subnet{
 			{
 				ID:         "network_id",
 				Name:       "network_name",
-				PortGroups: []string{"port", "group"},
+				PortGroups: photon.PortGroups{PortGroups: []string{"port", "group"}},
 				IsDefault:  false,
 			},
 		},
@@ -163,7 +163,7 @@ func TestListPhysicalNetworks(t *testing.T) {
 		mocks.CreateResponder(200, string(response[:])))
 
 	expectedList = MockNetworksPage{
-		Items:            []photon.Network{},
+		Items:            []photon.Subnet{},
 		NextPageLink:     "",
 		PreviousPageLink: "",
 	}
@@ -216,96 +216,5 @@ func TestListPhysicalNetworks(t *testing.T) {
 	err = checkRegExp(`\"id\":\s*\".*\"`, output)
 	if err != nil {
 		t.Errorf("List networks didn't produce a JSON field named 'id': %s", err)
-	}
-}
-
-func TestShowPhysicalNetwork(t *testing.T) {
-	expectedStruct := photon.Network{
-		ID:         "network_id",
-		Name:       "network_name",
-		PortGroups: []string{"port", "group"},
-		IsDefault:  false,
-	}
-
-	response, err := json.Marshal(expectedStruct)
-	if err != nil {
-		t.Error("Not expecting error serializing expected response")
-	}
-
-	server := mocks.NewTestServer()
-	mocks.RegisterResponder(
-		"GET",
-		server.URL+rootUrl+"/subnets/"+expectedStruct.ID,
-		mocks.CreateResponder(200, string(response[:])))
-	defer server.Close()
-
-	mocks.Activate(true)
-	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
-
-	set := flag.NewFlagSet("test", 0)
-	err = set.Parse([]string{expectedStruct.ID})
-	cxt := cli.NewContext(nil, set, nil)
-	err = showPhysicalNetwork(cxt, os.Stdout)
-	if err != nil {
-		t.Error("Error showing networks: " + err.Error())
-	}
-}
-
-func TestSetDefaultPhysicalNetwork(t *testing.T) {
-	completedTask := &photon.Task{
-		Operation: "SET_DEFAULT_NETWORK",
-		State:     "COMPLETED",
-		Entity:    photon.Entity{ID: "id"},
-	}
-
-	taskresponse, err := json.Marshal(completedTask)
-	if err != nil {
-		t.Error("Not expecting error serializing expected completedTask")
-	}
-
-	info := &photon.Info{
-		NetworkType: PHYSICAL,
-	}
-
-	infoString, err := json.Marshal(info)
-	if err != nil {
-		t.Error("Not expecting error when serializing expected info")
-	}
-
-	server := mocks.NewTestServer()
-	mocks.RegisterResponder(
-		"POST",
-		server.URL+rootUrl+"/subnets/"+completedTask.Entity.ID+"/set_default",
-		mocks.CreateResponder(200, string(taskresponse[:])))
-	mocks.RegisterResponder(
-		"GET",
-		server.URL+rootUrl+"/tasks/"+completedTask.ID,
-		mocks.CreateResponder(200, string(taskresponse[:])))
-	mocks.RegisterResponder(
-		"GET",
-		server.URL+rootUrl+"/info",
-		mocks.CreateResponder(200, string(infoString[:])))
-	defer server.Close()
-
-	mocks.Activate(true)
-	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
-	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
-
-	globalSet := flag.NewFlagSet("test", 0)
-	globalSet.Bool("non-interactive", true, "doc")
-	globalCtx := cli.NewContext(nil, globalSet, nil)
-	err = globalSet.Parse([]string{"--non-interactive"})
-	if err != nil {
-		t.Error("Not expecting arguments parsing to fail")
-	}
-
-	set := flag.NewFlagSet("test", 0)
-	err = set.Parse([]string{completedTask.Entity.ID})
-	cxt := cli.NewContext(nil, set, globalCtx)
-
-	err = setDefaultNetwork(cxt, os.Stdout)
-	if err != nil {
-		t.Error("Not expecting set default network to fail", err)
 	}
 }

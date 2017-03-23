@@ -758,6 +758,11 @@ type NsxConfigurationSpec struct {
 	HostUplinkVlanId       int               `json:"hostUplinkVlanId"`
 }
 
+// Represents port groups.
+type PortGroups struct {
+	PortGroups []string `json:"portGroups"`
+}
+
 // Represents a subnet
 type Subnet struct {
 	ID            string            `json:"id"`
@@ -768,6 +773,7 @@ type Subnet struct {
 	ReservedIps   map[string]string `json:"reservedIps"`
 	State         string            `json:"state"`
 	IsDefault     bool              `json:"isDefault"`
+	PortGroups    PortGroups        `json:"portGroups"`
 }
 
 // Represents multiple subnets returned by the API.
