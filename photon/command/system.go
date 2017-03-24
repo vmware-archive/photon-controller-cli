@@ -18,6 +18,7 @@ import (
 	"net"
 	"os"
 	"regexp"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -26,7 +27,6 @@ import (
 
 	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
-	"strings"
 )
 
 // Create a cli.command object for command "system"
@@ -523,16 +523,8 @@ func addHosts(c *cli.Context) error {
 		return err
 	}
 
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	deployments, err := client.Photonclient.Deployments.GetAll()
-	deploymentID := deployments.Items[0].ID
-
 	// Create Hosts
-	err = createHostsInBatch(dcMap, deploymentID)
+	err = createHostsInBatch(dcMap)
 	if err != nil {
 		return err
 	}
@@ -680,7 +672,7 @@ func createAvailabilityZonesFromDcMap(dcMap *manifest.Installation) (map[string]
 	return availabilityZoneNameToIdMap, nil
 }
 
-func createHostsInBatch(dcMap *manifest.Installation, deploymentID string) error {
+func createHostsInBatch(dcMap *manifest.Installation) error {
 	hostSpecs, err := createHostSpecs(dcMap)
 	if err != nil {
 		return err
@@ -690,7 +682,7 @@ func createHostsInBatch(dcMap *manifest.Installation, deploymentID string) error
 	var creationErrors []error
 	var pollErrors []error
 	for _, spec := range hostSpecs {
-		createHostTask, err := client.Photonclient.Hosts.Create(&spec, deploymentID)
+		createHostTask, err := client.Photonclient.InfraHosts.Create(&spec)
 		if err != nil {
 			creationErrors = append(creationErrors, err)
 			fmt.Printf("Creation of Host document with ip '%s' failed: with err '%s'\n",

@@ -17,8 +17,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -54,7 +52,7 @@ func TestCreateDeleteHost(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+rootUrl+"/deployments"+"/fake-deployment-id"+"/hosts",
+		server.URL+rootUrl+"/infrastructure/hosts",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -123,7 +121,7 @@ func TestCreateDeleteHost(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+rootUrl+"/hosts/"+queuedTask.Entity.ID,
+		server.URL+rootUrl+"/infrastructure"+"/hosts/"+queuedTask.Entity.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -153,10 +151,7 @@ func TestListHosts(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to mock hosts: " + err.Error())
 	}
-	err = mockDeploymentsForList(t, server, 1)
-	if err != nil {
-		t.Error("Failed to mock one deployment: " + err.Error())
-	}
+
 	mocks.Activate(true)
 
 	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
@@ -179,46 +174,6 @@ func TestListHosts(t *testing.T) {
 	err = listHosts(cxt, &output)
 	if err != nil {
 		t.Error("listHosts with one deployment failed unexpectedly: " + err.Error())
-	}
-
-	// Verify we printed a list of hosts: it should start with a bracket
-	err = checkRegExp(`^\s*\[`, output)
-	if err != nil {
-		t.Errorf("List hosts didn't produce a JSON list that starts with a bracket (list): %s", err)
-	}
-	// and end with a bracket (two regular expressions because it's multiline, it's easier)
-	err = checkRegExp(`\]\s*$`, output)
-	if err != nil {
-		t.Errorf("List hosts didn't produce JSON that ended in a bracket (list): %s", err)
-	}
-	// And spot check that we have the "id" field
-	err = checkRegExp(`\"id\":\s*\".*\"`, output)
-	if err != nil {
-		t.Errorf("List hosts didn't produce a JSON field named 'id': %s", err)
-	}
-
-	// Now we verify that with zero deployments, we fail as expected
-	err = mockDeploymentsForList(t, server, 0)
-	if err != nil {
-		t.Error("Failed to mock zero deployments: " + err.Error())
-	}
-	err = listHosts(cxt, os.Stdout)
-	if err == nil {
-		t.Error("listHosts with zero deployments succeeded unexpectedly: " + err.Error())
-	} else if !strings.Contains(err.Error(), "There are no deployments") {
-		t.Error("listHosts failed, but not with expected error message: " + err.Error())
-	}
-
-	// Now we verify that with two deployments, we fail as expected
-	err = mockDeploymentsForList(t, server, 2)
-	if err != nil {
-		t.Error("Failed to mock two deployments: " + err.Error())
-	}
-	err = listHosts(cxt, os.Stdout)
-	if err == nil {
-		t.Error("listHosts with two deployments succeeded unexpectedly: " + err.Error())
-	} else if !strings.Contains(err.Error(), "There are multiple deployments") {
-		t.Error("listHosts failed, but not with expected error message: " + err.Error())
 	}
 }
 
@@ -245,7 +200,7 @@ func mockHostsForList(t *testing.T, server *httptest.Server) error {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+rootUrl+"/deployments/0/hosts",
+		server.URL+rootUrl+"/infrastructure"+"/hosts",
 		mocks.CreateResponder(200, string(response[:])))
 
 	hostList = MockHostsPage{
@@ -261,32 +216,6 @@ func mockHostsForList(t *testing.T, server *httptest.Server) error {
 	mocks.RegisterResponder(
 		"GET",
 		server.URL+"/fake-next-page-link",
-		mocks.CreateResponder(200, string(response[:])))
-	return nil
-}
-
-func mockDeploymentsForList(t *testing.T, server *httptest.Server, numDeployments int) error {
-	var deployments []photon.Deployment
-
-	for i := 0; i < numDeployments; i++ {
-		deployment := photon.Deployment{
-			ID: strconv.Itoa(i),
-		}
-		deployments = append(deployments, deployment)
-	}
-
-	expectedStruct := photon.Deployments{
-		Items: deployments,
-	}
-
-	response, err := json.Marshal(expectedStruct)
-	if err != nil {
-		return err
-	}
-
-	mocks.RegisterResponder(
-		"GET",
-		server.URL+rootUrl+"/deployments",
 		mocks.CreateResponder(200, string(response[:])))
 	return nil
 }
@@ -308,7 +237,7 @@ func TestShowHost(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+rootUrl+"/hosts/"+expectedStruct.ID,
+		server.URL+rootUrl+"/infrastructure"+"/hosts/"+expectedStruct.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 
@@ -561,7 +490,7 @@ func TestSuspendAndResumeHost(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/suspend",
+		server.URL+rootUrl+"/infrastructure"+"/hosts"+"/fake-host-id"+"/suspend",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -606,7 +535,7 @@ func TestSuspendAndResumeHost(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/resume",
+		server.URL+rootUrl+"/infrastructure"+"/hosts"+"/fake-host-id"+"/resume",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -652,7 +581,7 @@ func TestEnterAndExitMaintenanceMode(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/enter_maintenance",
+		server.URL+rootUrl+"/infrastructure"+"/hosts"+"/fake-host-id"+"/enter-maintenance",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -697,7 +626,7 @@ func TestEnterAndExitMaintenanceMode(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/exit_maintenance",
+		server.URL+rootUrl+"/infrastructure"+"/hosts"+"/fake-host-id"+"/exit-maintenance",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",

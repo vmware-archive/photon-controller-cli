@@ -64,7 +64,7 @@ func TestListDeploymentHosts(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+rootUrl+"/deployments/1/hosts",
+		server.URL+rootUrl+"/infrastructure/hosts",
 		mocks.CreateResponder(200, string(response[:])))
 
 	hostList = MockHostsPage{
@@ -196,7 +196,7 @@ func TestUpdateImageDatastores(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+rootUrl+"/deployments/"+deploymentId+"/set_image_datastores",
+		server.URL+rootUrl+"/infrastructure"+"/image-datastores",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -246,7 +246,7 @@ func TestSyncHostsConfig(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+rootUrl+"/deployments/"+queuedTask.Entity.ID+"/sync_hosts_config",
+		server.URL+rootUrl+"/infrastructure/sync-hosts-config",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
