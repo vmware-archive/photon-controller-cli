@@ -41,11 +41,11 @@ func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 // Subcommands:
 //              list;       Usage: deployment list
 //              show;       Usage: deployment show [<id>]
-//              list-hosts; Usage: deployment list-hosts [<id>]
+//              list-hosts; Usage: deployment list-hosts
 //              list-vms;   Usage: deployment list-vms [<id>]
 
-//              update-image-datastores;        Usage: deployment update-image-datastores [<id> <options>]
-//              sync-hosts-config;              Usage: deployment sync-hosts-config [<id>]
+//              update-image-datastores;        Usage: deployment update-image-datastores [<options>]
+//              sync-hosts-config;              Usage: deployment sync-hosts-config
 
 //              pause;                          Usage: deployment pause [<id>]
 //              pause-background-tasks;         Usage: deployment pause-background-tasks [<id>]
@@ -569,17 +569,14 @@ func showDeployment(c *cli.Context, w io.Writer) error {
 
 // Lists all the hosts associated with the deployment
 func listDeploymentHosts(c *cli.Context, w io.Writer) error {
-	id, err := getDeploymentId(c)
-	if err != nil {
-		return err
-	}
 
+	var err error
 	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	hosts, err := client.Photonclient.Deployments.GetHosts(id)
+	hosts, err := client.Photonclient.InfraHosts.GetHosts()
 	if err != nil {
 		return err
 	}
@@ -655,7 +652,7 @@ func updateImageDatastores(c *cli.Context) error {
 		return err
 	}
 
-	task, err := client.Photonclient.Deployments.SetImageDatastores(id, imageDataStores)
+	task, err := client.Photonclient.Infra.SetImageDatastores(imageDataStores)
 	if err != nil {
 		return err
 	}
@@ -685,7 +682,7 @@ func syncHostsConfig(c *cli.Context) error {
 		return err
 	}
 
-	task, err := client.Photonclient.Deployments.SyncHostsConfig(id)
+	task, err := client.Photonclient.Infra.SyncHostsConfig()
 	if err != nil {
 		return err
 	}
