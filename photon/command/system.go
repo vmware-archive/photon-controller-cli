@@ -672,6 +672,31 @@ func createAvailabilityZonesFromDcMap(dcMap *manifest.Installation) (map[string]
 	return availabilityZoneNameToIdMap, nil
 }
 
+func createZonesFromDcMap(dcMap *manifest.Installation) (map[string]string, error) {
+	zoneNameToIdMap := make(map[string]string)
+	for _, host := range dcMap.Hosts {
+		if len(host.AvailabilityZone) > 0 {
+			if _, present := zoneNameToIdMap[host.AvailabilityZone]; !present {
+				zoneSpec := &photon.ZoneCreateSpec{
+					Name: host.AvailabilityZone,
+				}
+
+				createZoneTask, err := client.Photonclient.Zones.Create(zoneSpec)
+				if err != nil {
+					return nil, err
+				}
+
+				task, err := pollTask(createZoneTask.ID)
+				if err != nil {
+					return nil, err
+				}
+				zoneNameToIdMap[host.AvailabilityZone] = task.Entity.ID
+			}
+		}
+	}
+	return zoneNameToIdMap, nil
+}
+
 func createHostsInBatch(dcMap *manifest.Installation) error {
 	hostSpecs, err := createHostSpecs(dcMap)
 	if err != nil {
@@ -706,7 +731,7 @@ func createHostsInBatch(dcMap *manifest.Installation) error {
 }
 
 func createHostSpecs(dcMap *manifest.Installation) ([]photon.HostCreateSpec, error) {
-	availabilityZoneNameToIdMap, err := createAvailabilityZonesFromDcMap(dcMap)
+	zoneNameToIdMap, err := createZonesFromDcMap(dcMap)
 	if err != nil {
 		return nil, err
 	}
@@ -749,7 +774,7 @@ func createHostSpecs(dcMap *manifest.Installation) ([]photon.HostCreateSpec, err
 				Username: host.Username,
 				Password: host.Password,
 				Address:  hostIp,
-				Zone:     availabilityZoneNameToIdMap[host.AvailabilityZone],
+				Zone:     zoneNameToIdMap[host.AvailabilityZone],
 				Tags:     host.Tags,
 				Metadata: metaData,
 			}

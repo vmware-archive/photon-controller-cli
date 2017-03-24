@@ -41,6 +41,7 @@ import (
 //              resume;                Usage: host resume <id>
 //              enter-maintenance;     Usage: host enter-maintenance <id>
 //              exit-maintenance;      Usage: host exit-maintenance <id>
+//              set-zone:              Usage: host set -zone <id> <zone-id>
 func GetHostsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "host",
@@ -136,6 +137,20 @@ func GetHostsCommand() cli.Command {
 				Description: "Set a host's availability zone. You must be a system administrator to do this.",
 				Action: func(c *cli.Context) {
 					err := setHostAvailabilityZone(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "set-zone",
+				Usage:     "Set a host's zone",
+				ArgsUsage: "<host-id> <zone-id>",
+				Description: "Set a host's zone. You must be a system administrator to do this. \n" +
+					"   You cannot change the zone of a host after it is set once. \n" +
+					"   (Unless you remove the host and add it back)",
+				Action: func(c *cli.Context) {
+					err := setHostZone(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -240,7 +255,7 @@ func createHost(c *cli.Context, w io.Writer) error {
 	username := c.String("username")
 	password := c.String("password")
 	address := c.String("address")
-	availabilityZone := c.String("availability_zone")
+	zone := c.String("availability_zone")
 	tags := c.String("tag")
 	metadata := c.String("metadata")
 
@@ -280,7 +295,7 @@ func createHost(c *cli.Context, w io.Writer) error {
 	hostSpec.Username = username
 	hostSpec.Password = password
 	hostSpec.Address = address
-	hostSpec.Zone = availabilityZone
+	hostSpec.Zone = zone
 	hostSpec.Tags = regexp.MustCompile(`\s*,\s*`).Split(tags, -1)
 
 	if len(metadata) == 0 {
@@ -401,13 +416,13 @@ func showHost(c *cli.Context, w io.Writer) error {
 		utils.FormatObject(host, w, c)
 	} else {
 		fmt.Println("Host ID: ", host.ID)
-		fmt.Println("  Username:          ", host.Username)
-		fmt.Println("  IP:                ", host.Address)
-		fmt.Println("  Tags:              ", host.Tags)
-		fmt.Println("  State:             ", host.State)
-		fmt.Println("  Metadata:          ", host.Metadata)
-		fmt.Println("  AvailabilityZone:  ", host.Zone)
-		fmt.Println("  Version:           ", host.EsxVersion)
+		fmt.Println("  Username: ", host.Username)
+		fmt.Println("  IP:       ", host.Address)
+		fmt.Println("  Tags:     ", host.Tags)
+		fmt.Println("  State:    ", host.State)
+		fmt.Println("  Metadata: ", host.Metadata)
+		fmt.Println("  Zone:     ", host.Zone)
+		fmt.Println("  Version:  ", host.EsxVersion)
 	}
 
 	return nil
@@ -439,6 +454,41 @@ func setHostAvailabilityZone(c *cli.Context, w io.Writer) error {
 	}
 	if utils.NeedsFormatting(c) {
 		host, err := client.Photonclient.InfraHosts.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(host, w, c)
+	}
+
+	return nil
+}
+
+// Set host's zone with the specified host ID, returns an error if one occurred
+func setHostZone(c *cli.Context, w io.Writer) error {
+	err := checkArgCount(c, 2)
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+	zoneId := c.Args()[1]
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	setZoneSpec := photon.HostSetZoneOperation{}
+	setZoneSpec.ZoneId = zoneId
+	setTask, err := client.Photonclient.Hosts.SetZone(id, &setZoneSpec)
+	if err != nil {
+		return err
+	}
+	id, err = waitOnTaskOperation(setTask.ID, c)
+	if err != nil {
+		return err
+	}
+	if utils.NeedsFormatting(c) {
+		host, err := client.Photonclient.Hosts.Get(id)
 		if err != nil {
 			return err
 		}

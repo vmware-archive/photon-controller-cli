@@ -306,6 +306,54 @@ func TestSetHostAvailabilityZone(t *testing.T) {
 	}
 }
 
+func TestSetHostZone(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "SET_ZONE",
+		State:     "QUEUED",
+		ID:        "fake-task-id",
+		Entity:    photon.Entity{ID: "fake-host-id"},
+	}
+	completedTask := &photon.Task{
+		Operation: "SET_ZONE",
+		State:     "COMPLETED",
+		ID:        "fake-task-id",
+		Entity:    photon.Entity{ID: "fake-host-id"},
+	}
+
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected createTask")
+	}
+	taskResponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected createTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/set_zone",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake-host-id", "fake-zone-id"})
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = setHostZone(cxt, os.Stdout)
+	if err != nil {
+		t.Error("Error listing hosts: " + err.Error())
+	}
+}
+
 func TestHostTasks(t *testing.T) {
 	taskList := MockTasksPage{
 		Items: []photon.Task{

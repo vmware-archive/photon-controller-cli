@@ -1,4 +1,4 @@
-// Copyright (c) 2016 VMware, Inc. All Rights Reserved.
+// Copyright (c) 2017 VMware, Inc. All Rights Reserved.
 //
 // This product is licensed to you under the Apache License, Version 2.0 (the "License").
 // You may not use this product except in compliance with the License.
@@ -23,30 +23,30 @@ import (
 	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
-// Creates a cli.Command for availability-zone
-// Subcommands: create; Usage: availability-zone create [<options>]
-//              delete; Usage: availability-zone delete <id>
-//              list;   Usage: availability-zone list
-//              show;   Usage: availability-zone show <id>
-//              tasks;  Usage: availability-zone tasks <id> [<options>]
-func GetAvailabilityZonesCommand() cli.Command {
+// Creates a cli.Command for zone
+// Subcommands: create; Usage: zone create [<options>]
+//              delete; Usage: zone delete <id>
+//              list;   Usage: zone list
+//              show;   Usage: zone show <id>
+//              tasks;  Usage: zone tasks <id> [<options>]
+func GetZonesCommand() cli.Command {
 	command := cli.Command{
-		Name:  "availability-zone",
-		Usage: "options for availability-zone",
+		Name:  "zone",
+		Usage: "options for zone",
 		Subcommands: []cli.Command{
 			{
 				Name:        "create",
-				Usage:       "Create a new availability zone",
+				Usage:       "Create a new zone",
 				ArgsUsage:   " ",
-				Description: "This creates a new availablity zone. Only a system adminstrator can create one.",
+				Description: "This creates a new zone. Only a system adminstrator can create one.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
-						Usage: "Availability-zone name",
+						Usage: "Zone name",
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := createAvailabilityZone(c, os.Stdout)
+					err := createZone(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -54,12 +54,12 @@ func GetAvailabilityZonesCommand() cli.Command {
 			},
 			{
 				Name:  "delete",
-				Usage: "Delete an availability zone",
+				Usage: "Delete an zone",
 				Description: "This deletess an existing availablity zone given its id.\n" +
-					"   Only a system adminstrator can delete an availability zone.",
+					"   Only a system adminstrator can delete the zone.",
 				ArgsUsage: "<zone-id>",
 				Action: func(c *cli.Context) {
-					err := deleteAvailabilityZone(c)
+					err := deleteZone(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -67,10 +67,10 @@ func GetAvailabilityZonesCommand() cli.Command {
 			},
 			{
 				Name:      "list",
-				Usage:     "List all availability zones",
+				Usage:     "List all zones",
 				ArgsUsage: " ",
 				Action: func(c *cli.Context) {
-					err := listAvailabilityZones(c, os.Stdout)
+					err := listZones(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -78,10 +78,10 @@ func GetAvailabilityZonesCommand() cli.Command {
 			},
 			{
 				Name:      "show",
-				Usage:     "Show specified availability-zone",
+				Usage:     "Show specified zone",
 				ArgsUsage: "<zone-id>",
 				Action: func(c *cli.Context) {
-					err := showAvailabilityZone(c, os.Stdout)
+					err := showZone(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -89,7 +89,7 @@ func GetAvailabilityZonesCommand() cli.Command {
 			},
 			{
 				Name:      "tasks",
-				Usage:     "Show availability-zone tasks",
+				Usage:     "Show zone tasks",
 				ArgsUsage: "<zone-id>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
@@ -98,7 +98,7 @@ func GetAvailabilityZonesCommand() cli.Command {
 					},
 				},
 				Action: func(c *cli.Context) {
-					err := getAvailabilityZoneTasks(c, os.Stdout)
+					err := getZoneTasks(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -109,9 +109,9 @@ func GetAvailabilityZonesCommand() cli.Command {
 	return command
 }
 
-// Sends a create availability-zone task to client based on the cli.Context
+// Sends a create zone task to client based on the cli.Context
 // Returns an error if one occurred
-func createAvailabilityZone(c *cli.Context, w io.Writer) error {
+func createZone(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -120,17 +120,17 @@ func createAvailabilityZone(c *cli.Context, w io.Writer) error {
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
-		name, err = askForInput("AvailabilityZone name: ", name)
+		name, err = askForInput("Zone name: ", name)
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(name) == 0 {
-		return fmt.Errorf("Please provide availability zone name")
+		return fmt.Errorf("Please provide zone name")
 	}
 
-	azSpec := &photon.AvailabilityZoneCreateSpec{
+	azSpec := &photon.ZoneCreateSpec{
 		Name: name,
 	}
 
@@ -139,7 +139,7 @@ func createAvailabilityZone(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	createTask, err := client.Photonclient.AvailabilityZones.Create(azSpec)
+	createTask, err := client.Photonclient.Zones.Create(azSpec)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func createAvailabilityZone(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		zone, err := client.Photonclient.AvailabilityZones.Get(id)
+		zone, err := client.Photonclient.Zones.Get(id)
 		if err != nil {
 			return err
 		}
@@ -160,8 +160,8 @@ func createAvailabilityZone(c *cli.Context, w io.Writer) error {
 	return nil
 }
 
-// Retrieves availability zone against specified id.
-func showAvailabilityZone(c *cli.Context, w io.Writer) error {
+// Retrieves zone against specified id.
+func showZone(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -173,7 +173,7 @@ func showAvailabilityZone(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	zone, err := client.Photonclient.AvailabilityZones.Get(id)
+	zone, err := client.Photonclient.Zones.Get(id)
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func showAvailabilityZone(c *cli.Context, w io.Writer) error {
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(zone, w, c)
 	} else {
-		fmt.Printf("AvailabilityZone ID: %s\n", zone.ID)
+		fmt.Printf("  Zone ID:     %s\n", zone.ID)
 		fmt.Printf("  Name:        %s\n", zone.Name)
 		fmt.Printf("  Kind:        %s\n", zone.Kind)
 		fmt.Printf("  State:       %s\n", zone.State)
@@ -192,8 +192,8 @@ func showAvailabilityZone(c *cli.Context, w io.Writer) error {
 	return nil
 }
 
-// Retrieves a list of availability zones, returns an error if one occurred
-func listAvailabilityZones(c *cli.Context, w io.Writer) error {
+// Retrieves a list of zones, returns an error if one occurred
+func listZones(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -203,7 +203,7 @@ func listAvailabilityZones(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	zones, err := client.Photonclient.AvailabilityZones.GetAll()
+	zones, err := client.Photonclient.Zones.GetAll()
 	if err != nil {
 		return err
 	}
@@ -231,9 +231,9 @@ func listAvailabilityZones(c *cli.Context, w io.Writer) error {
 	return nil
 }
 
-// Sends a delete availability zone task to client based on the cli.Context
+// Sends a delete zone task to client based on the cli.Context
 // Returns an error if one occurred
-func deleteAvailabilityZone(c *cli.Context) error {
+func deleteZone(c *cli.Context) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -245,7 +245,7 @@ func deleteAvailabilityZone(c *cli.Context) error {
 		return err
 	}
 
-	deleteTask, err := client.Photonclient.AvailabilityZones.Delete(id)
+	deleteTask, err := client.Photonclient.Zones.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -258,8 +258,8 @@ func deleteAvailabilityZone(c *cli.Context) error {
 	return nil
 }
 
-// Retrieves tasks from specified availability zone
-func getAvailabilityZoneTasks(c *cli.Context, w io.Writer) error {
+// Retrieves tasks from specified zone
+func getZoneTasks(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -276,7 +276,7 @@ func getAvailabilityZoneTasks(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	taskList, err := client.Photonclient.AvailabilityZones.GetTasks(id, options)
+	taskList, err := client.Photonclient.Zones.GetTasks(id, options)
 	if err != nil {
 		return err
 	}
