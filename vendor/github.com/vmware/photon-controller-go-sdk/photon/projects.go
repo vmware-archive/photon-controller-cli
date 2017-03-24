@@ -12,6 +12,7 @@ package photon
 import (
 	"bytes"
 	"encoding/json"
+	"io/ioutil"
 )
 
 // Contains functionality for projects API.
@@ -226,5 +227,122 @@ func (api *ProjectsAPI) GetRouters(projectID string, options *RouterGetOptions) 
 
 	result = &Routers{}
 	err = json.Unmarshal(res, result)
+	return
+}
+
+// Get quota for project with the specified ID.
+func (api *ProjectsAPI) GetQuota(projectId string) (quota *Quota, err error) {
+	uri := api.client.Endpoint + projectUrl + projectId + "/quota"
+	res, err := api.client.restClient.Get(uri, api.client.options.TokenOptions)
+
+	if err != nil {
+		return
+	}
+
+	defer res.Body.Close()
+	res, err = getError(res)
+	if err != nil {
+		return
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+
+	quota = &Quota{}
+	err = json.Unmarshal(body, quota)
+	return
+}
+
+// Set (replace) the whole project quota with the quota line items specified in quota spec.
+func (api *ProjectsAPI) SetQuota(projectId string, spec *QuotaSpec) (task *Task, err error) {
+	task, err = api.modifyQuota("PUT", projectId, spec)
+	return
+}
+
+// Update portion of the project quota with the quota line items specified in quota spec.
+func (api *ProjectsAPI) UpdateQuota(projectId string, spec *QuotaSpec) (task *Task, err error) {
+	task, err = api.modifyQuota("PATCH", projectId, spec)
+	return
+}
+
+// Exclude project quota line items from the specific quota spec.
+func (api *ProjectsAPI) ExcludeQuota(projectId string, spec *QuotaSpec) (task *Task, err error) {
+	task, err = api.modifyQuota("DELETE", projectId, spec)
+	return
+}
+
+// A private common function for modifying quota for the specified project with the quota line items specified
+// in quota spec.
+func (api *ProjectsAPI) modifyQuota(method string, projectId string, spec *QuotaSpec) (task *Task, err error) {
+	body, err := json.Marshal(spec)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.SendRequestCommon(
+		method,
+		api.client.Endpoint+projectUrl+projectId+"/quota",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
+// Gets IAM Policy of a project.
+func (api *ProjectsAPI) GetIam(projectId string) (policy *[]PolicyEntry, err error) {
+	res, err := api.client.restClient.Get(
+		api.client.Endpoint+projectUrl+projectId+"/iam",
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	res, err = getError(res)
+	if err != nil {
+		return
+	}
+	var result []PolicyEntry
+	err = json.NewDecoder(res.Body).Decode(&result)
+	return &result, err
+}
+
+// Sets IAM Policy on a project.
+func (api *ProjectsAPI) SetIam(projectId string, policy *[]PolicyEntry) (task *Task, err error) {
+	body, err := json.Marshal(policy)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+projectUrl+projectId+"/iam",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
+// Modifies IAM Policy on a project.
+func (api *ProjectsAPI) ModifyIam(projectId string, policyDelta *PolicyDelta) (task *Task, err error) {
+	body, err := json.Marshal(policyDelta)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.Patch(
+		api.client.Endpoint+projectUrl+projectId+"/iam",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
 	return
 }

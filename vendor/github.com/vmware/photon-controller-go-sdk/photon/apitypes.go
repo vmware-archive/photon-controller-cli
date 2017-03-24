@@ -433,27 +433,27 @@ type FlavorList struct {
 
 // Creation spec for hosts.
 type HostCreateSpec struct {
-	Username         string            `json:"username"`
-	Password         string            `json:"password"`
-	AvailabilityZone string            `json:"availabilityZone,omitempty"`
-	Metadata         map[string]string `json:"metadata,omitempty"`
-	Address          string            `json:"address"`
-	Tags             []string          `json:"usageTags"`
+	Username string            `json:"username"`
+	Password string            `json:"password"`
+	Zone     string            `json:"zone,omitempty"`
+	Metadata map[string]string `json:"metadata,omitempty"`
+	Address  string            `json:"address"`
+	Tags     []string          `json:"usageTags"`
 }
 
 // Represents a host
 type Host struct {
-	Username         string            `json:"username"`
-	Password         string            `json:"password"`
-	Address          string            `json:"address"`
-	Kind             string            `json:"kind"`
-	ID               string            `json:"id"`
-	AvailabilityZone string            `json:"availabilityZone,omitempty"`
-	Tags             []string          `json:"usageTags"`
-	Metadata         map[string]string `json:"metadata,omitempty"`
-	SelfLink         string            `json:"selfLink"`
-	State            string            `json:"state"`
-	EsxVersion       string            `json:"esxVersion"`
+	Username   string            `json:"username"`
+	Password   string            `json:"password"`
+	Address    string            `json:"address"`
+	Kind       string            `json:"kind"`
+	ID         string            `json:"id"`
+	Zone       string            `json:"zone,omitempty"`
+	Tags       []string          `json:"usageTags"`
+	Metadata   map[string]string `json:"metadata,omitempty"`
+	SelfLink   string            `json:"selfLink"`
+	State      string            `json:"state"`
+	EsxVersion string            `json:"esxVersion"`
 }
 
 // Represents multiple hosts returned by the API.
@@ -723,6 +723,30 @@ type HostSetAvailabilityZoneOperation struct {
 	AvailabilityZoneId string `json:"availabilityZoneId"`
 }
 
+// Represents single zone.
+type Zone struct {
+	Kind     string `json:"kind"`
+	Name     string `json:"name"`
+	State    string `json:"state"`
+	ID       string `json:"id"`
+	SelfLink string `json:"selfLink"`
+}
+
+// Represents multiple zones returned by the API.
+type Zones struct {
+	Items []Zone `json:"items"`
+}
+
+// Creation spec for zones.
+type ZoneCreateSpec struct {
+	Name string `json:"name"`
+}
+
+// Represents zone that can be set for host
+type HostSetZoneOperation struct {
+	ZoneId string `json:"zoneId"`
+}
+
 // Represents the list of image datastores.
 type ImageDatastores struct {
 	Items []string `json:"items"`
@@ -780,6 +804,7 @@ type SubnetCreateSpec struct {
 	Name          string `json:"name"`
 	Description   string `json:"description"`
 	PrivateIpCidr string `json:"privateIpCidr"`
+	Type          string `json:"type"`
 }
 
 // Represents name that can be set for subnet
