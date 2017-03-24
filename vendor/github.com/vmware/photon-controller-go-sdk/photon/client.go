@@ -45,6 +45,8 @@ type Client struct {
 	Subnets           *SubnetsAPI
 	System            *SystemAPI
 	Zones             *ZonesAPI
+	Infra             *InfraAPI
+	InfraHosts        *InfraHostsAPI
 }
 
 // Represents Tokens
@@ -173,6 +175,8 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	c.Subnets = &SubnetsAPI{c}
 	c.System = &SystemAPI{c}
 	c.Zones = &ZonesAPI{c}
+	c.Infra = &InfraAPI{c}
+	c.InfraHosts = &InfraHostsAPI{c}
 
 	// Tell the restClient about the Auth API so it can request new
 	// acces tokens when they expire

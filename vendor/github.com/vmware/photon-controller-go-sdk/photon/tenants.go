@@ -273,3 +273,59 @@ func (api *TenantsAPI) modifyQuota(method string, tenantId string, spec *QuotaSp
 	task, err = getTask(getError(res))
 	return
 }
+
+// Gets IAM Policy of a tenant.
+func (api *TenantsAPI) GetIam(tenantId string) (policy *[]PolicyEntry, err error) {
+	res, err := api.client.restClient.Get(
+		api.client.Endpoint+tenantUrl+"/"+tenantId+"/iam",
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	res, err = getError(res)
+	if err != nil {
+		return
+	}
+	var result []PolicyEntry
+	err = json.NewDecoder(res.Body).Decode(&result)
+	return &result, err
+}
+
+// Sets IAM Policy on a tenant.
+func (api *TenantsAPI) SetIam(tenantId string, policy *[]PolicyEntry) (task *Task, err error) {
+	body, err := json.Marshal(policy)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+tenantUrl+"/"+tenantId+"/iam",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
+// Modifies IAM Policy on a tenant.
+func (api *TenantsAPI) ModifyIam(tenantId string, policyDelta *PolicyDelta) (task *Task, err error) {
+	body, err := json.Marshal(policyDelta)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.Patch(
+		api.client.Endpoint+tenantUrl+"/"+tenantId+"/iam",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}

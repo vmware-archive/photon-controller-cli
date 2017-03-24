@@ -199,6 +199,10 @@ func createSubnet(c *cli.Context, w io.Writer) error {
 	subnetSpec.Name = name
 	subnetSpec.Description = description
 	subnetSpec.PrivateIpCidr = privateIpCidr
+
+	// (TODO:ysheng) Hard code "NAT" here since it is the only type we support for now.
+	subnetSpec.Type = "NAT"
+
 	if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
 		fmt.Printf("\nCreating Subnet: '%s', Description: '%s', PrivateIpCidr: '%s'\n\n",
 			subnetSpec.Name, subnetSpec.Description, subnetSpec.PrivateIpCidr)

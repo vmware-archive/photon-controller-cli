@@ -804,6 +804,7 @@ type SubnetCreateSpec struct {
 	Name          string `json:"name"`
 	Description   string `json:"description"`
 	PrivateIpCidr string `json:"privateIpCidr"`
+	Type          string `json:"type"`
 }
 
 // Represents name that can be set for subnet
