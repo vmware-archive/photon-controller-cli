@@ -327,7 +327,7 @@ func configureServerCerts(endpoint string, noChertCheck bool, c *cli.Context) (e
 		return
 	}
 
-	authInfo, err := client.Photonclient.Auth.Get()
+	authInfo, err := client.Photonclient.System.GetAuthInfo()
 	if err != nil {
 		return
 	}

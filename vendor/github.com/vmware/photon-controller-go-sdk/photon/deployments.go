@@ -102,22 +102,6 @@ func (api *DeploymentsAPI) GetAll() (result *Deployments, err error) {
 	return
 }
 
-// Gets a deployment with the specified ID.
-func (api *DeploymentsAPI) Get(id string) (deployment *Deployment, err error) {
-	res, err := api.client.restClient.Get(api.getEntityUrl(id), api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	res, err = getError(res)
-	if err != nil {
-		return
-	}
-	var result Deployment
-	err = json.NewDecoder(res.Body).Decode(&result)
-	return &result, nil
-}
-
 // Gets all hosts with the specified deployment ID.
 func (api *DeploymentsAPI) GetHosts(id string) (result *Hosts, err error) {
 	uri := api.getEntityUrl(id) + "/hosts"
@@ -182,10 +166,6 @@ func (api *DeploymentsAPI) FinalizeDeploymentMigration(sourceAddress *FinalizeMi
 	return
 }
 
-func (api *DeploymentsAPI) SetSecurityGroups(id string, securityGroups *SecurityGroupsSpec) (*Task, error) {
-	return setSecurityGroups(api.client, api.getEntityUrl(id), securityGroups)
-}
-
 // Update image datastores of a deployment.
 func (api *DeploymentsAPI) SetImageDatastores(id string, imageDatastores *ImageDatastores) (task *Task, err error) {
 	body, err := json.Marshal(imageDatastores)
@@ -211,54 +191,6 @@ func (api *DeploymentsAPI) SetImageDatastores(id string, imageDatastores *ImageD
 func (api *DeploymentsAPI) SyncHostsConfig(id string) (task *Task, err error) {
 	res, err := api.client.restClient.Post(
 		api.getEntityUrl(id)+"/sync_hosts_config",
-		"application/json",
-		bytes.NewReader([]byte("")),
-		api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-
-	task, err = getTask(getError(res))
-	return
-}
-
-// Pause system with specified deployment ID.
-func (api *DeploymentsAPI) PauseSystem(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Post(
-		api.getEntityUrl(id)+"/pause_system",
-		"application/json",
-		bytes.NewReader([]byte("")),
-		api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-
-	task, err = getTask(getError(res))
-	return
-}
-
-// Pause background tasks of system with specified deployment ID.
-func (api *DeploymentsAPI) PauseBackgroundTasks(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Post(
-		api.getEntityUrl(id)+"/pause_background_tasks",
-		"application/json",
-		bytes.NewReader([]byte("")),
-		api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-
-	task, err = getTask(getError(res))
-	return
-}
-
-// Pause background tasks of system with specified deployment ID.
-func (api *DeploymentsAPI) ResumeSystem(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Post(
-		api.getEntityUrl(id)+"/resume_system",
 		"application/json",
 		bytes.NewReader([]byte("")),
 		api.client.options.TokenOptions)

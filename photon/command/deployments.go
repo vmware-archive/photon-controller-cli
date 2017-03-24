@@ -40,17 +40,11 @@ func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 // Creates a cli.Command for deployments
 // Subcommands:
 //              list;       Usage: deployment list
-//              show;       Usage: deployment show [<id>]
 //              list-hosts; Usage: deployment list-hosts [<id>]
 //              list-vms;   Usage: deployment list-vms [<id>]
 
 //              update-image-datastores;        Usage: deployment update-image-datastores [<id> <options>]
 //              sync-hosts-config;              Usage: deployment sync-hosts-config [<id>]
-
-//              pause;                          Usage: deployment pause [<id>]
-//              pause-background-tasks;         Usage: deployment pause-background-tasks [<id>]
-//              resume;                         Usage: deployment resume [<id>]
-//              set-security-groups             Usage: deployment set-security-groups [<id>] comma-separated-groups
 
 //              migration prepare;              Usage: deployment prepare migration [<id> <options>]
 //              migration finalize;             Usage: deployment finalize migration [<id> <options>]
@@ -71,19 +65,6 @@ func GetDeploymentsCommand() cli.Command {
 				Description: "[Deprecated] List the current deployment.",
 				Action: func(c *cli.Context) {
 					err := listDeployments(c, os.Stdout)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:      "show",
-				Usage:     "Show deployment info",
-				ArgsUsage: " ",
-				Description: "Show detailed information about the current deployment.\n" +
-					"   Requires system administrator access,",
-				Action: func(c *cli.Context) {
-					err := showDeployment(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -257,65 +238,6 @@ func GetDeploymentsCommand() cli.Command {
 				},
 			},
 			{
-				Name:      "pause",
-				Usage:     "Pause system under the deployment",
-				ArgsUsage: " ",
-				Description: "Pause Photon Controller. All incoming requests that modify the system\n" +
-					"   state (other than resume) will be refused. This implies pause-background-states" +
-					"   Requires system administrator access.",
-				Action: func(c *cli.Context) {
-					err := pauseSystem(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:      "pause-background-tasks",
-				Usage:     "Pause background tasks",
-				ArgsUsage: " ",
-				Description: "Pause all background tasks in Photon Controller, such as image replication." +
-					"   Incoming requests from users will continue to work\n" +
-					"   Requires system administrator access.",
-				Action: func(c *cli.Context) {
-					err := pauseBackgroundTasks(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:      "resume",
-				Usage:     "Resume system under the deployment",
-				ArgsUsage: " ",
-				Description: "Resume Photon Controller after it has been paused.\n" +
-					"   Requires system administrator access.",
-				Action: func(c *cli.Context) {
-					err := resumeSystem(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:      "set-security-groups",
-				Usage:     "Set security groups for a deployment",
-				ArgsUsage: "<comma separate list of security groups>",
-				Description: "Provide the list of Lightwave groups that contain the people who are\n" +
-					"   allowed to be system administrators. Be careful: providing the wrong group could remove\n" +
-					"   your access.\n\n" +
-					"   A security group specifies both the Lightwave domain and Lightwave group.\n" +
-					"   For example, a security group may be photon.vmware.com\\group-1\n\n" +
-					"   Example: photon deployment set-security-groups 'photon.vmware.com\\group-1,photon.vmware.com\\group-2'\n\n" +
-					"   Requires system administrator access.",
-				Action: func(c *cli.Context) {
-					err := setDeploymentSecurityGroups(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
 				Name:  "migration",
 				Usage: "migrates state and hosts between photon controller deployments",
 				Subcommands: []cli.Command{
@@ -403,165 +325,6 @@ func listDeployments(c *cli.Context, w io.Writer) error {
 			return err
 		}
 		fmt.Printf("\nTotal: %d\n", len(deployments.Items))
-	}
-
-	return nil
-}
-
-// Retrieves information about a deployment
-func showDeployment(c *cli.Context, w io.Writer) error {
-	id, err := getDeploymentId(c)
-	if err != nil {
-		return err
-	}
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	deployment, err := client.Photonclient.Deployments.Get(id)
-	if err != nil {
-		return err
-	}
-
-	vms, err := client.Photonclient.Deployments.GetVms(id)
-	if err != nil {
-		return err
-	}
-
-	var data []VM_NetworkIPs
-
-	for _, vm := range vms.Items {
-		networks, err := getVMNetworks(vm.ID, c)
-		if err != nil {
-			return err
-		}
-		ipAddr := "N/A"
-		for _, nt := range networks {
-			network := nt.(map[string]interface{})
-			if len(network) != 0 && network["network"] != nil {
-				if val, ok := network["ipAddress"]; ok && val != nil {
-					ipAddr = val.(string)
-					break
-				}
-			}
-
-		}
-		data = append(data, VM_NetworkIPs{vm, ipAddr})
-	}
-	if utils.NeedsFormatting(c) {
-		utils.FormatObject(deployment, w, c)
-	} else if c.GlobalIsSet("non-interactive") {
-		imageDataStores := getCommaSeparatedStringFromStringArray(deployment.ImageDatastores)
-		securityGroups := getCommaSeparatedStringFromStringArray(deployment.Auth.SecurityGroups)
-
-		fmt.Printf("%s\t%s\t%s\t%t\t%s\t%s\t%t\t%s\n", deployment.ID, deployment.State,
-			imageDataStores, deployment.UseImageDatastoreForVms, deployment.SyslogEndpoint,
-			deployment.NTPEndpoint, deployment.LoadBalancerEnabled,
-			deployment.LoadBalancerAddress)
-
-		fmt.Printf("%s\t%s\t%d\t%s\n", deployment.Auth.Endpoint,
-			deployment.Auth.Tenant, deployment.Auth.Port, securityGroups)
-
-	} else {
-		syslogEndpoint := deployment.SyslogEndpoint
-		if len(deployment.SyslogEndpoint) == 0 {
-			syslogEndpoint = "-"
-		}
-		ntpEndpoint := deployment.NTPEndpoint
-		if len(deployment.NTPEndpoint) == 0 {
-			ntpEndpoint = "-"
-		}
-
-		fmt.Printf("\n")
-		fmt.Printf("Deployment ID: %s\n", deployment.ID)
-		fmt.Printf("  State:                       %s\n", deployment.State)
-		fmt.Printf("\n  Image Datastores:            %s\n", deployment.ImageDatastores)
-		fmt.Printf("  Use image datastore for vms: %t\n", deployment.UseImageDatastoreForVms)
-		fmt.Printf("\n  Syslog Endpoint:             %s\n", syslogEndpoint)
-		fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
-		fmt.Printf("\n  LoadBalancer:\n")
-		fmt.Printf("    Enabled:                   %t\n", deployment.LoadBalancerEnabled)
-		if deployment.LoadBalancerEnabled {
-			fmt.Printf("    Address:                   %s\n", deployment.LoadBalancerAddress)
-		}
-
-		fmt.Printf("\n  Auth:\n")
-		fmt.Printf("    Endpoint:                  %s\n", deployment.Auth.Endpoint)
-		fmt.Printf("    Tenant:                    %s\n", deployment.Auth.Tenant)
-		fmt.Printf("    Port:                      %d\n", deployment.Auth.Port)
-		fmt.Printf("    Securitygroups:            %v\n", deployment.Auth.SecurityGroups)
-	}
-
-	if deployment.Stats != nil {
-		stats := deployment.Stats
-		if c.GlobalIsSet("non-interactive") {
-			fmt.Printf("%t\t%s\t%d\n", stats.Enabled, stats.StoreEndpoint, stats.StorePort)
-		} else if !utils.NeedsFormatting(c) {
-
-			fmt.Printf("\n  Stats:\n")
-			fmt.Printf("    Enabled:               %t\n", stats.Enabled)
-			if stats.Enabled {
-				fmt.Printf("    Store Endpoint:        %s\n", stats.StoreEndpoint)
-				fmt.Printf("    Store Port:            %d\n", stats.StorePort)
-			}
-		}
-	} else {
-		if c.GlobalIsSet("non-interactive") {
-			fmt.Printf("\n")
-		}
-	}
-
-	if deployment.Migration != nil {
-		migration := deployment.Migration
-		if c.GlobalIsSet("non-interactive") {
-			fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
-				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
-		} else if !utils.NeedsFormatting(c) {
-			fmt.Printf("\n  Migration status:\n")
-			fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
-			fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
-				migration.DataMigrationCycleSize)
-			fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
-		}
-	} else {
-		if c.GlobalIsSet("non-interactive") {
-			fmt.Printf("\n")
-		}
-	}
-
-	if deployment.ServiceConfigurations != nil && len(deployment.ServiceConfigurations) != 0 {
-		if c.GlobalIsSet("non-interactive") {
-			serviceConfigurations := []string{}
-			for _, c := range deployment.ServiceConfigurations {
-				serviceConfigurations = append(serviceConfigurations, fmt.Sprintf("%s\t%s", c.Type, c.ImageID))
-			}
-			scriptServiceConfigurations := strings.Join(serviceConfigurations, ",")
-			fmt.Printf("%s\n", scriptServiceConfigurations)
-		} else if !utils.NeedsFormatting(c) {
-			fmt.Println("\n  Service Configurations:")
-			for i, c := range deployment.ServiceConfigurations {
-				fmt.Printf("    ServiceConfiguration %d:\n", i+1)
-				fmt.Println("      Kind:     ", c.Kind)
-				fmt.Println("      Type:     ", c.Type)
-				fmt.Println("      ImageID:  ", c.ImageID)
-			}
-		}
-	} else {
-		if c.GlobalIsSet("non-interactive") {
-			fmt.Printf("\n")
-		} else if !utils.NeedsFormatting(c) {
-			fmt.Println("\n  Service Configurations:")
-			fmt.Printf("    No Service is supported")
-		}
-	}
-
-	if !utils.NeedsFormatting(c) {
-		err = displayDeploymentSummary(data, c.GlobalIsSet("non-interactive"))
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -696,146 +459,6 @@ func syncHostsConfig(c *cli.Context) error {
 	}
 
 	err = deploymentJsonHelper(c, id, client.Photonclient)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Sends a pause system task to client
-func pauseSystem(c *cli.Context) error {
-	id, err := getDeploymentId(c)
-	if err != nil {
-		return err
-	}
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	pauseSystemTask, err := client.Photonclient.Deployments.PauseSystem(id)
-	if err != nil {
-		return err
-	}
-
-	_, err = waitOnTaskOperation(pauseSystemTask.ID, c)
-	if err != nil {
-		return err
-	}
-
-	err = deploymentJsonHelper(c, id, client.Photonclient)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Sends a pause background task to client
-func pauseBackgroundTasks(c *cli.Context) error {
-	id, err := getDeploymentId(c)
-	if err != nil {
-		return err
-	}
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	pauseBackgroundTask, err := client.Photonclient.Deployments.PauseBackgroundTasks(id)
-	if err != nil {
-		return err
-	}
-
-	_, err = waitOnTaskOperation(pauseBackgroundTask.ID, c)
-	if err != nil {
-		return err
-	}
-
-	err = deploymentJsonHelper(c, id, client.Photonclient)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Sends a resume system task to client
-func resumeSystem(c *cli.Context) error {
-	id, err := getDeploymentId(c)
-	if err != nil {
-		return err
-	}
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	resumeSystemTask, err := client.Photonclient.Deployments.ResumeSystem(id)
-	if err != nil {
-		return err
-	}
-
-	_, err = waitOnTaskOperation(resumeSystemTask.ID, c)
-	if err != nil {
-		return err
-	}
-
-	err = deploymentJsonHelper(c, id, client.Photonclient)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Set security groups for a deployment
-func setDeploymentSecurityGroups(c *cli.Context) error {
-	var err error
-	var deploymentId string
-	var groups string
-
-	// We have two cases:
-	// Case 1: arguments are: id groups
-	// Case 2: arguments are: groups
-	if len(c.Args()) == 2 {
-		deploymentId = c.Args()[0]
-		groups = c.Args()[1]
-	} else if len(c.Args()) == 1 {
-		deploymentId, err = getDefaultDeploymentId(c)
-		if err != nil {
-			return err
-		}
-		groups = c.Args()[0]
-	} else {
-		return fmt.Errorf("Usage: deployments set-security-groups [id] groups")
-	}
-
-	items := regexp.MustCompile(`\s*,\s*`).Split(groups, -1)
-	securityGroups := &photon.SecurityGroupsSpec{
-		Items: items,
-	}
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	task, err := client.Photonclient.Deployments.SetSecurityGroups(deploymentId, securityGroups)
-	if err != nil {
-		return err
-	}
-
-	_, err = waitOnTaskOperation(task.ID, c)
-	if err != nil {
-		return err
-	}
-
-	err = deploymentJsonHelper(c, deploymentId, client.Photonclient)
 	if err != nil {
 		return err
 	}
@@ -1069,7 +692,7 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 		return err
 	}
 
-	deployment, err := client.Photonclient.Deployments.Get(id)
+	deployment, err := client.Photonclient.System.GetSystemInfo()
 	if err != nil {
 		return err
 	}
@@ -1116,7 +739,7 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 		return err
 	}
 
-	deployment, err := client.Photonclient.Deployments.Get(id)
+	deployment, err := client.Photonclient.System.GetSystemInfo()
 	if err != nil {
 		return err
 	}
@@ -1154,7 +777,7 @@ func showMigrationStatus(c *cli.Context) error {
 		return err
 	}
 
-	deployment, err := client.Photonclient.Deployments.Get(id)
+	deployment, err := client.Photonclient.System.GetSystemInfo()
 	if err != nil {
 		return err
 	}
@@ -1304,7 +927,7 @@ func removeDuplicates(a []string) []string {
 
 func deploymentJsonHelper(c *cli.Context, id string, client *photon.Client) error {
 	if utils.NeedsFormatting(c) {
-		deployment, err := client.Deployments.Get(id)
+		deployment, err := client.System.GetSystemInfo()
 		if err != nil {
 			return err
 		}

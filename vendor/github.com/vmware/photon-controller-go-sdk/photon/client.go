@@ -25,7 +25,6 @@ type Client struct {
 	restClient        *restClient
 	logger            *log.Logger
 	Endpoint          string
-	Status            *StatusAPI
 	Tenants           *TenantsAPI
 	Tasks             *TasksAPI
 	Projects          *ProjectsAPI
@@ -155,7 +154,6 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	// Ensure a copy of options is made, rather than using a pointer
 	// which may change out from underneath if misused by the caller.
 	c.options = *defaultOptions
-	c.Status = &StatusAPI{c}
 	c.Tenants = &TenantsAPI{c}
 	c.Tasks = &TasksAPI{c}
 	c.Projects = &ProjectsAPI{c}
