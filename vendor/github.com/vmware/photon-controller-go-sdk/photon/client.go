@@ -25,7 +25,6 @@ type Client struct {
 	restClient        *restClient
 	logger            *log.Logger
 	Endpoint          string
-	Status            *StatusAPI
 	Tenants           *TenantsAPI
 	Tasks             *TasksAPI
 	Projects          *ProjectsAPI
@@ -45,6 +44,8 @@ type Client struct {
 	Subnets           *SubnetsAPI
 	System            *SystemAPI
 	Zones             *ZonesAPI
+	Infra             *InfraAPI
+	InfraHosts        *InfraHostsAPI
 }
 
 // Represents Tokens
@@ -153,7 +154,6 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	// Ensure a copy of options is made, rather than using a pointer
 	// which may change out from underneath if misused by the caller.
 	c.options = *defaultOptions
-	c.Status = &StatusAPI{c}
 	c.Tenants = &TenantsAPI{c}
 	c.Tasks = &TasksAPI{c}
 	c.Projects = &ProjectsAPI{c}
@@ -173,6 +173,8 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	c.Subnets = &SubnetsAPI{c}
 	c.System = &SystemAPI{c}
 	c.Zones = &ZonesAPI{c}
+	c.Infra = &InfraAPI{c}
+	c.InfraHosts = &InfraHostsAPI{c}
 
 	// Tell the restClient about the Auth API so it can request new
 	// acces tokens when they expire

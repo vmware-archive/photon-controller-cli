@@ -10,33 +10,13 @@
 package photon
 
 import (
-	"encoding/json"
 	"fmt"
-
 	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 )
 
 // Contains functionality for auth API.
 type AuthAPI struct {
 	client *Client
-}
-
-const authUrl string = rootUrl + "/auth"
-
-// Gets authentication info.
-func (api *AuthAPI) Get() (info *AuthInfo, err error) {
-	res, err := api.client.restClient.Get(api.client.Endpoint+authUrl, nil)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	res, err = getError(res)
-	if err != nil {
-		return
-	}
-	info = &AuthInfo{}
-	err = json.NewDecoder(res.Body).Decode(info)
-	return
 }
 
 // Gets Tokens from username/password.
@@ -86,7 +66,7 @@ func (api *AuthAPI) GetTokensByRefreshToken(refreshtoken string) (tokenOptions *
 }
 
 func (api *AuthAPI) getAuthEndpoint() (endpoint string, err error) {
-	authInfo, err := api.client.Auth.Get()
+	authInfo, err := api.client.System.GetAuthInfo()
 	if err != nil {
 		return
 	}

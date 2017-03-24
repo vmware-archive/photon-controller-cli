@@ -40,17 +40,11 @@ func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 // Creates a cli.Command for deployments
 // Subcommands:
 //              list;       Usage: deployment list
-//              show;       Usage: deployment show [<id>]
 //              list-hosts; Usage: deployment list-hosts [<id>]
 //              list-vms;   Usage: deployment list-vms [<id>]
 
 //              update-image-datastores;        Usage: deployment update-image-datastores [<id> <options>]
 //              sync-hosts-config;              Usage: deployment sync-hosts-config [<id>]
-
-//              pause;                          Usage: deployment pause [<id>]
-//              pause-background-tasks;         Usage: deployment pause-background-tasks [<id>]
-//              resume;                         Usage: deployment resume [<id>]
-//              set-security-groups             Usage: deployment set-security-groups [<id>] comma-separated-groups
 
 //              migration prepare;              Usage: deployment prepare migration [<id> <options>]
 //              migration finalize;             Usage: deployment finalize migration [<id> <options>]
@@ -698,7 +692,7 @@ func deploymentMigrationPrepare(c *cli.Context) error {
 		return err
 	}
 
-	deployment, err := client.Photonclient.Deployments.Get(id)
+	deployment, err := client.Photonclient.System.GetSystemInfo()
 	if err != nil {
 		return err
 	}
@@ -745,7 +739,7 @@ func deploymentMigrationFinalize(c *cli.Context) error {
 		return err
 	}
 
-	deployment, err := client.Photonclient.Deployments.Get(id)
+	deployment, err := client.Photonclient.System.GetSystemInfo()
 	if err != nil {
 		return err
 	}
@@ -783,7 +777,7 @@ func showMigrationStatus(c *cli.Context) error {
 		return err
 	}
 
-	deployment, err := client.Photonclient.Deployments.Get(id)
+	deployment, err := client.Photonclient.System.GetSystemInfo()
 	if err != nil {
 		return err
 	}
@@ -933,7 +927,7 @@ func removeDuplicates(a []string) []string {
 
 func deploymentJsonHelper(c *cli.Context, id string, client *photon.Client) error {
 	if utils.NeedsFormatting(c) {
-		deployment, err := client.Deployments.Get(id)
+		deployment, err := client.System.GetSystemInfo()
 		if err != nil {
 			return err
 		}
