@@ -248,12 +248,6 @@ func createHost(c *cli.Context, w io.Writer) error {
 	availabilityZone := c.String("availability_zone")
 	tags := c.String("tag")
 	metadata := c.String("metadata")
-	deploymentID := c.String("deployment_id")
-
-	deploymentID, err = getDeploymentId(c)
-	if err != nil {
-		return err
-	}
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
@@ -291,7 +285,7 @@ func createHost(c *cli.Context, w io.Writer) error {
 	hostSpec.Username = username
 	hostSpec.Password = password
 	hostSpec.Address = address
-	hostSpec.AvailabilityZone = availabilityZone
+	hostSpec.Zone = availabilityZone
 	hostSpec.Tags = regexp.MustCompile(`\s*,\s*`).Split(tags, -1)
 
 	if len(metadata) == 0 {
@@ -309,7 +303,7 @@ func createHost(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	createTask, err := client.Photonclient.Hosts.Create(&hostSpec, deploymentID)
+	createTask, err := client.Photonclient.InfraHosts.Create(&hostSpec)
 	if err != nil {
 		return err
 	}
@@ -319,7 +313,7 @@ func createHost(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		host, err := client.Photonclient.Hosts.Get(id)
+		host, err := client.Photonclient.InfraHosts.Get(id)
 		if err != nil {
 			return err
 		}
@@ -343,7 +337,7 @@ func deleteHost(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	deleteTask, err := client.Photonclient.Hosts.Delete(id)
+	deleteTask, err := client.Photonclient.InfraHosts.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -370,20 +364,7 @@ func listHosts(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	// Find the current deployment
-	deployments, err := client.Photonclient.Deployments.GetAll()
-	if err != nil {
-		return err
-	}
-	numDeployments := len(deployments.Items)
-	if numDeployments == 0 {
-		return fmt.Errorf("There are no deployments, so the hosts cannot be listed.")
-	} else if numDeployments > 1 {
-		return fmt.Errorf("There are multiple deployments, which normally should not happen. Use deployments list-hosts.")
-	}
-	id := deployments.Items[0].ID
-
-	hosts, err := client.Photonclient.Deployments.GetHosts(id)
+	hosts, err := client.Photonclient.InfraHosts.GetHosts()
 	if err != nil {
 		return err
 	}
@@ -408,7 +389,7 @@ func showHost(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	host, err := client.Photonclient.Hosts.Get(id)
+	host, err := client.Photonclient.InfraHosts.Get(id)
 	if err != nil {
 		return err
 	}
@@ -419,7 +400,7 @@ func showHost(c *cli.Context, w io.Writer) error {
 		metadata := strings.Trim(strings.TrimLeft(fmt.Sprint(host.Metadata), "map"), "[]")
 		scriptMetadata := strings.Replace(metadata, " ", ",", -1)
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", host.ID, host.Username, host.Address,
-			scriptTag, host.State, scriptMetadata, host.AvailabilityZone, host.EsxVersion)
+			scriptTag, host.State, scriptMetadata, host.Zone, host.EsxVersion)
 	} else if utils.NeedsFormatting(c) {
 		host.Password = ""
 		utils.FormatObject(host, w, c)
@@ -430,7 +411,7 @@ func showHost(c *cli.Context, w io.Writer) error {
 		fmt.Println("  Tags:              ", host.Tags)
 		fmt.Println("  State:             ", host.State)
 		fmt.Println("  Metadata:          ", host.Metadata)
-		fmt.Println("  AvailabilityZone:  ", host.AvailabilityZone)
+		fmt.Println("  AvailabilityZone:  ", host.Zone)
 		fmt.Println("  Version:           ", host.EsxVersion)
 	}
 
@@ -462,7 +443,7 @@ func setHostAvailabilityZone(c *cli.Context, w io.Writer) error {
 		return err
 	}
 	if utils.NeedsFormatting(c) {
-		host, err := client.Photonclient.Hosts.Get(id)
+		host, err := client.Photonclient.InfraHosts.Get(id)
 		if err != nil {
 			return err
 		}
@@ -566,7 +547,7 @@ func suspendHost(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	suspendTask, err := client.Photonclient.Hosts.Suspend(id)
+	suspendTask, err := client.Photonclient.InfraHosts.Suspend(id)
 	if err != nil {
 		return err
 	}
@@ -592,7 +573,7 @@ func resumeHost(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	resumeTask, err := client.Photonclient.Hosts.Resume(id)
+	resumeTask, err := client.Photonclient.InfraHosts.Resume(id)
 	if err != nil {
 		return err
 	}
@@ -618,7 +599,7 @@ func enterMaintenanceMode(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	enterTask, err := client.Photonclient.Hosts.EnterMaintenanceMode(id)
+	enterTask, err := client.Photonclient.InfraHosts.EnterMaintenanceMode(id)
 	if err != nil {
 		return err
 	}
@@ -644,7 +625,7 @@ func exitMaintenanceMode(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	exitTask, err := client.Photonclient.Hosts.ExitMaintenanceMode(id)
+	exitTask, err := client.Photonclient.InfraHosts.ExitMaintenanceMode(id)
 	if err != nil {
 		return err
 	}
