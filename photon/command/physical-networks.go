@@ -66,7 +66,7 @@ func createPhysicalNetwork(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	task, err := client.Photonclient.Networks.Create(createSpec)
+	task, err := client.Photonclient.Subnets.Create(createSpec)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func createPhysicalNetwork(c *cli.Context, w io.Writer) error {
 	}
 
 	if utils.NeedsFormatting(c) {
-		network, err := client.Photonclient.Networks.Get(id)
+		network, err := client.Photonclient.Subnets.Get(id)
 		if err != nil {
 			return err
 		}
@@ -98,69 +98,34 @@ func listPhysicalNetworks(c *cli.Context, w io.Writer) error {
 	}
 
 	name := c.String("name")
-	options := &photon.NetworkGetOptions{
+	options := &photon.SubnetGetOptions{
 		Name: name,
 	}
 
-	networks, err := client.Photonclient.Networks.GetAll(options)
+	subnets, err := client.Photonclient.Subnets.GetAll(options)
 	if err != nil {
 		return err
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		for _, network := range networks.Items {
-			fmt.Printf("%s\t%s\t%s\t%s\t%s\n", network.ID, network.Name, network.State, network.PortGroups, network.Description)
+		for _, subnet := range subnets.Items {
+			fmt.Printf("%s\t%s\t%s\t%s\t%s\n", subnet.ID, subnet.Name, subnet.State, subnet.PortGroups.PortGroups, subnet.Description)
 		}
 	} else if utils.NeedsFormatting(c) {
-		utils.FormatObjects(networks.Items, w, c)
+		utils.FormatObjects(subnets.Items, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
 		fmt.Fprintf(w, "ID\tName\tState\tPortGroups\tDescription\tIsDefault\n")
-		for _, network := range networks.Items {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%t\n", network.ID, network.Name, network.State, network.PortGroups,
-				network.Description, network.IsDefault)
+		for _, subnet := range subnets.Items {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%t\n", subnet.ID, subnet.Name, subnet.State, subnet.PortGroups.PortGroups,
+				subnet.Description, subnet.IsDefault)
 		}
 		err = w.Flush()
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Total: %d\n", len(networks.Items))
-	}
-
-	return nil
-}
-
-func showPhysicalNetwork(c *cli.Context, w io.Writer) error {
-	err := checkArgCount(c, 1)
-	if err != nil {
-		return err
-	}
-	id := c.Args().First()
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	network, err := client.Photonclient.Networks.Get(id)
-	if err != nil {
-		return err
-	}
-
-	if c.GlobalIsSet("non-interactive") {
-		portGroups := getCommaSeparatedStringFromStringArray(network.PortGroups)
-		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%t\n", network.ID, network.Name, network.State, portGroups,
-			network.Description, network.IsDefault)
-	} else if utils.NeedsFormatting(c) {
-		utils.FormatObject(network, w, c)
-	} else {
-		fmt.Printf("Network ID: %s\n", network.ID)
-		fmt.Printf("  Name:        %s\n", network.Name)
-		fmt.Printf("  State:       %s\n", network.State)
-		fmt.Printf("  Description: %s\n", network.Description)
-		fmt.Printf("  Port Groups: %s\n", network.PortGroups)
-		fmt.Printf("  Is Default: %t\n", network.IsDefault)
+		fmt.Printf("Total: %d\n", len(subnets.Items))
 	}
 
 	return nil

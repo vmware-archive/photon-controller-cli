@@ -276,10 +276,7 @@ func TestListSubnets(t *testing.T) {
 	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
-	err = set.Parse([]string{"fake-router-id"})
-	if err != nil {
-		t.Error("Not expecting arguments parsing to fail")
-	}
+	set.String("router-id", "fake-router-id", "Router id")
 	cxt := cli.NewContext(nil, set, nil)
 
 	err = listSubnets(cxt, os.Stdout)

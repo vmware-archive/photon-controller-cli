@@ -81,15 +81,19 @@ func GetSubnetsCommand() cli.Command {
 			},
 			{
 				Name:      "list",
-				Usage:     "List all subnets on a given router in a project",
-				ArgsUsage: "<router-id>",
+				Usage:     "List all subnets.",
+				ArgsUsage: "",
 				Description: "List all subnets for the specificed router.\n" +
 					"   Example: \n" +
-					"   photon subnet list 4f9caq234 \\ \n",
+					"   photon subnet list 4f9caq234 \n",
 				Flags: []cli.Flag{
 					cli.StringFlag{
-						Name:  "name",
+						Name:  "name, n",
 						Usage: "subnet name",
+					},
+					cli.StringFlag{
+						Name:  "router-id, r",
+						Usage: "router id",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -253,23 +257,31 @@ func deleteSubnet(c *cli.Context) error {
 
 // Retrieves a list of subnets, returns an error if one occurred
 func listSubnets(c *cli.Context, w io.Writer) error {
-	err := checkArgCount(c, 1)
+	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
 	}
 
-	routerId := c.Args().First()
 	name := c.String("name")
 	options := &photon.SubnetGetOptions{
 		Name: name,
 	}
+
+	routerId := c.String("router-id")
 
 	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	subnetList, err := client.Photonclient.Routers.GetSubnets(routerId, options)
+	var subnetList *photon.Subnets
+
+	if len(routerId) == 0 {
+		subnetList, err = client.Photonclient.Subnets.GetAll(options)
+	} else {
+		subnetList, err = client.Photonclient.Routers.GetSubnets(routerId, options)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -323,8 +335,9 @@ func showSubnet(c *cli.Context, w io.Writer) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\t%s\t%s\t%t\n",
-			subnet.ID, subnet.Name, subnet.Description, subnet.PrivateIpCidr, subnet.IsDefault)
+		portGroups := getCommaSeparatedStringFromStringArray(subnet.PortGroups.PortGroups)
+		fmt.Printf("%s\t%s\t%s\t%s\t%t\t%s\n",
+			subnet.ID, subnet.Name, subnet.Description, subnet.PrivateIpCidr, subnet.IsDefault, portGroups)
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(subnet, w, c)
 	} else {
@@ -333,6 +346,7 @@ func showSubnet(c *cli.Context, w io.Writer) error {
 		fmt.Println("  description:          ", subnet.Description)
 		fmt.Println("  privateIpCidr:        ", subnet.PrivateIpCidr)
 		fmt.Println("  isDefault:            ", subnet.IsDefault)
+		fmt.Println("  Port Groups:          ", subnet.PortGroups.PortGroups)
 	}
 
 	return nil
