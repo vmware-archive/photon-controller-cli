@@ -46,10 +46,6 @@ func (ip ipsSorter) Less(i, j int) bool { return ip[i].ips < ip[j].ips }
 //              update-image-datastores;        Usage: deployment update-image-datastores [<options>]
 //              sync-hosts-config;              Usage: deployment sync-hosts-config
 
-//              migration prepare;              Usage: deployment prepare migration [<id> <options>]
-//              migration finalize;             Usage: deployment finalize migration [<id> <options>]
-//              migration status;               Usage: deployment finalize migration [<id>]
-
 //              enable-service-type, enable-cluster-type;            Usage: deployment enable-service-type [<id> <options>]
 //              disable-service-type, disable-cluster-type;           Usage: deployment disable-service-type [<id> <options>]
 
@@ -235,54 +231,6 @@ func GetDeploymentsCommand() cli.Command {
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
-				},
-			},
-			{
-				Name:  "migration",
-				Usage: "migrates state and hosts between photon controller deployments",
-				Subcommands: []cli.Command{
-					{
-						Name:  "prepare",
-						Usage: "initializes the migration",
-						Flags: []cli.Flag{
-							cli.StringFlag{
-								Name:  "endpoint, e",
-								Usage: "API endpoint of the old management plane",
-							},
-						},
-						Action: func(c *cli.Context) {
-							err := deploymentMigrationPrepare(c)
-							if err != nil {
-								log.Fatal("Error: ", err)
-							}
-						},
-					},
-					{
-						Name:  "finalize",
-						Usage: "finalizes the migration",
-						Flags: []cli.Flag{
-							cli.StringFlag{
-								Name:  "endpoint, e",
-								Usage: "API endpoint of the old management plane",
-							},
-						},
-						Action: func(c *cli.Context) {
-							err := deploymentMigrationFinalize(c)
-							if err != nil {
-								log.Fatal("Error: ", err)
-							}
-						},
-					},
-					{
-						Name:  "status",
-						Usage: "shows the status of the current migration",
-						Action: func(c *cli.Context) {
-							err := showMigrationStatus(c)
-							if err != nil {
-								log.Fatal("Error: ", err)
-							}
-						},
-					},
 				},
 			},
 		},
@@ -669,138 +617,6 @@ func disableServiceType(c *cli.Context) error {
 	} else {
 		fmt.Println("Cancelled")
 	}
-	return nil
-}
-
-// Starts the recurring copy state of source system into destination
-func deploymentMigrationPrepare(c *cli.Context) error {
-	id, err := getDeploymentId(c)
-	if err != nil {
-		return err
-	}
-
-	sourceAddress := c.String("endpoint")
-	if len(sourceAddress) == 0 {
-		return fmt.Errorf("Please provide the API endpoint of the old control plane")
-	}
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	deployment, err := client.Photonclient.System.GetSystemInfo()
-	if err != nil {
-		return err
-	}
-	initializeMigrationSpec := photon.InitializeMigrationOperation{}
-	initializeMigrationSpec.SourceNodeGroupReference = sourceAddress
-
-	// Initialize deployment migration
-	initializeMigrate, err := client.Photonclient.Deployments.InitializeDeploymentMigration(&initializeMigrationSpec, deployment.ID)
-	if err != nil {
-		return err
-	}
-
-	_, err = waitOnTaskOperation(initializeMigrate.ID, c)
-	if err != nil {
-		return err
-	}
-
-	if !utils.NeedsFormatting(c) {
-		fmt.Printf("Deployment '%s' migration started [source management endpoint: '%s'].\n", deployment.ID, sourceAddress)
-	}
-
-	err = deploymentJsonHelper(c, id, client.Photonclient)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Finishes the copy state of source system into destination and makes this system the active one
-func deploymentMigrationFinalize(c *cli.Context) error {
-	id, err := getDeploymentId(c)
-	if err != nil {
-		return err
-	}
-
-	sourceAddress := c.String("endpoint")
-	if len(sourceAddress) == 0 {
-		return fmt.Errorf("Please provide the API endpoint of the old control plane")
-	}
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	deployment, err := client.Photonclient.System.GetSystemInfo()
-	if err != nil {
-		return err
-	}
-	finalizeMigrationSpec := photon.FinalizeMigrationOperation{}
-	finalizeMigrationSpec.SourceNodeGroupReference = sourceAddress
-
-	// Finalize deployment migration
-	finalizeMigrate, err := client.Photonclient.Deployments.FinalizeDeploymentMigration(&finalizeMigrationSpec, deployment.ID)
-	if err != nil {
-		return err
-	}
-
-	_, err = waitOnTaskOperation(finalizeMigrate.ID, c)
-	if err != nil {
-		return err
-	}
-
-	err = deploymentJsonHelper(c, id, client.Photonclient)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// displays the migration status
-func showMigrationStatus(c *cli.Context) error {
-	id, err := getDeploymentId(c)
-	if err != nil {
-		return err
-	}
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	deployment, err := client.Photonclient.System.GetSystemInfo()
-	if err != nil {
-		return err
-	}
-
-	if deployment.Migration == nil {
-		fmt.Print("No migration information available")
-		return nil
-	}
-
-	migration := deployment.Migration
-	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
-			migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
-	} else if !utils.NeedsFormatting(c) {
-		fmt.Printf("  Migration status:\n")
-		fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
-		fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
-			migration.DataMigrationCycleSize)
-		fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
-	} else {
-		err = deploymentJsonHelper(c, id, client.Photonclient)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
