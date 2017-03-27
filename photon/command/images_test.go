@@ -51,10 +51,11 @@ func TestCreateDeleteImage(t *testing.T) {
 		t.Error("Not expecting error serializaing expected createTask")
 	}
 
+	const projectId = "project1"
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+rootUrl+"/images",
+		server.URL+rootUrl+"/projects/"+projectId+"/images",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -69,6 +70,7 @@ func TestCreateDeleteImage(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	set.String("name", "n", "testname")
 	set.String("image_replication", "EAGER", "image replication")
+	set.String("project", projectId, "project id")
 	err = set.Parse([]string{"../../testdata/tty_tiny.ova"})
 	if err != nil {
 		t.Error("Not expecting arguments parsing to fail")

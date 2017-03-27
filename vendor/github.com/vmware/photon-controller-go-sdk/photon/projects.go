@@ -12,6 +12,7 @@ package photon
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 )
 
@@ -154,6 +155,18 @@ func (api *ProjectsAPI) CreateService(projectID string, spec *ServiceCreateSpec)
 	defer res.Body.Close()
 	task, err = getTask(getError(res))
 	return
+}
+
+// Creates an image on the specified project.
+func (api *ProjectsAPI) CreateImage(projectID string, reader io.ReadSeeker, name string, options *ImageCreateOptions) (task *Task, err error) {
+	params := imageCreateOptionsToMap(options)
+	res, err := api.client.restClient.MultipartUpload(api.client.Endpoint+projectUrl+projectID+"/images", reader, name, params, api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	result, err := getTask(getError(res))
+	return result, err
 }
 
 // Gets services for project with the specified ID
