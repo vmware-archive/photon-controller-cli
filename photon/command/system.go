@@ -72,42 +72,6 @@ func GetSystemCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "migration",
-				Usage: "migrates state and hosts between photon controller deployments",
-				Subcommands: []cli.Command{
-					{
-						Name:  "prepare",
-						Usage: "initializes the migration",
-						Action: func(c *cli.Context) {
-							err := deploymentMigrationPrepareDeprecated(c)
-							if err != nil {
-								log.Fatal("Error: ", err)
-							}
-						},
-					},
-					{
-						Name:  "finalize",
-						Usage: "finalizes the migration",
-						Action: func(c *cli.Context) {
-							err := deploymentMigrationFinalizeDeprecated(c)
-							if err != nil {
-								log.Fatal("Error: ", err)
-							}
-						},
-					},
-					{
-						Name:  "status",
-						Usage: "shows the status of the current migration",
-						Action: func(c *cli.Context) {
-							err := showMigrationStatusDeprecated(c)
-							if err != nil {
-								log.Fatal("Error: ", err)
-							}
-						},
-					},
-				},
-			},
-			{
 				Name:      "info",
 				Usage:     "Show system info",
 				ArgsUsage: " ",
@@ -314,24 +278,6 @@ func showSystemInfo(c *cli.Context, w io.Writer) error {
 		}
 	}
 
-	if deployment.Migration != nil {
-		migration := deployment.Migration
-		if c.GlobalIsSet("non-interactive") {
-			fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
-				migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
-		} else if !utils.NeedsFormatting(c) {
-			fmt.Printf("\n  Migration status:\n")
-			fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
-			fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
-				migration.DataMigrationCycleSize)
-			fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
-		}
-	} else {
-		if c.GlobalIsSet("non-interactive") {
-			fmt.Printf("\n")
-		}
-	}
-
 	if deployment.ServiceConfigurations != nil && len(deployment.ServiceConfigurations) != 0 {
 		if c.GlobalIsSet("non-interactive") {
 			serviceConfigurations := []string{}
@@ -529,112 +475,6 @@ func addHosts(c *cli.Context) error {
 		return err
 	}
 
-	return nil
-}
-
-// Starts the recurring copy state of source system into destination
-func deploymentMigrationPrepareDeprecated(c *cli.Context) error {
-	err := checkArgCount(c, 1)
-	if err != nil {
-		return err
-	}
-	sourceAddress := c.Args().First()
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-	deployments, err := client.Photonclient.Deployments.GetAll()
-	if err != nil {
-		return err
-	}
-	initializeMigrationSpec := photon.InitializeMigrationOperation{}
-	initializeMigrationSpec.SourceNodeGroupReference = sourceAddress
-
-	// Initialize deployment migration
-	for _, deployment := range deployments.Items {
-		initializeMigrate, err := client.Photonclient.Deployments.InitializeDeploymentMigration(&initializeMigrationSpec, deployment.ID)
-		if err != nil {
-			return err
-		}
-		_, err = pollTask(initializeMigrate.ID)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Deployment '%s' migration started [source management endpoint: '%s'].\n", deployment.ID, sourceAddress)
-
-		return nil
-	}
-
-	return nil
-}
-
-// Finishes the copy state of source system into destination and makes this system the active one
-func deploymentMigrationFinalizeDeprecated(c *cli.Context) error {
-	fmt.Printf("'%d'", len(c.Args()))
-	err := checkArgCount(c, 1)
-	if err != nil {
-		return err
-	}
-	sourceAddress := c.Args().First()
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-	deployments, err := client.Photonclient.Deployments.GetAll()
-	if err != nil {
-		return err
-	}
-	finalizeMigrationSpec := photon.FinalizeMigrationOperation{}
-	finalizeMigrationSpec.SourceNodeGroupReference = sourceAddress
-
-	// Finalize deployment migration
-	for _, deployment := range deployments.Items {
-		finalizeMigrate, err := client.Photonclient.Deployments.FinalizeDeploymentMigration(&finalizeMigrationSpec, deployment.ID)
-		if err != nil {
-			return err
-		}
-		_, err = pollTask(finalizeMigrate.ID)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-
-	return nil
-}
-
-// displays the migration status
-func showMigrationStatusDeprecated(c *cli.Context) error {
-	err := checkArgCount(c, 0)
-	if err != nil {
-		return err
-	}
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-	deployments, err := client.Photonclient.Deployments.GetAll()
-	if err != nil {
-		return err
-	}
-
-	for _, deployment := range deployments.Items {
-		if deployment.Migration != nil {
-			migration := deployment.Migration
-			if c.GlobalIsSet("non-interactive") {
-				fmt.Printf("%d\t%d\t%d\t%d\t%d\n", migration.CompletedDataMigrationCycles, migration.DataMigrationCycleProgress,
-					migration.DataMigrationCycleSize, migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
-			} else {
-				fmt.Printf("  Migration status:\n")
-				fmt.Printf("    Completed data migration cycles:          %d\n", migration.CompletedDataMigrationCycles)
-				fmt.Printf("    Current data migration cycles progress:   %d / %d\n", migration.DataMigrationCycleProgress,
-					migration.DataMigrationCycleSize)
-				fmt.Printf("    VIB upload progress:                      %d / %d\n", migration.VibsUploaded, migration.VibsUploading+migration.VibsUploaded)
-			}
-		}
-		return nil
-	}
 	return nil
 }
 

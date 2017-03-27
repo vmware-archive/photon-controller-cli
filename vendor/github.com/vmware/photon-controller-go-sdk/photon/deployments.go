@@ -51,41 +51,6 @@ func (api *DeploymentsAPI) Delete(id string) (task *Task, err error) {
 	return
 }
 
-// Deploys a deployment with specified ID.
-func (api *DeploymentsAPI) Deploy(id string, config *DeploymentDeployOperation) (task *Task, err error) {
-	body, err := json.Marshal(config)
-	if err != nil {
-		return
-	}
-
-	res, err := api.client.restClient.Post(
-		api.getEntityUrl(id)+"/deploy",
-		"application/json",
-		bytes.NewReader(body),
-		api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	task, err = getTask(getError(res))
-	return
-}
-
-// Destroys a deployment with specified ID.
-func (api *DeploymentsAPI) Destroy(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Post(
-		api.getEntityUrl(id)+"/destroy",
-		"application/json",
-		bytes.NewReader([]byte("")),
-		api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	task, err = getTask(getError(res))
-	return
-}
-
 // Returns all deployments.
 func (api *DeploymentsAPI) GetAll() (result *Deployments, err error) {
 	res, err := api.client.restClient.Get(api.client.Endpoint+deploymentUrl, api.client.options.TokenOptions)
@@ -125,44 +90,6 @@ func (api *DeploymentsAPI) GetVms(id string) (result *VMs, err error) {
 
 	result = &VMs{}
 	err = json.Unmarshal(res, result)
-	return
-}
-
-// Initialize deployment migration from source to destination
-func (api *DeploymentsAPI) InitializeDeploymentMigration(sourceAddress *InitializeMigrationOperation, id string) (task *Task, err error) {
-	body, err := json.Marshal(sourceAddress)
-	if err != nil {
-		return
-	}
-	res, err := api.client.restClient.Post(
-		api.getEntityUrl(id)+"/initialize_migration",
-		"application/json",
-		bytes.NewReader(body),
-		api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	task, err = getTask(getError(res))
-	return
-}
-
-// Finalize deployment migration from source to destination
-func (api *DeploymentsAPI) FinalizeDeploymentMigration(sourceAddress *FinalizeMigrationOperation, id string) (task *Task, err error) {
-	body, err := json.Marshal(sourceAddress)
-	if err != nil {
-		return
-	}
-	res, err := api.client.restClient.Post(
-		api.getEntityUrl(id)+"/finalize_migration",
-		"application/json",
-		bytes.NewReader(body),
-		api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	task, err = getTask(getError(res))
 	return
 }
 
