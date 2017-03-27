@@ -46,7 +46,9 @@ func GetImagesCommand() cli.Command {
 				ArgsUsage: "<image-filename>",
 				Description: "Upload a new image to Photon Controller.\n" +
 					"   If the image replication is EAGER, it will be distributed to all allowed datastores on all ESXi hosts\n" +
-					"   If the image replication is ON_DEMAND, it will be distributed to all image datastores",
+					"   If the image replication is ON_DEMAND, it will be distributed to all image datastores\n" +
+					"   An image can have project scope or infrastructure scope. To create infrastructure images, enter empty\n" +
+					"   value for project_id. Only system administrators can create infrastructure images.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -55,6 +57,10 @@ func GetImagesCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "image_replication, i",
 						Usage: "Image replication type (EAGER or ON_DEMAND)",
+					},
+					cli.StringFlag{
+						Name:  "project, p",
+						Usage: "Project ID, or enter empty value for infrastructure images.",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -132,7 +138,7 @@ func GetImagesCommand() cli.Command {
 						Usage:     "Show the IAM policy associated with an image",
 						ArgsUsage: "<image-id>",
 						Action: func(c *cli.Context) {
-							err := getIam(c)
+							err := getImageIam(c)
 							if err != nil {
 								log.Fatal("Error: ", err)
 							}
@@ -157,7 +163,7 @@ func GetImagesCommand() cli.Command {
 							},
 						},
 						Action: func(c *cli.Context) {
-							err := modifyIamPolicy(c, os.Stdout, "ADD")
+							err := modifyImageIamPolicy(c, os.Stdout, "ADD")
 							if err != nil {
 								log.Fatal("Error: ", err)
 							}
@@ -182,7 +188,7 @@ func GetImagesCommand() cli.Command {
 							},
 						},
 						Action: func(c *cli.Context) {
-							err := modifyIamPolicy(c, os.Stdout, "REMOVE")
+							err := modifyImageIamPolicy(c, os.Stdout, "REMOVE")
 							if err != nil {
 								log.Fatal("Error: ", err)
 							}
@@ -203,6 +209,7 @@ func createImage(c *cli.Context, w io.Writer) error {
 	filePath := c.Args().First()
 	name := c.String("name")
 	replicationType := c.String("image_replication")
+	projectID := c.String("project")
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
@@ -245,6 +252,11 @@ func createImage(c *cli.Context, w io.Writer) error {
 		if len(replicationType) == 0 {
 			replicationType = defaultReplication
 		}
+
+		projectID, err = askForInput("Project ID (ENTER to create infrastructure image): ", projectID)
+		if err != nil {
+			return err
+		}
 	}
 
 	file, err := os.Open(filePath)
@@ -264,7 +276,12 @@ func createImage(c *cli.Context, w io.Writer) error {
 		options = nil
 	}
 
-	uploadTask, err := client.Photonclient.Images.Create(file, name, options)
+	var uploadTask *photon.Task
+	if len(projectID) == 0 {
+		uploadTask, err = client.Photonclient.Images.Create(file, name, options)
+	} else {
+		uploadTask, err = client.Photonclient.Projects.CreateImage(projectID, file, name, options)
+	}
 	if err != nil {
 		return err
 	}
@@ -452,7 +469,7 @@ func getImageTasks(c *cli.Context) error {
 }
 
 // Retrieves IAM Policy for specified image
-func getIam(c *cli.Context) error {
+func getImageIam(c *cli.Context) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
@@ -478,7 +495,7 @@ func getIam(c *cli.Context) error {
 }
 
 // Grant or remove a role from a principal on the specified image
-func modifyIamPolicy(c *cli.Context, w io.Writer, action string) error {
+func modifyImageIamPolicy(c *cli.Context, w io.Writer, action string) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
