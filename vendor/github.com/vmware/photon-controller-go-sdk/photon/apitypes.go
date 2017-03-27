@@ -658,19 +658,29 @@ type ServiceCreateSpec struct {
 	ExtendedProperties map[string]string `json:"extendedProperties"`
 }
 
-// Represents a service
+// Represents a service.
 type Service struct {
-	Kind               string            `json:"kind"`
-	Name               string            `json:"name"`
-	State              string            `json:"state"`
-	ID                 string            `json:"id"`
-	Type               string            `json:"type"`
-	ImageID            string            `json:"imageId"`
-	ProjectID          string            `json:"projectID,omitempty"`
-	WorkerCount        int               `json:"workerCount"`
-	SelfLink           string            `json:"selfLink,omitempty"`
-	ErrorReason        string            `json:"errorReason,omitempty"`
-	ExtendedProperties map[string]string `json:"extendedProperties"`
+	Kind               string                `json:"kind"`
+	Name               string                `json:"name"`
+	State              string                `json:"state"`
+	ID                 string                `json:"id"`
+	Type               string                `json:"type"`
+	ImageID            string                `json:"imageId"`
+	UpgradeStatus      *ServiceUpgradeStatus `json:"upgradeStatus,omitempty"`
+	ProjectID          string                `json:"projectID,omitempty"`
+	WorkerCount        int                   `json:"workerCount"`
+	SelfLink           string                `json:"selfLink,omitempty"`
+	ErrorReason        string                `json:"errorReason,omitempty"`
+	ExtendedProperties map[string]string     `json:"extendedProperties"`
+}
+
+// Represents the status of a service during upgrade.
+type ServiceUpgradeStatus struct {
+	NewImageID           string `json:"newImageId"`
+	UpgradeMessage       string `json:"upgradeMessage,omitempty"`
+	TotalNodes           int    `json:"totalNodes,omitempty"`
+	NumNodesUpgraded     int    `json:"numNodesUpgraded"`
+	UpgradeResultMessage string `json:"upgradeResultMessage,omitempty"`
 }
 
 // Represents multiple services returned by the API

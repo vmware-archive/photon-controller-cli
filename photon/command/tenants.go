@@ -163,6 +163,73 @@ func GetTenantsCommand() cli.Command {
 					}
 				},
 			},
+			{
+				Name:  "iam",
+				Usage: "options for identity and access management",
+				Subcommands: []cli.Command{
+					{
+						Name:      "show",
+						Usage:     "Show the IAM policy associated with a tenant",
+						ArgsUsage: "<tenant-id>",
+						Action: func(c *cli.Context) {
+							err := getTenantIam(c)
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name:      "add",
+						Usage:     "Grant a role to a user or group on a tenant",
+						ArgsUsage: "<tenant-id>",
+						Description: "Grant a role to a user or group on a tenant. \n\n" +
+							"   Example: \n" +
+							"   photon tenant iam add <tenant-id> -p user1@photon.local -r contributor\n" +
+							"   photon tenant iam add <tenant-id> -p photon.local\\group1 -r viewer",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "principal, p",
+								Usage: "User or group",
+							},
+							cli.StringFlag{
+								Name:  "role, r",
+								Usage: "'owner', 'contributor' and 'viewer'",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := modifyTenantIamPolicy(c, os.Stdout, "ADD")
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name:      "remove",
+						Usage:     "Remove a role from a user or group on a tenant",
+						ArgsUsage: "<tenant-id>",
+						Description: "Remove a role from a user or group on a tenant. \n\n" +
+							"   Example: \n" +
+							"   photon tenant iam remove <tenant-id> -p user1@photon.local -r contributor \n" +
+							"   photon tenant iam remove <tenant-id> -p photon.local\\group1 -r viewer",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "principal, p",
+								Usage: "User or group",
+							},
+							cli.StringFlag{
+								Name:  "role, r",
+								Usage: "'owner', 'contributor' and 'viewer'. Or use '*' to remove all existing roles.",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := modifyTenantIamPolicy(c, os.Stdout, "REMOVE")
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+				},
+			},
 			// Load Tenant Quota related logic from separated file.
 			getTenantQuotaCommand(),
 		},
@@ -469,6 +536,95 @@ func setSecurityGroups(c *cli.Context) error {
 	_, err = waitOnTaskOperation(task.ID, c)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// Retrieves IAM Policy for specified tenant
+func getTenantIam(c *cli.Context) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	policy, err := client.Photonclient.Tenants.GetIam(id)
+	if err != nil {
+		return err
+	}
+
+	err = printIamPolicy(*policy, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Grant or remove a role from a principal on the specified tenant
+func modifyTenantIamPolicy(c *cli.Context, w io.Writer, action string) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	tenantID := c.Args()[0]
+	principal := c.String("principal")
+	role := c.String("role")
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		principal, err = askForInput("Principal: ", principal)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(principal) == 0 {
+		return fmt.Errorf("Please provide principal")
+	}
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		role, err = askForInput("Role: ", role)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(role) == 0 {
+		return fmt.Errorf("Please provide role")
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	var delta photon.PolicyDelta
+	delta = photon.PolicyDelta{Principal: principal, Action: action, Role: role}
+	task, err := client.Photonclient.Tenants.ModifyIam(tenantID, &delta)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		policy, err := client.Photonclient.Tenants.GetIam(tenantID)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(policy, w, c)
 	}
 
 	return nil
