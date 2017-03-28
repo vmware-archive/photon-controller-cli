@@ -10,6 +10,7 @@
 package command
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"net/http"
@@ -276,10 +277,7 @@ func TestListSubnets(t *testing.T) {
 	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
-	err = set.Parse([]string{"fake-router-id"})
-	if err != nil {
-		t.Error("Not expecting arguments parsing to fail")
-	}
+	set.String("router-id", "fake-router-id", "Router id")
 	cxt := cli.NewContext(nil, set, nil)
 
 	err = listSubnets(cxt, os.Stdout)
@@ -330,5 +328,73 @@ func TestSetDefaultSubnet(t *testing.T) {
 	err = setDefaultSubnet(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting set default subnet to fail", err)
+	}
+}
+
+func TestListPortGroups(t *testing.T) {
+	server := mocks.NewTestServer()
+	defer server.Close()
+
+	expectedList := MockSubnetsPage{
+		Items: []photon.Subnet{
+			{
+				ID:         "subnet_id",
+				Name:       "subnet_name",
+				PortGroups: photon.PortGroups{PortGroups: []string{"port", "group"}},
+				IsDefault:  false,
+			},
+		},
+		NextPageLink:     "/fake-next-page-link",
+		PreviousPageLink: "",
+	}
+
+	response, err := json.Marshal(expectedList)
+	if err != nil {
+		t.Error("Not expecting error serializing expected response")
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/subnets",
+		mocks.CreateResponder(200, string(response[:])))
+
+	expectedList = MockSubnetsPage{
+		Items:            []photon.Subnet{},
+		NextPageLink:     "",
+		PreviousPageLink: "",
+	}
+
+	response, err = json.Marshal(expectedList)
+	if err != nil {
+		t.Error("Not expecting error serializing expected response")
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"/fake-next-page-link",
+		mocks.CreateResponder(200, string(response[:])))
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalFlags := flag.NewFlagSet("global-flags", flag.ContinueOnError)
+	globalFlags.String("output", "json", "output")
+	err = globalFlags.Parse([]string{"--output=json"})
+	if err != nil {
+		t.Error(err)
+	}
+	globalCxt := cli.NewContext(nil, globalFlags, nil)
+	commandFlags := flag.NewFlagSet("command-flags", flag.ContinueOnError)
+	err = commandFlags.Parse([]string{})
+	if err != nil {
+		t.Error(err)
+	}
+	cxt := cli.NewContext(nil, commandFlags, globalCxt)
+	var output bytes.Buffer
+
+	err = listSubnets(cxt, &output)
+	if err != nil {
+		t.Error("Error listing subnets: " + err.Error())
 	}
 }

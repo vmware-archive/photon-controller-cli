@@ -19,11 +19,6 @@ type RoutersAPI struct {
 	client *Client
 }
 
-// Options for GetSubnets API.
-type SubnetGetOptions struct {
-	Name string `urlParam:"name"`
-}
-
 var routerUrl string = rootUrl + "/routers/"
 
 // Gets a router with the specified ID.
