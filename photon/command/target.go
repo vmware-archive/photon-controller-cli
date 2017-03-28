@@ -28,6 +28,7 @@ import (
 	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"golang.org/x/crypto/ssh/terminal"
+	"runtime"
 )
 
 // Create a cli.command object for command "target"
@@ -84,11 +85,13 @@ func GetTargetCommand() cli.Command {
 				},
 			},
 			{
-				Name:      "login",
-				Usage:     "Allow user to login with a access token, refresh token or username/password",
+				Name: "login",
+				Usage: "Allow user to login with a access token, refresh token, username/password" +
+					" or using Windows logged in credentials on Windows OS",
 				ArgsUsage: " ",
 				Description: "The typical usage is to provide a username and password.\n" +
-					"   If you do not provide any arguments, you will be prompted for the username and password.\n" +
+					"   On Windows if you do not provide arguments, you will be logged in with your Windows logged in credentials.\n" +
+					"   In other cases, if you do not provide any arguments, you will be prompted for the username and password.\n" +
 					"   Logging in will result in you receiving a token, which is stored in the CLI configuration file\n" +
 					"   in ~/.photon-cli/.photon-config. You can see it with the 'photon auth show-login-token'.",
 				Flags: []cli.Flag{
@@ -220,6 +223,10 @@ func login(c *cli.Context) error {
 	password := c.String("password")
 	token := c.String("access_token")
 
+	if runtime.GOOS == "windows" && len(token) == 0 && len(username) == 0 && len(password) == 0 {
+		return loginUsingWindowsCredentials(c)
+	}
+
 	if !c.GlobalIsSet("non-interactive") && len(token) == 0 {
 		username, err = askForInput("User name (username@tenant): ", username)
 		if err != nil {
@@ -272,6 +279,33 @@ func login(c *cli.Context) error {
 	}
 
 	fmt.Println("Login successful")
+
+	return nil
+}
+
+func loginUsingWindowsCredentials(c *cli.Context) error {
+	config, err := cf.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	options, err := client.Photonclient.Auth.GetTokensFromWindowsLogInContext()
+	if err != nil {
+		return err
+	}
+
+	config.Token = options.AccessToken
+	config.RefreshToken = options.RefreshToken
+
+	err = cf.SaveConfig(config)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
