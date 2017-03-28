@@ -28,6 +28,7 @@ import (
 	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"golang.org/x/crypto/ssh/terminal"
+	"runtime"
 )
 
 // Create a cli.command object for command "target"
@@ -84,11 +85,13 @@ func GetTargetCommand() cli.Command {
 				},
 			},
 			{
-				Name:      "login",
-				Usage:     "Allow user to login with a access token, refresh token or username/password",
+				Name: "login",
+				Usage: "Allow user to login with a access token, refresh token, username/password" +
+					" or using Windows logged in credentials on Windows OS",
 				ArgsUsage: " ",
 				Description: "The typical usage is to provide a username and password.\n" +
 					"   If you do not provide any arguments, you will be prompted for the username and password.\n" +
+					"   On Windows you can login using logged in Windows credentials.\n" +
 					"   Logging in will result in you receiving a token, which is stored in the CLI configuration file\n" +
 					"   in ~/.photon-cli/.photon-config. You can see it with the 'photon auth show-login-token'.",
 				Flags: []cli.Flag{
@@ -103,6 +106,11 @@ func GetTargetCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "password, p",
 						Usage: "password, if this is provided a username needs to be provided as well",
+					},
+					cli.BoolFlag{
+						Name: "windows, w",
+						Usage: "flag to use logged in Windows credentials to authenticate. Can be " +
+							"used only on Windows OS",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -219,6 +227,18 @@ func login(c *cli.Context) error {
 	username := c.String("username")
 	password := c.String("password")
 	token := c.String("access_token")
+	windows := c.Bool("windows")
+
+	if windows {
+		if runtime.GOOS != "windows" {
+			fmt.Println("--windows flag is only available on Windows OS")
+		} else if len(token) != 0 || len(username) != 0 || len(password) != 0 {
+			fmt.Println("You cannot use --windows flag with other options")
+		} else {
+			return loginUsingWindowsCredentials(c)
+		}
+		return nil
+	}
 
 	if !c.GlobalIsSet("non-interactive") && len(token) == 0 {
 		username, err = askForInput("User name (username@tenant): ", username)
@@ -273,6 +293,34 @@ func login(c *cli.Context) error {
 
 	fmt.Println("Login successful")
 
+	return nil
+}
+
+func loginUsingWindowsCredentials(c *cli.Context) error {
+	config, err := cf.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	options, err := client.Photonclient.Auth.GetTokensFromWindowsLogInContext()
+	if err != nil {
+		return err
+	}
+
+	config.Token = options.AccessToken
+	config.RefreshToken = options.RefreshToken
+
+	err = cf.SaveConfig(config)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Login successful")
 	return nil
 }
 
