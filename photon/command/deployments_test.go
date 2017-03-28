@@ -196,7 +196,7 @@ func TestUpdateImageDatastores(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+rootUrl+"/infrastructure"+"/image-datastores",
+		server.URL+rootUrl+"/infrastructure/image-datastores",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",

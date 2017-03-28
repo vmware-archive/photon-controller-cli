@@ -488,7 +488,7 @@ func setHostZone(c *cli.Context, w io.Writer) error {
 		return err
 	}
 	if utils.NeedsFormatting(c) {
-		host, err := client.Photonclient.Hosts.Get(id)
+		host, err := client.Photonclient.InfraHosts.Get(id)
 		if err != nil {
 			return err
 		}
