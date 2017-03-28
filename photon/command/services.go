@@ -354,6 +354,10 @@ func createService(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
+	sdn, err := isSoftwareDefinedNetwork(c)
+	if err != nil {
+		return err
+	}
 
 	tenantName := c.String("tenant")
 	projectName := c.String("project")
@@ -438,17 +442,19 @@ func createService(c *cli.Context, w io.Writer) error {
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
-		dns, err = askForInput("Service DNS server: ", dns)
-		if err != nil {
-			return err
-		}
-		gateway, err = askForInput("Service network gateway: ", gateway)
-		if err != nil {
-			return err
-		}
-		netmask, err = askForInput("Service network netmask: ", netmask)
-		if err != nil {
-			return err
+		if !sdn {
+			dns, err = askForInput("Service DNS server: ", dns)
+			if err != nil {
+				return err
+			}
+			gateway, err = askForInput("Service network gateway: ", gateway)
+			if err != nil {
+				return err
+			}
+			netmask, err = askForInput("Service network netmask: ", netmask)
+			if err != nil {
+				return err
+			}
 		}
 		ssh_key, err = askForInput("Service ssh key file path (leave blank for none): ", ssh_key)
 		if err != nil {
@@ -456,7 +462,7 @@ func createService(c *cli.Context, w io.Writer) error {
 		}
 	}
 
-	if len(dns) == 0 || len(gateway) == 0 || len(netmask) == 0 {
+	if !sdn && (len(dns) == 0 || len(gateway) == 0 || len(netmask) == 0) {
 		return fmt.Errorf("Provide a valid DNS, gateway, and netmask")
 	}
 
@@ -485,10 +491,6 @@ func createService(c *cli.Context, w io.Writer) error {
 	service_type = strings.ToUpper(service_type)
 	switch service_type {
 	case "KUBERNETES":
-		sdn, err := isSoftwareDefinedNetwork(c)
-		if err != nil {
-			return err
-		}
 		if !c.GlobalIsSet("non-interactive") {
 			container_network, err = askForInput("Container network CIDR: ", container_network)
 			if err != nil {
