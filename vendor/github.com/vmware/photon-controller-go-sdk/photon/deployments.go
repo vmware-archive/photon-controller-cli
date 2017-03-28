@@ -67,19 +67,6 @@ func (api *DeploymentsAPI) GetAll() (result *Deployments, err error) {
 	return
 }
 
-// Gets all hosts with the specified deployment ID.
-func (api *DeploymentsAPI) GetHosts(id string) (result *Hosts, err error) {
-	uri := api.getEntityUrl(id) + "/hosts"
-	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-
-	result = &Hosts{}
-	err = json.Unmarshal(res, result)
-	return
-}
-
 // Gets all the vms with the specified deployment ID.
 func (api *DeploymentsAPI) GetVms(id string) (result *VMs, err error) {
 	uri := api.getEntityUrl(id) + "/vms"
@@ -90,43 +77,6 @@ func (api *DeploymentsAPI) GetVms(id string) (result *VMs, err error) {
 
 	result = &VMs{}
 	err = json.Unmarshal(res, result)
-	return
-}
-
-// Update image datastores of a deployment.
-func (api *DeploymentsAPI) SetImageDatastores(id string, imageDatastores *ImageDatastores) (task *Task, err error) {
-	body, err := json.Marshal(imageDatastores)
-	if err != nil {
-		return
-	}
-
-	res, err := api.client.restClient.Post(
-		api.getEntityUrl(id)+"/set_image_datastores",
-		"application/json",
-		bytes.NewReader(body),
-		api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-
-	task, err = getTask(getError(res))
-	return
-}
-
-// Synchronizes hosts configurations
-func (api *DeploymentsAPI) SyncHostsConfig(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Post(
-		api.getEntityUrl(id)+"/sync_hosts_config",
-		"application/json",
-		bytes.NewReader([]byte("")),
-		api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-
-	task, err = getTask(getError(res))
 	return
 }
 

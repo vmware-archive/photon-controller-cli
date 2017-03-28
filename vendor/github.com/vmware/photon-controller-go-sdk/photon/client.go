@@ -33,6 +33,7 @@ type Client struct {
 	Disks             *DisksAPI
 	VMs               *VmAPI
 	Hosts             *HostsAPI
+	Datastores        *DatastoresAPI
 	Deployments       *DeploymentsAPI
 	ResourceTickets   *ResourceTicketsAPI
 	Networks          *NetworksAPI
@@ -162,6 +163,7 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	c.Disks = &DisksAPI{c}
 	c.VMs = &VmAPI{c}
 	c.Hosts = &HostsAPI{c}
+	c.Datastores = &DatastoresAPI{c}
 	c.Deployments = &DeploymentsAPI{c}
 	c.ResourceTickets = &ResourceTicketsAPI{c}
 	c.Networks = &NetworksAPI{c}

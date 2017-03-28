@@ -60,6 +60,7 @@ func BuildApp() *cli.App {
 		command.GetTargetCommand(),
 		command.GetTenantsCommand(),
 		command.GetHostsCommand(),
+		command.GetDatastoresCommand(),
 		command.GetDeploymentsCommand(),
 		command.GetResourceTicketCommand(),
 		command.GetImagesCommand(),

@@ -90,6 +90,32 @@ func printHostList(hostList []photon.Host, w io.Writer, c *cli.Context) error {
 	return nil
 }
 
+func printDatastoreList(datastoreList []photon.Datastore, w io.Writer, c *cli.Context) error {
+	if c.GlobalIsSet("non-interactive") {
+		for _, datastore := range datastoreList {
+			tag := strings.Trim(fmt.Sprint(datastore.Tags), "[]")
+			scriptTag := strings.Replace(tag, " ", ",", -1)
+			fmt.Printf("%s\t%s\t%s\n", datastore.ID, datastore.Type, scriptTag)
+		}
+	} else if c.GlobalString("output") != "" {
+		utils.FormatObjects(datastoreList, w, c)
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+		fmt.Fprintf(w, "ID\tType\tTags\n")
+		for _, datastore := range datastoreList {
+			fmt.Fprintf(w, "%s\t%s\t%s\n", datastore.ID, datastore.Type, strings.Trim(fmt.Sprint(datastore.Tags), "[]"))
+		}
+		err := w.Flush()
+		if err != nil {
+			return err
+		}
+		fmt.Printf("\nTotal: %d\n", len(datastoreList))
+	}
+
+	return nil
+}
+
 // Prompt for input if limitsList is empty
 func askForLimitList(limitsList []photon.QuotaLineItem) ([]photon.QuotaLineItem, error) {
 	if len(limitsList) == 0 {
