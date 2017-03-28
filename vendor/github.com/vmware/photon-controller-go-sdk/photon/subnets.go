@@ -19,11 +19,35 @@ type SubnetsAPI struct {
 	client *Client
 }
 
-var subnetUrl string = rootUrl + "/subnets/"
+// Options for GetSubnets API.
+type SubnetGetOptions struct {
+	Name string `urlParam:"name"`
+}
+
+var subnetUrl string = rootUrl + "/subnets"
+
+// Creates a portgroup.
+func (api *SubnetsAPI) Create(networkSpec *NetworkCreateSpec) (task *Task, err error) {
+	body, err := json.Marshal(networkSpec)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+subnetUrl,
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
 
 // Deletes a subnet with the specified ID.
 func (api *SubnetsAPI) Delete(id string) (task *Task, err error) {
-	res, err := api.client.restClient.Delete(api.client.Endpoint+subnetUrl+id, api.client.options.TokenOptions)
+	res, err := api.client.restClient.Delete(api.client.Endpoint+subnetUrl+"/"+id, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -36,7 +60,7 @@ func (api *SubnetsAPI) Delete(id string) (task *Task, err error) {
 
 // Gets a subnet with the specified ID.
 func (api *SubnetsAPI) Get(id string) (subnet *Subnet, err error) {
-	res, err := api.client.restClient.Get(api.client.Endpoint+subnetUrl+id, api.client.options.TokenOptions)
+	res, err := api.client.restClient.Get(api.client.Endpoint+subnetUrl+"/"+id, api.client.options.TokenOptions)
 	if err != nil {
 		return
 	}
@@ -58,7 +82,7 @@ func (api *SubnetsAPI) Update(id string, subnetSpec *SubnetUpdateSpec) (task *Ta
 	}
 
 	res, err := api.client.restClient.Patch(
-		api.client.Endpoint+subnetUrl+id,
+		api.client.Endpoint+subnetUrl+"/"+id,
 		"application/json",
 		bytes.NewReader(body),
 		api.client.options.TokenOptions)
@@ -71,10 +95,23 @@ func (api *SubnetsAPI) Update(id string, subnetSpec *SubnetUpdateSpec) (task *Ta
 	return
 }
 
+// Returns all subnets
+func (api *SubnetsAPI) GetAll(options *SubnetGetOptions) (result *Subnets, err error) {
+	uri := api.client.Endpoint + subnetUrl
+	if options != nil {
+		uri += getQueryString(options)
+	}
+	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
+
+	result = &Subnets{}
+	err = json.Unmarshal(res, result)
+	return
+}
+
 // Sets default subnet.
 func (api *SubnetsAPI) SetDefault(id string) (task *Task, err error) {
 	res, err := api.client.restClient.Post(
-		api.client.Endpoint+subnetUrl+id+"/set_default",
+		api.client.Endpoint+subnetUrl+"/"+id+"/set_default",
 		"application/json",
 		bytes.NewReader([]byte("")),
 		api.client.options.TokenOptions)

@@ -581,24 +581,6 @@ type NetworkCreateSpec struct {
 	PortGroups  []string `json:"portGroups"`
 }
 
-// Represents a subnet
-type Network struct {
-	Kind        string   `json:"kind"`
-	Name        string   `json:"name"`
-	Description string   `json:"description,omitempty"`
-	State       string   `json:"state"`
-	ID          string   `json:"id"`
-	PortGroups  []string `json:"portGroups"`
-	Tags        []string `json:"tags,omitempty"`
-	SelfLink    string   `json:"selfLink"`
-	IsDefault   bool     `json:"isDefault"`
-}
-
-// Represents multiple subnets returned by the API
-type Networks struct {
-	Items []Network `json:"items"`
-}
-
 // Represents a router
 type Router struct {
 	ID            string `json:"id"`
@@ -785,6 +767,11 @@ type NsxConfigurationSpec struct {
 	HostUplinkVlanId       int               `json:"hostUplinkVlanId"`
 }
 
+// Represents port groups.
+type PortGroups struct {
+	PortGroups []string `json:"portGroups"`
+}
+
 // Represents a subnet
 type Subnet struct {
 	ID            string            `json:"id"`
@@ -795,6 +782,7 @@ type Subnet struct {
 	ReservedIps   map[string]string `json:"reservedIps"`
 	State         string            `json:"state"`
 	IsDefault     bool              `json:"isDefault"`
+	PortGroups    PortGroups        `json:"portGroups"`
 }
 
 // Represents multiple subnets returned by the API.

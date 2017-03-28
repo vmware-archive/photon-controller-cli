@@ -11,16 +11,12 @@ package command
 
 import (
 	"errors"
-	"fmt"
-	"io"
 	"log"
 	"os"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
-	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"github.com/urfave/cli"
-	"github.com/vmware/photon-controller-go-sdk/photon"
 )
 
 const (
@@ -31,10 +27,7 @@ const (
 
 // Creates a cli.Command for networks
 // Subcommands: create; Usage: network create [<options>]
-//              delete; Usage: network delete <id>
 //              list;   Usage: network list
-//              show;   Usage: network show <id>
-//              set-default; Usage: network setDefault <id>
 func GetNetworksCommand() cli.Command {
 	command := cli.Command{
 		Name:  "network",
@@ -82,64 +75,6 @@ func GetNetworksCommand() cli.Command {
 					}
 				},
 			},
-			{
-				Name:      "delete",
-				Usage:     "Delete a network",
-				ArgsUsage: "<network-id>",
-				Action: func(c *cli.Context) {
-					err := deleteNetwork(c)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:      "list",
-				Usage:     "List networks",
-				ArgsUsage: " ",
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "name, n",
-						Usage: "Optionally filter by name",
-					},
-					cli.StringFlag{
-						Name: "projectId, i",
-						Usage: "ID of the project that networks to be listed belong to (only for software-defined " +
-							"network)",
-					},
-				},
-				Action: func(c *cli.Context) {
-					err := listPhysicalNetworks(c, os.Stdout)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:      "show",
-				Usage:     "Show network given its id",
-				ArgsUsage: "<network-id>",
-				Action: func(c *cli.Context) {
-					err := showPhysicalNetwork(c, os.Stdout)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
-				Name:      "set-default",
-				Usage:     "Set default network",
-				ArgsUsage: "<network-id>",
-				Description: "Set the default network to be used in the current project when making a VM\n" +
-					"   This is not required: when making a VM you can either specify the network to use, or rely\n" +
-					"   on the default network.",
-				Action: func(c *cli.Context) {
-					err := setDefaultNetwork(c, os.Stdout)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
 		},
 	}
 	return command
@@ -162,72 +97,4 @@ func isSoftwareDefinedNetwork(c *cli.Context) (sdnEnabled bool, err error) {
 		sdnEnabled = (info.NetworkType == SOFTWARE_DEFINED)
 	}
 	return
-}
-
-func deleteNetwork(c *cli.Context) error {
-	err := checkArgCount(c, 1)
-	if err != nil {
-		return err
-	}
-	id := c.Args().First()
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	var task *photon.Task
-	if !confirmed(c) {
-		fmt.Println("Canceled")
-		return nil
-	}
-
-	task, err = client.Photonclient.Networks.Delete(id)
-	if err != nil {
-		return err
-	}
-
-	_, err = waitOnTaskOperation(task.ID, c)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func setDefaultNetwork(c *cli.Context, w io.Writer) error {
-	err := checkArgCount(c, 1)
-	if err != nil {
-		return err
-	}
-	id := c.Args().First()
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	var task *photon.Task
-	task, err = client.Photonclient.Networks.SetDefault(id)
-
-	if err != nil {
-		return err
-	}
-
-	if confirmed(c) {
-		id, err := waitOnTaskOperation(task.ID, c)
-		if err != nil {
-			return err
-		}
-
-		if utils.NeedsFormatting(c) {
-			network, err := client.Photonclient.Networks.Get(id)
-			if err != nil {
-				return err
-			}
-			utils.FormatObject(network, w, c)
-		}
-	} else {
-		fmt.Println("OK. Canceled")
-	}
-	return nil
 }
