@@ -74,6 +74,7 @@ func BuildApp() *cli.App {
 		command.GetAvailabilityZonesCommand(),
 		command.GetRoutersCommand(),
 		command.GetSubnetsCommand(),
+		command.GetZonesCommand(),
 	}
 	app.Before = func(c *cli.Context) error {
 		logFile := c.GlobalString("log-file")
