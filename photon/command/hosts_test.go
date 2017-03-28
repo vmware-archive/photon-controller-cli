@@ -121,7 +121,7 @@ func TestCreateDeleteHost(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"DELETE",
-		server.URL+rootUrl+"/infrastructure"+"/hosts/"+queuedTask.Entity.ID,
+		server.URL+rootUrl+"/infrastructure/hosts/"+queuedTask.Entity.ID,
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -200,7 +200,7 @@ func mockHostsForList(t *testing.T, server *httptest.Server) error {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+rootUrl+"/infrastructure"+"/hosts",
+		server.URL+rootUrl+"/infrastructure/hosts",
 		mocks.CreateResponder(200, string(response[:])))
 
 	hostList = MockHostsPage{
