@@ -150,10 +150,7 @@ func getProjectQuota(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-
-	for k, v := range quota.QuotaLineItems {
-		fmt.Printf("%s\t%g\t%g\t%s\n", k, v.Limit, v.Usage, v.Unit)
-	}
+	printQuota(quota, c, w)
 
 	return nil
 }
@@ -242,6 +239,7 @@ func modifyProjectQuota(c *cli.Context, w io.Writer, operation string) error {
 			return err
 		}
 
+		// read back the current quota.
 		if utils.NeedsFormatting(c) {
 			quota, err := client.Photonclient.Projects.GetQuota(project.ID)
 			if err != nil {
