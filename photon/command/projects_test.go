@@ -37,6 +37,12 @@ func TestCreateProject(t *testing.T) {
 			{
 				Name: "fake_tenant_name",
 				ID:   "fake_tenant_ID",
+				ResourceQuota: photon.Quota{
+					QuotaLineItems: photon.QuotaSpec{
+						"vm.test1": {Limit: 100, Usage: 0, Unit: "B"},
+						"vm.cpu":   {Limit: 100, Usage: 0, Unit: "COUNT"},
+					},
+				},
 			},
 		},
 	}
@@ -94,10 +100,112 @@ func TestCreateProject(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	set := flag.NewFlagSet("test", 0)
-	set.String("name", "fake_project_name", "project name")
-	set.String("resource-ticket", "fake_rt_Name", "rt name")
+	err = set.Parse([]string{"fake_project_name"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+
 	set.String("tenant", "fake_tenant_name", "tenant name")
 	set.String("limits", "vm.test1 1 B", "project limits")
+	set.String("security-groups", "fake_security_group", "security groups")
+	set.String("default-router-private-ip-cidr", "192.168.0.0/24", "default router private ip cidr")
+	cxt := cli.NewContext(nil, set, globalCtx)
+
+	err = createProject(cxt, os.Stdout)
+	if err != nil {
+		t.Error("Not expecting error creating project: " + err.Error())
+	}
+}
+
+func TestCreateProjectUsingPercentageOfTenantQuota(t *testing.T) {
+	tenantStruct := photon.Tenants{
+		Items: []photon.Tenant{
+			{
+				Name: "fake_tenant_name",
+				ID:   "fake_tenant_ID",
+				ResourceQuota: photon.Quota{
+					QuotaLineItems: photon.QuotaSpec{
+						"vm.test1": {Limit: 100, Usage: 0, Unit: "B"},
+						"vm.cpu":   {Limit: 100, Usage: 0, Unit: "COUNT"},
+					},
+				},
+			},
+		},
+	}
+	tenantResponse, err := json.Marshal(tenantStruct)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected tenantStruct")
+	}
+
+	queuedTask := &photon.Task{
+		Operation: "CREATE_PROJECT",
+		State:     "QUEUED",
+		ID:        "fake-project-task-id",
+		Entity:    photon.Entity{ID: "fake_project_ID"},
+	}
+	taskResponse, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected queuedTask")
+	}
+
+	completedTask := &photon.Task{
+		Operation: "CREATE_PROJECT",
+		State:     "COMPLETED",
+		ID:        "fake-project-task-id",
+		Entity:    photon.Entity{ID: "fake_project_ID"},
+	}
+	response, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected completedTask")
+	}
+
+	// mock the response quota
+	mockQuota := photon.Quota{
+		QuotaLineItems: map[string]photon.QuotaStatusLineItem{
+			"vm.test1": {Unit: "COUNT", Limit: 100, Usage: 0},
+			"vm.cpu":   {Unit: "GB", Limit: 100, Usage: 0},
+		},
+	}
+	quotaResponse, err := json.Marshal(mockQuota)
+
+	server = mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/tenants",
+		mocks.CreateResponder(200, string(tenantResponse[:])))
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/projects",
+		mocks.CreateResponder(200, string(taskResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/tenants/"+"fake_tenant_ID"+"/quota",
+		mocks.CreateResponder(200, string(quotaResponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(response[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", true, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	set := flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{"fake_project_name"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+
+	set.String("tenant", "fake_tenant_name", "tenant name")
+	set.String("percent", "50", "percentage of tenant limits")
 	set.String("security-groups", "fake_security_group", "security groups")
 	set.String("default-router-private-ip-cidr", "192.168.0.0/24", "default router private ip cidr")
 	cxt := cli.NewContext(nil, set, globalCtx)
@@ -112,11 +220,11 @@ func TestShowProject(t *testing.T) {
 	projectStruct := photon.ProjectCompact{
 		Name: "fake_project_name",
 		ID:   "fake_project_ID",
-		ResourceTicket: photon.ProjectTicket{
-			TenantTicketID:   "fake_ticket_id",
-			TenantTicketName: "fake_ticket_name",
-			Limits:           []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-			Usage:            []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
+		ResourceQuota: photon.Quota{
+			QuotaLineItems: photon.QuotaSpec{
+				"vm.test1": {Limit: 1, Usage: 0, Unit: "B"},
+				"vm.cpu":   {Limit: 10, Usage: 0, Unit: "COUNT"},
+			},
 		},
 	}
 	response, err := json.Marshal(projectStruct)
@@ -153,9 +261,10 @@ func TestSetGetProject(t *testing.T) {
 			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
-				ResourceTicket: photon.ProjectTicket{
-					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
+				ResourceQuota: photon.Quota{
+					QuotaLineItems: photon.QuotaSpec{
+						"vm.test1": {Limit: 1, Usage: 0, Unit: "B"},
+					},
 				},
 			},
 		},
@@ -214,9 +323,10 @@ func TestListProjects(t *testing.T) {
 			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
-				ResourceTicket: photon.ProjectTicket{
-					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
+				ResourceQuota: photon.Quota{
+					QuotaLineItems: photon.QuotaSpec{
+						"vm.test1": {Limit: 1, Usage: 0, Unit: "B"},
+					},
 				},
 			},
 		},
@@ -274,22 +384,6 @@ func TestListProjects(t *testing.T) {
 	err = listProjects(cxt, &output)
 	if err != nil {
 		t.Error("Not expecting error listing projects: " + err.Error())
-	}
-
-	// Verify we printed a list of resource ticket starting with a bracket
-	err = checkRegExp(`^\s*\[`, output)
-	if err != nil {
-		t.Errorf("List resource ticket didn't produce a JSON list that starts with a bracket (list): %s", err)
-	}
-	// and end with a bracket (two regular expressions because it's multiline, it's easier)
-	err = checkRegExp(`\]\s*$`, output)
-	if err != nil {
-		t.Errorf("List resource ticket didn't produce JSON that ended in a bracket (list): %s", err)
-	}
-	// And spot check that we have the "id" field
-	err = checkRegExp(`\"id\":\s*\".*\"`, output)
-	if err != nil {
-		t.Errorf("List resource ticket didn't produce a JSON field named 'id': %s", err)
 	}
 }
 
