@@ -143,20 +143,6 @@ func GetHostsCommand() cli.Command {
 				},
 			},
 			{
-				Name:      "set-zone",
-				Usage:     "Set a host's zone",
-				ArgsUsage: "<host-id> <zone-id>",
-				Description: "Set a host's zone. You must be a system administrator to do this. \n" +
-					"   You cannot change the zone of a host after it is set once. \n" +
-					"   (Unless you remove the host and add it back)",
-				Action: func(c *cli.Context) {
-					err := setHostZone(c, os.Stdout)
-					if err != nil {
-						log.Fatal("Error: ", err)
-					}
-				},
-			},
-			{
 				Name:      "tasks",
 				Usage:     "Show host tasks",
 				ArgsUsage: "<host-id>",

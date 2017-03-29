@@ -55,7 +55,7 @@ func GetZonesCommand() cli.Command {
 			{
 				Name:  "delete",
 				Usage: "Delete an zone",
-				Description: "This deletess an existing availablity zone given its id.\n" +
+				Description: "This deletess an existing zone given its id.\n" +
 					"   Only a system adminstrator can delete the zone.",
 				ArgsUsage: "<zone-id>",
 				Action: func(c *cli.Context) {

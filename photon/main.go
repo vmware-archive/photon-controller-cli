@@ -71,7 +71,6 @@ func BuildApp() *cli.App {
 		command.GetVMCommand(),
 		command.GetNetworksCommand(),
 		command.GetServiceCommand(),
-		command.GetAvailabilityZonesCommand(),
 		command.GetRoutersCommand(),
 		command.GetSubnetsCommand(),
 		command.GetZonesCommand(),
