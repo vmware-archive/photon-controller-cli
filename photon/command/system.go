@@ -489,31 +489,6 @@ func contains(list []string, value string) bool {
 	return false
 }
 
-func createAvailabilityZonesFromDcMap(dcMap *manifest.Installation) (map[string]string, error) {
-	availabilityZoneNameToIdMap := make(map[string]string)
-	for _, host := range dcMap.Hosts {
-		if len(host.AvailabilityZone) > 0 {
-			if _, present := availabilityZoneNameToIdMap[host.AvailabilityZone]; !present {
-				availabilityZoneSpec := &photon.AvailabilityZoneCreateSpec{
-					Name: host.AvailabilityZone,
-				}
-
-				createAvailabilityZoneTask, err := client.Photonclient.AvailabilityZones.Create(availabilityZoneSpec)
-				if err != nil {
-					return nil, err
-				}
-
-				task, err := pollTask(createAvailabilityZoneTask.ID)
-				if err != nil {
-					return nil, err
-				}
-				availabilityZoneNameToIdMap[host.AvailabilityZone] = task.Entity.ID
-			}
-		}
-	}
-	return availabilityZoneNameToIdMap, nil
-}
-
 func createZonesFromDcMap(dcMap *manifest.Installation) (map[string]string, error) {
 	zoneNameToIdMap := make(map[string]string)
 	for _, host := range dcMap.Hosts {

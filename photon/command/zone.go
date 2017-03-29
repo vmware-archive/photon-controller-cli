@@ -1,7 +1,7 @@
 // Copyright (c) 2017 VMware, Inc. All Rights Reserved.
 //
 // This product is licensed to you under the Apache License, Version 2.0 (the "License").
-// You may not use this product except in compliance with the License.
+// You may not use this product except in compliance with the License .
 //
 // This product may include a number of subcomponents with separate copyright notices and
 // license terms. Your use of these subcomponents is subject to the terms and conditions
@@ -55,7 +55,7 @@ func GetZonesCommand() cli.Command {
 			{
 				Name:  "delete",
 				Usage: "Delete an zone",
-				Description: "This deletess an existing availablity zone given its id.\n" +
+				Description: "This deletess an existing zone given its id.\n" +
 					"   Only a system adminstrator can delete the zone.",
 				ArgsUsage: "<zone-id>",
 				Action: func(c *cli.Context) {
