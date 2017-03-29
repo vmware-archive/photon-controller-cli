@@ -54,20 +54,8 @@ func GetProjectsCommand() cli.Command {
 						Usage: "Project name",
 					},
 					cli.StringFlag{
-						Name:  "limits, l",
-						Usage: "Project limits(key,value,unit)",
-					},
-					cli.Float64Flag{
-						Name:  "percent, p",
-						Usage: "Project limits(percentage of resource-ticket)",
-					},
-					cli.StringFlag{
 						Name:  "tenant, t",
 						Usage: "Tenant name for project",
-					},
-					cli.StringFlag{
-						Name:  "resource-ticket, r",
-						Usage: "Resource-ticket name for project",
 					},
 					cli.StringFlag{
 						Name:  "security-groups, g",
@@ -284,10 +272,7 @@ func createProject(c *cli.Context, w io.Writer) error {
 		return err
 	}
 	tenantName := c.String("tenant")
-	rtName := c.String("resource-ticket")
 	name := c.String("name")
-	limits := c.String("limits")
-	percent := c.Float64("percent")
 	securityGroups := c.String("security-groups")
 	defaultRouterPrivateIpCidr := c.String("default-router-private-ip-cidr")
 
@@ -305,31 +290,8 @@ func createProject(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	var limitsList []photon.QuotaLineItem
-	if c.IsSet("limits") && c.IsSet("percent") {
-		return fmt.Errorf("Error: Can only specify one of '--limits' or '--percent'")
-	}
-	if c.IsSet("limits") {
-		limitsList, err = parseLimitsListFromFlag(limits)
-		if err != nil {
-			return err
-		}
-	}
-	if c.IsSet("percent") {
-		limitsList = []photon.QuotaLineItem{
-			{Key: "subdivide.percent", Value: percent, Unit: "COUNT"}}
-	}
-
 	if !c.GlobalIsSet("non-interactive") {
 		name, err = askForInput("Project name: ", name)
-		if err != nil {
-			return err
-		}
-		rtName, err = askForInput("Resource-ticket name: ", rtName)
-		if err != nil {
-			return err
-		}
-		limitsList, err = askForLimitList(limitsList)
 		if err != nil {
 			return err
 		}
@@ -337,17 +299,11 @@ func createProject(c *cli.Context, w io.Writer) error {
 
 	projectSpec := photon.ProjectCreateSpec{}
 	projectSpec.Name = name
-	projectSpec.ResourceTicket = photon.ResourceTicketReservation{Name: rtName, Limits: limitsList}
 	projectSpec.DefaultRouterPrivateIpCidr = defaultRouterPrivateIpCidr
 
 	if !c.GlobalIsSet("non-interactive") {
 		fmt.Printf("\nTenant name: %s\n", tenant.Name)
-		fmt.Printf("Resource ticket name: %s\n", rtName)
 		fmt.Printf("Creating project name: %s\n\n", name)
-		fmt.Println("Please make sure limits below are correct:")
-		for i, l := range limitsList {
-			fmt.Printf("%d: %s, %g, %s\n", i+1, l.Key, l.Value, l.Unit)
-		}
 	}
 	if confirmed(c) {
 		if len(securityGroups) > 0 {
@@ -432,11 +388,8 @@ func showProject(c *cli.Context, w io.Writer) error {
 			securityGroups = append(securityGroups, fmt.Sprintf("%s:%t", s.Name, s.Inherited))
 		}
 		scriptSecurityGroups := strings.Join(securityGroups, ",")
-		limits := quotaLineItemListToString(project.ResourceTicket.Limits)
-		usages := quotaLineItemListToString(project.ResourceTicket.Usage)
 
-		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n", project.ID, project.Name, project.ResourceTicket.TenantTicketID,
-			project.ResourceTicket.TenantTicketName, limits, usages, scriptSecurityGroups)
+		fmt.Printf("%s\t%s\t%s\n", project.ID, project.Name, scriptSecurityGroups)
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(project, w, c)
 	} else {
@@ -444,16 +397,7 @@ func showProject(c *cli.Context, w io.Writer) error {
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
 		fmt.Fprintf(w, "Project ID: %s\n", project.ID)
 		fmt.Fprintf(w, "  Name: %s\n", project.Name)
-		fmt.Fprintf(w, "  TenantTicketID: %s\n", project.ResourceTicket.TenantTicketID)
-		fmt.Fprintf(w, "    TenantTicketName: %s\n", project.ResourceTicket.TenantTicketName)
-		fmt.Fprintf(w, "    Limits:\n")
-		for _, l := range project.ResourceTicket.Limits {
-			fmt.Fprintf(w, "      %s\t%g\t%s\n", l.Key, l.Value, l.Unit)
-		}
-		fmt.Fprintf(w, "    Usage:\n")
-		for _, u := range project.ResourceTicket.Usage {
-			fmt.Fprintf(w, "      %s\t%g\t%s\n", u.Key, u.Value, u.Unit)
-		}
+
 		if len(project.SecurityGroups) != 0 {
 			fmt.Fprintf(w, "  SecurityGroups:\n")
 			for _, s := range project.SecurityGroups {
@@ -561,38 +505,10 @@ func listProjects(c *cli.Context, w io.Writer) error {
 
 	if c.GlobalIsSet("non-interactive") {
 		for _, t := range projects.Items {
-			limits := quotaLineItemListToString(t.ResourceTicket.Limits)
-			usage := quotaLineItemListToString(t.ResourceTicket.Usage)
-			fmt.Printf("%s\t%s\t%s\t%s\n", t.ID, t.Name, limits, usage)
+			fmt.Printf("%s\t%s\n", t.ID, t.Name)
 		}
-	} else if utils.NeedsFormatting(c) {
-		utils.FormatObjects(projects.Items, w, c)
 	} else {
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w, "ID\tName\tLimit\tUsage\n")
-		for _, t := range projects.Items {
-			rt := t.ResourceTicket
-			for i := 0; i < len(rt.Limits); i++ {
-				if i == 0 {
-					fmt.Fprintf(w, "%s\t%s\t%s %g %s\t%s %g %s\n", t.ID, t.Name,
-						rt.Limits[i].Key, rt.Limits[i].Value, rt.Limits[i].Unit,
-						rt.Usage[i].Key, rt.Usage[i].Value, rt.Usage[i].Unit)
-				} else {
-					fmt.Fprintf(w, "\t\t%s %g %s\t%s %g %s\n",
-						rt.Limits[i].Key, rt.Limits[i].Value, rt.Limits[i].Unit,
-						rt.Usage[i].Key, rt.Usage[i].Value, rt.Usage[i].Unit)
-				}
-			}
-			for i := len(rt.Limits); i < len(rt.Usage); i++ {
-				fmt.Fprintf(w, "\t\t\t%s %g %s\n", rt.Usage[i].Key, rt.Usage[i].Value, rt.Usage[i].Unit)
-			}
-		}
-		err := w.Flush()
-		if err != nil {
-			return err
-		}
-		fmt.Printf("\nTotal projects: %d\n", len(projects.Items))
+		utils.FormatObjects(projects.Items, w, c)
 	}
 	return nil
 }

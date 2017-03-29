@@ -112,12 +112,6 @@ func TestShowProject(t *testing.T) {
 	projectStruct := photon.ProjectCompact{
 		Name: "fake_project_name",
 		ID:   "fake_project_ID",
-		ResourceTicket: photon.ProjectTicket{
-			TenantTicketID:   "fake_ticket_id",
-			TenantTicketName: "fake_ticket_name",
-			Limits:           []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-			Usage:            []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
-		},
 	}
 	response, err := json.Marshal(projectStruct)
 	if err != nil {
@@ -153,10 +147,6 @@ func TestSetGetProject(t *testing.T) {
 			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
-				ResourceTicket: photon.ProjectTicket{
-					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
-				},
 			},
 		},
 	}
@@ -214,10 +204,6 @@ func TestListProjects(t *testing.T) {
 			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
-				ResourceTicket: photon.ProjectTicket{
-					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
-				},
 			},
 		},
 		NextPageLink:     "fake-next-page-link",
@@ -274,22 +260,6 @@ func TestListProjects(t *testing.T) {
 	err = listProjects(cxt, &output)
 	if err != nil {
 		t.Error("Not expecting error listing projects: " + err.Error())
-	}
-
-	// Verify we printed a list of resource ticket starting with a bracket
-	err = checkRegExp(`^\s*\[`, output)
-	if err != nil {
-		t.Errorf("List resource ticket didn't produce a JSON list that starts with a bracket (list): %s", err)
-	}
-	// and end with a bracket (two regular expressions because it's multiline, it's easier)
-	err = checkRegExp(`\]\s*$`, output)
-	if err != nil {
-		t.Errorf("List resource ticket didn't produce JSON that ended in a bracket (list): %s", err)
-	}
-	// And spot check that we have the "id" field
-	err = checkRegExp(`\"id\":\s*\".*\"`, output)
-	if err != nil {
-		t.Errorf("List resource ticket didn't produce a JSON field named 'id': %s", err)
 	}
 }
 

@@ -685,10 +685,6 @@ func TestListVMs(t *testing.T) {
 			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
-				ResourceTicket: photon.ProjectTicket{
-					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
-				},
 			},
 		},
 	}
@@ -752,10 +748,6 @@ func TestFindVMsByName(t *testing.T) {
 			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
-				ResourceTicket: photon.ProjectTicket{
-					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
-				},
 			},
 		},
 	}
