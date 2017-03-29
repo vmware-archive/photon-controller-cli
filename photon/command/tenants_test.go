@@ -131,6 +131,7 @@ func TestShowTenant(t *testing.T) {
 		t.Error("Not expecting error serializaing expected tenant")
 	}
 
+	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
 		server.URL+rootUrl+"/tenants"+"/"+"fake_tenant_ID",

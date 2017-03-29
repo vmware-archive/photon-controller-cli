@@ -26,7 +26,12 @@ import (
 
 	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"net/http/httptest"
 )
+
+var tenantName string
+var tenantID string
+var server *httptest.Server
 
 type ServiceVM struct {
 	ServiceVM photon.VM `json:"vm"`
@@ -653,24 +658,6 @@ func clearConfigProject(id string) error {
 		}
 	}
 	return nil
-}
-
-// Finds the rt based on tenant id and rt name, returns nil with an error if it is not found
-func findResourceTicket(tenantID string, name string) (*photon.ResourceTicket, error) {
-	tickets, err := client.Photonclient.Tenants.GetResourceTickets(tenantID, &photon.ResourceTicketGetOptions{Name: name})
-	if err != nil {
-		return nil, err
-	}
-	rtList := tickets.Items
-
-	if len(rtList) < 1 {
-		return nil, fmt.Errorf("Error: Cannot find resource ticket named '%s'", name)
-	}
-	if len(rtList) > 1 {
-		return nil, fmt.Errorf("Error: Found more than 1 resource ticket named '%s'", name)
-	}
-
-	return &rtList[0], nil
 }
 
 // Finds the project based on tenant id and project name, returns nil with an error if it is not found
