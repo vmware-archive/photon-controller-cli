@@ -150,12 +150,9 @@ func getTenantQuota(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
+	err = printQuotaContent(quota, c, w)
 
-	for k, v := range quota.QuotaLineItems {
-		fmt.Printf("%s\t%g\t%g\t%s\n", k, v.Limit, v.Usage, v.Unit)
-	}
-
-	return nil
+	return err
 }
 
 // Set (replace) the whole tenant quota with the quota line items specified in limits flag.
@@ -242,6 +239,7 @@ func modifyTenantQuota(c *cli.Context, w io.Writer, operation string) error {
 			return err
 		}
 
+		// read back the current quota.
 		if utils.NeedsFormatting(c) {
 			quota, err := client.Photonclient.Tenants.GetQuota(tenant.ID)
 			if err != nil {

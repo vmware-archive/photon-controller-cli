@@ -26,7 +26,12 @@ import (
 
 	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"net/http/httptest"
 )
+
+var tenantName string
+var tenantID string
+var server *httptest.Server
 
 type ServiceVM struct {
 	ServiceVM photon.VM `json:"vm"`
@@ -238,6 +243,32 @@ func printIamPolicy(policy []photon.PolicyEntry, c *cli.Context) error {
 	return nil
 }
 
+// Print out the content of quota object.
+func printQuotaContent(quota *photon.Quota, c *cli.Context, w io.Writer) error {
+	if c.GlobalIsSet("non-interactive") {
+		quotaString := quotaSpecToString(quota.QuotaLineItems)
+		fmt.Printf("%s\n", quotaString)
+	} else if utils.NeedsFormatting(c) {
+		utils.FormatObject(quota, w, c)
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
+		fmt.Fprintf(w, "    Limits:\n")
+		for k, l := range quota.QuotaLineItems {
+			fmt.Fprintf(w, "      %s\t%g\t%s\n", k, l.Limit, l.Unit)
+		}
+		fmt.Fprintf(w, "    Usage:\n")
+		for k, u := range quota.QuotaLineItems {
+			fmt.Fprintf(w, "      %s\t%g\t%s\n", k, u.Usage, u.Unit)
+		}
+		err := w.Flush()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func printQuotaList(w *tabwriter.Writer, qliList []photon.QuotaLineItem, colEntry ...string) {
 	for i := 0; i < len(qliList); i++ {
 		if i == 0 {
@@ -258,6 +289,14 @@ func quotaLineItemListToString(qliList []photon.QuotaLineItem) string {
 	scriptUsage := []string{}
 	for _, u := range qliList {
 		scriptUsage = append(scriptUsage, fmt.Sprintf("%s:%g:%s", u.Key, u.Value, u.Unit))
+	}
+	return strings.Join(scriptUsage, ",")
+}
+
+func quotaSpecToString(quotaSpec photon.QuotaSpec) string {
+	scriptUsage := []string{}
+	for k, v := range quotaSpec {
+		scriptUsage = append(scriptUsage, fmt.Sprintf("%s:%g:%g:%s", k, v.Limit, v.Usage, v.Unit))
 	}
 	return strings.Join(scriptUsage, ",")
 }
@@ -653,24 +692,6 @@ func clearConfigProject(id string) error {
 		}
 	}
 	return nil
-}
-
-// Finds the rt based on tenant id and rt name, returns nil with an error if it is not found
-func findResourceTicket(tenantID string, name string) (*photon.ResourceTicket, error) {
-	tickets, err := client.Photonclient.Tenants.GetResourceTickets(tenantID, &photon.ResourceTicketGetOptions{Name: name})
-	if err != nil {
-		return nil, err
-	}
-	rtList := tickets.Items
-
-	if len(rtList) < 1 {
-		return nil, fmt.Errorf("Error: Cannot find resource ticket named '%s'", name)
-	}
-	if len(rtList) > 1 {
-		return nil, fmt.Errorf("Error: Found more than 1 resource ticket named '%s'", name)
-	}
-
-	return &rtList[0], nil
 }
 
 // Finds the project based on tenant id and project name, returns nil with an error if it is not found

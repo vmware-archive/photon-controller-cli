@@ -27,7 +27,7 @@ import (
 )
 
 // Creates a cli.Command for tenant
-// Subcommands: create; Usage: tenant create <name>
+// Subcommands: create; Usage: tenant create <name> [<options>]
 //              delete; Usage: tenant delete <id>
 //              show;   Usage: tenant show <id>
 //              list;   Usage: tenant list
@@ -44,10 +44,29 @@ func GetTenantsCommand() cli.Command {
 				Name:      "create",
 				Usage:     "Create a new tenant",
 				ArgsUsage: "<tenant-name>",
+				Description: "Create a tenant. Only system administrators can create new tenant.\n" +
+					"   A quota for the tenant can be defined during tenant creation and " +
+					"   it is defined by a set of maximum resource costs. Each usage has a type,\n" +
+					"   a numnber (e.g. 1) and a unit (e.g. GB). You must specify at least one cost\n" +
+					"   Valid units:  GB, MB, KB, B, or COUNT\n" +
+					"   Common costs:\n" +
+					"     vm.count:            Total number of VMs (use with COUNT)\n" +
+					"     vm.cpu:              Total number of vCPUs for a VM (use with COUNT)\n" +
+					"     vm.memory:           Total amount of RAM for a VM (use with GB, MB, KB, or B)\n" +
+					"     disk.capacity:       Total disk capacity (use with GB, MB, KB, or B)\n" +
+					"     disk.count:          Number of disks (use with COUNT)\n" +
+					"     sdn.floatingip.size: Number of floating ip \n" +
+					"   Example: set tenant quota with 100 VMs, 1000 GB of RAM and 500 vCPUs:\n" +
+					"      photon tenant create tenant1 \\\n" +
+					"             --limits 'vm.count 100 COUNT, vm.memory 1000 GB, vm.cpu 500 COUNT'\n",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "security-groups, s",
 						Usage: "Comma-separated Lightwave group names, to specify the tenant administrators",
+					},
+					cli.StringFlag{
+						Name:  "limits, l",
+						Usage: "Tenant limits (key value unit)",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -245,6 +264,7 @@ func createTenant(c *cli.Context, w io.Writer) error {
 	}
 	name := c.Args().First()
 	securityGroups := c.String("security-groups")
+	limits := c.String("limits")
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
@@ -268,9 +288,22 @@ func createTenant(c *cli.Context, w io.Writer) error {
 		securityGroupList = regexp.MustCompile(`\s*,\s*`).Split(securityGroups, -1)
 	}
 
+	// Get project quota if present
+	quota := photon.Quota{}
+	if c.IsSet("limits") {
+		limitsList, err := parseLimitsListFromFlag(limits)
+		if err != nil {
+			return err
+		}
+
+		quotaSpec := convertQuotaSpecFromQuotaLineItems(limitsList)
+		quota.QuotaLineItems = quotaSpec
+	}
+
 	tenantSpec := &photon.TenantCreateSpec{
 		Name:           name,
 		SecurityGroups: securityGroupList,
+		ResourceQuota:  quota,
 	}
 
 	var err error
@@ -319,7 +352,8 @@ func listTenants(c *cli.Context, w io.Writer) error {
 
 	if c.GlobalIsSet("non-interactive") {
 		for _, tenant := range tenants.Items {
-			fmt.Printf("%s\t%s\n", tenant.ID, tenant.Name)
+			quotaString := quotaSpecToString(tenant.ResourceQuota.QuotaLineItems)
+			fmt.Printf("%s\t%s\t%s\n", tenant.ID, tenant.Name, quotaString)
 		}
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObjects(tenants.Items, w, c)
@@ -329,6 +363,14 @@ func listTenants(c *cli.Context, w io.Writer) error {
 		fmt.Fprintf(w, "ID\tName\n")
 		for _, tenant := range tenants.Items {
 			fmt.Fprintf(w, "%s\t%s\n", tenant.ID, tenant.Name)
+			fmt.Fprintf(w, "    Limits:\n")
+			for k, l := range tenant.ResourceQuota.QuotaLineItems {
+				fmt.Fprintf(w, "      %s\t%g\t%s\n", k, l.Limit, l.Unit)
+			}
+			fmt.Fprintf(w, "    Usage:\n")
+			for k, u := range tenant.ResourceQuota.QuotaLineItems {
+				fmt.Fprintf(w, "      %s\t%g\t%s\n", k, u.Usage, u.Unit)
+			}
 		}
 		err = w.Flush()
 		if err != nil {
@@ -395,7 +437,8 @@ func showTenant(c *cli.Context, w io.Writer) error {
 			securityGroups = append(securityGroups, fmt.Sprintf("%s:%t", s.Name, s.Inherited))
 		}
 		scriptSecurityGroups := strings.Join(securityGroups, ",")
-		fmt.Printf("%s\t%s\t%s\n", tenant.ID, tenant.Name, scriptSecurityGroups)
+		quotaString := quotaSpecToString(tenant.ResourceQuota.QuotaLineItems)
+		fmt.Printf("%s\t%s\t%s\t%s\n", tenant.ID, tenant.Name, scriptSecurityGroups, quotaString)
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(tenant, w, c)
 	} else {
@@ -405,6 +448,15 @@ func showTenant(c *cli.Context, w io.Writer) error {
 			fmt.Printf("    SecurityGroups %d:\n", i+1)
 			fmt.Println("      Name:          ", s.Name)
 			fmt.Println("      Inherited:     ", s.Inherited)
+		}
+
+		fmt.Fprintf(w, "    Limits:\n")
+		for k, l := range tenant.ResourceQuota.QuotaLineItems {
+			fmt.Fprintf(w, "      %s\t%g\t%s\n", k, l.Limit, l.Unit)
+		}
+		fmt.Fprintf(w, "    Usage:\n")
+		for k, u := range tenant.ResourceQuota.QuotaLineItems {
+			fmt.Fprintf(w, "      %s\t%g\t%s\n", k, u.Usage, u.Unit)
 		}
 	}
 

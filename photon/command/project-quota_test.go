@@ -197,7 +197,7 @@ func TestUpdateProjectQuota(t *testing.T) {
 		Operation: "MODIFY_QUOTA",
 		State:     "QUEUED",
 		ID:        "fake_task_Id",
-		Entity:    photon.Entity{ID: tenantID},
+		Entity:    photon.Entity{ID: projectID},
 	}
 	taskResponse, err := json.Marshal(queuedTask)
 	if err != nil {
@@ -208,7 +208,7 @@ func TestUpdateProjectQuota(t *testing.T) {
 		Operation: "MODIFY_QUOTA",
 		State:     "COMPLETED",
 		ID:        "fake_task_Id",
-		Entity:    photon.Entity{ID: tenantID},
+		Entity:    photon.Entity{ID: projectID},
 	}
 	response, err := json.Marshal(completedTask)
 	if err != nil {
@@ -289,7 +289,7 @@ func TestExcludeProjectQuota(t *testing.T) {
 		Operation: "MODIFY_QUOTA",
 		State:     "QUEUED",
 		ID:        "fake_task_Id",
-		Entity:    photon.Entity{ID: tenantID},
+		Entity:    photon.Entity{ID: projectID},
 	}
 	taskResponse, err := json.Marshal(queuedTask)
 	if err != nil {
@@ -300,7 +300,7 @@ func TestExcludeProjectQuota(t *testing.T) {
 		Operation: "MODIFY_QUOTA",
 		State:     "COMPLETED",
 		ID:        "fake_task_Id",
-		Entity:    photon.Entity{ID: tenantID},
+		Entity:    photon.Entity{ID: projectID},
 	}
 	response, err := json.Marshal(completedTask)
 	if err != nil {
