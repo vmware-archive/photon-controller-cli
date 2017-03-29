@@ -413,6 +413,8 @@ func setSystemSecurityGroups(c *cli.Context) error {
 		return fmt.Errorf("Usage: system set-security-group <groups>")
 	}
 
+	groups = c.Args()[0]
+
 	items := regexp.MustCompile(`\s*,\s*`).Split(groups, -1)
 	securityGroups := &photon.SecurityGroupsSpec{
 		Items: items,
