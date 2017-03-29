@@ -24,6 +24,7 @@ import (
 
 	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
+	"fmt"
 )
 
 type MockTenantsPage struct {
@@ -69,11 +70,17 @@ func TestCreateDeleteTenant(t *testing.T) {
 
 	set := flag.NewFlagSet("test", 0)
 	set.String("security-groups", "a,b,c", "Comma-separated security group names")
+	set.String("limits", "vm.test1 100 B", "tenant limits")
+	set.Set("limits", "vm.test1 100 B")
 	err = set.Parse([]string{"testname"})
 	if err != nil {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	cxt := cli.NewContext(nil, set, nil)
+
+	if cxt.IsSet("limits") {
+		fmt.Println("settted")
+	}
 
 	err = createTenant(cxt, os.Stdout)
 	if err != nil {
@@ -125,12 +132,19 @@ func TestShowTenant(t *testing.T) {
 	tenantStruct := &photon.Tenant{
 		Name: "fake_tenant_name",
 		ID:   "fake_tenant_ID",
+		ResourceQuota: photon.Quota{
+			QuotaLineItems : photon.QuotaSpec{
+				"vm.test1" : {Limit:100, Usage:0, Unit:"B"},
+				"vm.cpu" : {Limit:100, Usage:0, Unit:"COUNT"},
+			},
+		},
 	}
 	response, err := json.Marshal(tenantStruct)
 	if err != nil {
 		t.Error("Not expecting error serializaing expected tenant")
 	}
 
+	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
 		server.URL+rootUrl+"/tenants"+"/"+"fake_tenant_ID",

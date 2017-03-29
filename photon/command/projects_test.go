@@ -37,6 +37,12 @@ func TestCreateProject(t *testing.T) {
 			{
 				Name: "fake_tenant_name",
 				ID:   "fake_tenant_ID",
+				ResourceQuota: photon.Quota{
+					QuotaLineItems : photon.QuotaSpec{
+						"vm.test1" : {Limit:100, Usage:0, Unit:"B"},
+						"vm.cpu" : {Limit:100, Usage:0, Unit:"COUNT"},
+					},
+				},
 			},
 		},
 	}
@@ -94,10 +100,14 @@ func TestCreateProject(t *testing.T) {
 		t.Error("Not expecting arguments parsing to fail")
 	}
 	set := flag.NewFlagSet("test", 0)
-	set.String("name", "fake_project_name", "project name")
-	set.String("resource-ticket", "fake_rt_Name", "rt name")
+	err = set.Parse([]string{"fake_project_name"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+
 	set.String("tenant", "fake_tenant_name", "tenant name")
 	set.String("limits", "vm.test1 1 B", "project limits")
+	set.Set("limits", "vm.test1 1 B");
 	set.String("security-groups", "fake_security_group", "security groups")
 	set.String("default-router-private-ip-cidr", "192.168.0.0/24", "default router private ip cidr")
 	cxt := cli.NewContext(nil, set, globalCtx)
@@ -112,11 +122,11 @@ func TestShowProject(t *testing.T) {
 	projectStruct := photon.ProjectCompact{
 		Name: "fake_project_name",
 		ID:   "fake_project_ID",
-		ResourceTicket: photon.ProjectTicket{
-			TenantTicketID:   "fake_ticket_id",
-			TenantTicketName: "fake_ticket_name",
-			Limits:           []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-			Usage:            []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
+		ResourceQuota: photon.Quota{
+			QuotaLineItems : photon.QuotaSpec{
+				"vm.test1" : {Limit:1, Usage:0, Unit:"B"},
+				"vm.cpu" : {Limit:10, Usage:0, Unit:"COUNT"},
+			},
 		},
 	}
 	response, err := json.Marshal(projectStruct)
@@ -153,9 +163,10 @@ func TestSetGetProject(t *testing.T) {
 			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
-				ResourceTicket: photon.ProjectTicket{
-					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
+				ResourceQuota: photon.Quota{
+					QuotaLineItems : photon.QuotaSpec{
+						"vm.test1" : {Limit:1, Usage:0, Unit:"B"},
+					},
 				},
 			},
 		},
@@ -214,9 +225,10 @@ func TestListProjects(t *testing.T) {
 			{
 				Name: "fake_project_name",
 				ID:   "fake_project_ID",
-				ResourceTicket: photon.ProjectTicket{
-					Limits: []photon.QuotaLineItem{{Key: "vm.test1", Value: 1, Unit: "B"}},
-					Usage:  []photon.QuotaLineItem{{Key: "vm.test1", Value: 0, Unit: "B"}},
+				ResourceQuota: photon.Quota{
+					QuotaLineItems : photon.QuotaSpec{
+						"vm.test1" : {Limit:1, Usage:0, Unit:"B"},
+					},
 				},
 			},
 		},
@@ -274,22 +286,6 @@ func TestListProjects(t *testing.T) {
 	err = listProjects(cxt, &output)
 	if err != nil {
 		t.Error("Not expecting error listing projects: " + err.Error())
-	}
-
-	// Verify we printed a list of resource ticket starting with a bracket
-	err = checkRegExp(`^\s*\[`, output)
-	if err != nil {
-		t.Errorf("List resource ticket didn't produce a JSON list that starts with a bracket (list): %s", err)
-	}
-	// and end with a bracket (two regular expressions because it's multiline, it's easier)
-	err = checkRegExp(`\]\s*$`, output)
-	if err != nil {
-		t.Errorf("List resource ticket didn't produce JSON that ended in a bracket (list): %s", err)
-	}
-	// And spot check that we have the "id" field
-	err = checkRegExp(`\"id\":\s*\".*\"`, output)
-	if err != nil {
-		t.Errorf("List resource ticket didn't produce a JSON field named 'id': %s", err)
 	}
 }
 
