@@ -765,6 +765,7 @@ type NsxConfigurationSpec struct {
 	TunnelIpPoolId         string            `json:"tunnelIpPoolId"`
 	HostUplinkPnic         string            `json:"hostUplinkPnic"`
 	HostUplinkVlanId       int               `json:"hostUplinkVlanId"`
+	DnsServerAddresses     []string          `json:"dnsServerAddresses"`
 }
 
 // Represents port groups.
