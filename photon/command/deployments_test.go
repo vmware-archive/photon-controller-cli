@@ -335,6 +335,8 @@ func TestConfigureNsx(t *testing.T) {
 	set.String("overlay-transport-zone-id", "overlayTransportZoneId", "ID of the OVERLAY transport zone")
 	set.String("tunnel-ip-pool-id", "tunnelIpPoolId", "ID of the tunnel IP pool")
 	set.String("host-uplink-pnic", "hostUplinkPnic", "Name of the host uplink pnic")
+	set.String("dns-server-addresses", "dnsServerAddress1,dnsServerAddress2", "Comma separated DNS server "+
+		"addresses")
 
 	cxt := cli.NewContext(nil, set, globalCtx)
 	err = configureNsx(cxt)

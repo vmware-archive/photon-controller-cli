@@ -149,6 +149,10 @@ func GetDeploymentsCommand() cli.Command {
 						Name:  "host-uplink-vlan-id",
 						Usage: "VLAN ID of the host uplink",
 					},
+					cli.StringFlag{
+						Name:  "dns-server-addresses",
+						Usage: "Comma-separated list of DNS server addresses",
+					},
 				},
 				Action: func(c *cli.Context) {
 					err := configureNsx(c)
@@ -430,6 +434,7 @@ func configureNsx(c *cli.Context) error {
 	tunnelIpPoolId := c.String("tunnel-ip-pool-id")
 	hostUplinkPnic := c.String("host-uplink-pnic")
 	hostUplinkVlanId := c.Int("host-uplink-vlan-id")
+	dnsServerAddresses := c.String("dns-server-addresses")
 
 	if len(nsxAddress) == 0 {
 		return fmt.Errorf("Please provide IP address of NSX")
@@ -464,6 +469,14 @@ func configureNsx(c *cli.Context) error {
 	if len(hostUplinkPnic) == 0 {
 		return fmt.Errorf("Please provide name of the host uplink pnic")
 	}
+	if len(dnsServerAddresses) == 0 {
+		return fmt.Errorf("Please provide list of the DNS server addresses")
+	}
+
+	dnsServerAddressList := []string{}
+	if dnsServerAddresses != "" {
+		dnsServerAddressList = regexp.MustCompile(`\s*,\s*`).Split(dnsServerAddresses, -1)
+	}
 
 	if confirmed(c) {
 		client.Photonclient, err = client.GetClient(c)
@@ -483,6 +496,7 @@ func configureNsx(c *cli.Context) error {
 			TunnelIpPoolId:         tunnelIpPoolId,
 			HostUplinkPnic:         hostUplinkPnic,
 			HostUplinkVlanId:       hostUplinkVlanId,
+			DnsServerAddresses:     dnsServerAddressList,
 		}
 
 		task, err := client.Photonclient.Deployments.ConfigureNsx(id, nsxConfigSpec)
