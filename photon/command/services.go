@@ -1051,18 +1051,19 @@ func waitForService(id string) (service *photon.Service, err error) {
 				return
 			}
 		}
-		switch strings.ToUpper(service.State) {
-		case "ERROR":
-			endAnimation = true
-			wg.Wait()
-			err = fmt.Errorf("Service %s entered ERROR state", id)
-			return
-		case "READY":
-			endAnimation = true
-			wg.Wait()
-			return
+		if service != nil {
+			switch strings.ToUpper(service.State) {
+			case "ERROR":
+				endAnimation = true
+				wg.Wait()
+				err = fmt.Errorf("Service %s entered ERROR state", id)
+				return
+			case "READY":
+				endAnimation = true
+				wg.Wait()
+				return
+			}
 		}
-
 		time.Sleep(taskPollDelay)
 	}
 
