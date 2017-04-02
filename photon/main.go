@@ -69,7 +69,6 @@ func BuildApp() *cli.App {
 		command.GetProjectsCommand(),
 		command.GetDiskCommand(),
 		command.GetVMCommand(),
-		command.GetNetworksCommand(),
 		command.GetServiceCommand(),
 		command.GetRoutersCommand(),
 		command.GetSubnetsCommand(),
