@@ -25,6 +25,7 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 
+	"encoding/pem"
 	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-cli/photon/utils"
 	"github.com/vmware/photon-controller-go-sdk/photon"
@@ -59,6 +60,25 @@ func GetAuthCommand() cli.Command {
 					"   Using the --detail flag will print the decoded token to stdout.",
 				Action: func(c *cli.Context) {
 					err := showLoginToken(c)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "get-lightwave-ca-cert",
+				Usage:     "Retrieve Lightwave CA certificates",
+				ArgsUsage: " ",
+				Description: "Retrieve Lightwave Certificate Authortity (CA) certificates and store \n" +
+					"   them in the file name specified in the --filename flag.",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "filename, f",
+						Usage: "name of the file to store the CA certificate in",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := getLightwaveCACert(c, os.Stdout)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -153,6 +173,66 @@ func showLoginTokenWriter(c *cli.Context, w io.Writer, config *configuration.Con
 	} else {
 		// General mode
 		dumpTokenDetails(w, "Login Access Token", config.Token)
+	}
+	return nil
+}
+
+// Get lightwave CA certificates
+func getLightwaveCACert(c *cli.Context, w io.Writer) error {
+	err := checkArgCount(c, 0)
+	if err != nil {
+		return err
+	}
+
+	filename := c.String("filename")
+
+	if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
+		filename, err = askForInput("File name: ", filename)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(filename) == 0 {
+		return fmt.Errorf("Please provide a file name")
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	authInfo, err := client.Photonclient.System.GetAuthInfo()
+	if err != nil {
+		return err
+	}
+
+	port := authInfo.Port
+	if port == 0 {
+		port = 443
+	}
+
+	oidcClient := lightwave.NewOIDCClient(fmt.Sprintf("https://%s:%v", authInfo.Endpoint, port), nil, nil)
+	certs, err := oidcClient.GetRootCerts()
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+
+	for _, cert := range certs {
+		_, err := file.Write(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Headers: nil, Bytes: cert.Raw}))
+		if err != nil {
+			return err
+		}
+	}
+
+	err = file.Close()
+	if err != nil {
+		return err
 	}
 	return nil
 }
