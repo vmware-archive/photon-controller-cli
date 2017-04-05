@@ -27,8 +27,8 @@ type SubnetGetOptions struct {
 var subnetUrl string = rootUrl + "/subnets"
 
 // Creates a portgroup.
-func (api *SubnetsAPI) Create(networkSpec *NetworkCreateSpec) (task *Task, err error) {
-	body, err := json.Marshal(networkSpec)
+func (api *SubnetsAPI) Create(subnetSpec *SubnetCreateSpec) (task *Task, err error) {
+	body, err := json.Marshal(subnetSpec)
 	if err != nil {
 		return
 	}

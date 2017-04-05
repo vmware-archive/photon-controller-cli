@@ -770,7 +770,7 @@ type NsxConfigurationSpec struct {
 
 // Represents port groups.
 type PortGroups struct {
-	PortGroups []string `json:"portGroups"`
+	Names []string `json:"names"`
 }
 
 // Represents a subnet
@@ -793,10 +793,11 @@ type Subnets struct {
 
 // Creation spec for subnets.
 type SubnetCreateSpec struct {
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	PrivateIpCidr string `json:"privateIpCidr"`
-	Type          string `json:"type"`
+	Name          string     `json:"name"`
+	Description   string     `json:"description"`
+	PrivateIpCidr string     `json:"privateIpCidr"`
+	Type          string     `json:"type"`
+	PortGroups    PortGroups `json:"portGroups"`
 }
 
 // Represents name that can be set for subnet
