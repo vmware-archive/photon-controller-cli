@@ -1,0 +1,8 @@
+Verified+1: Gerrit-Jenkins
+Code-Review+2: Yisui Hu <yisuih@vmware.com>
+Code-Review+2: Anfernee Yongkun Gui <agui@vmware.com>
+Submitted-by: Yisui Hu <yisuih@vmware.com>
+Submitted-at: Wed, 05 Apr 2017 14:46:13 -0700
+Reviewed-on: https://review.ec.eng.vmware.com/18120
+Project: photon-controller-cli
+Branch: refs/heads/develop
