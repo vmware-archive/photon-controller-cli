@@ -30,7 +30,7 @@ type MockSubnetsPage struct {
 	PreviousPageLink string          `json:"previousPageLink"`
 }
 
-func TestCreateDeleteSubnet(t *testing.T) {
+func TestCreateDeleteVirtualSubnet(t *testing.T) {
 	routerStruct := photon.Router{
 		Name: "fake_router_name",
 		ID:   "fake_router_ID",
@@ -141,6 +141,111 @@ func TestCreateDeleteSubnet(t *testing.T) {
 	err = deleteSubnet(cxt)
 	if err != nil {
 		t.Error("Not expecting error deleting subnet: " + err.Error())
+	}
+}
+
+func TestCreateDeletePhysicalSubnet(t *testing.T) {
+	queuedTask := &photon.Task{
+		Operation: "CREATE_SUBNET",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: "subnet-ID"},
+	}
+	completedTask := &photon.Task{
+		Operation: "CREATE_SUBNET",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: "subnet-ID"},
+	}
+	response, err := json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected queuedTask")
+	}
+	taskresponse, err := json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected completedTask")
+	}
+
+	server := mocks.NewTestServer()
+	mocks.RegisterResponder(
+		"POST",
+		server.URL+rootUrl+"/subnets",
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskresponse[:])))
+	defer server.Close()
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	globalSet := flag.NewFlagSet("test", 0)
+	globalSet.Bool("non-interactive", true, "doc")
+	globalCtx := cli.NewContext(nil, globalSet, nil)
+	err = globalSet.Parse([]string{"--non-interactive"})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	set := flag.NewFlagSet("test", 0)
+	set.String("name", "subnet_name", "subnet name")
+	set.String("portgroups", "portgroup, portgroup2", "portgroups")
+
+	cxt := cli.NewContext(nil, set, globalCtx)
+
+	err = createSubnet(cxt, os.Stdout)
+	if err != nil {
+		t.Error("Not expecting create subnet to fail", err)
+	}
+
+	queuedTask = &photon.Task{
+		Operation: "DELETE_SUBNET",
+		State:     "QUEUED",
+		Entity:    photon.Entity{ID: "subnet-ID"},
+	}
+	completedTask = &photon.Task{
+		Operation: "DELETE_SUBNET",
+		State:     "COMPLETED",
+		Entity:    photon.Entity{ID: "subnet-ID"},
+	}
+	info := &photon.Info{
+		NetworkType: PHYSICAL,
+	}
+
+	response, err = json.Marshal(queuedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected queuedTask")
+	}
+	taskresponse, err = json.Marshal(completedTask)
+	if err != nil {
+		t.Error("Not expecting error serializing expected completedTask")
+	}
+	infoString, err := json.Marshal(info)
+	if err != nil {
+		t.Error("Not expecting error when serializing expected info")
+	}
+
+	mocks.RegisterResponder(
+		"DELETE",
+		server.URL+rootUrl+"/subnets/"+queuedTask.Entity.ID,
+		mocks.CreateResponder(200, string(response[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/tasks/"+queuedTask.ID,
+		mocks.CreateResponder(200, string(taskresponse[:])))
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/info",
+		mocks.CreateResponder(200, string(infoString[:])))
+
+	set = flag.NewFlagSet("test", 0)
+	err = set.Parse([]string{queuedTask.Entity.ID})
+	if err != nil {
+		t.Error("Not expecting arguments parsing to fail")
+	}
+	cxt = cli.NewContext(nil, set, globalCtx)
+	err = deleteSubnet(cxt)
+	if err != nil {
+		t.Error("Not expecting delete subnet to fail")
 	}
 }
 
@@ -340,7 +445,7 @@ func TestListPortGroups(t *testing.T) {
 			{
 				ID:         "subnet_id",
 				Name:       "subnet_name",
-				PortGroups: photon.PortGroups{PortGroups: []string{"port", "group"}},
+				PortGroups: photon.PortGroups{Names: []string{"port", "group"}},
 				IsDefault:  false,
 			},
 		},
