@@ -14,6 +14,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"regexp"
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
@@ -58,6 +59,10 @@ func GetSubnetsCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "router, r",
 						Usage: "The id of the router on which subnet is to be created",
+					},
+					cli.StringFlag{
+						Name:  "portgroups, p",
+						Usage: "PortGroups associated with network (only for physical network)",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -160,6 +165,18 @@ func GetSubnetsCommand() cli.Command {
 // Sends a create Subnet task to client based on the cli.Context
 // Returns an error if one occurred
 func createSubnet(c *cli.Context, w io.Writer) error {
+	routerID := c.String("router")
+
+	if len(routerID) == 0 {
+		return createPhysicalSubnet(c, w)
+	} else {
+		return createVirtualSubnet(c, w, routerID)
+	}
+}
+
+// Creates a subnet under a rouer
+// Returns an error if one occurred
+func createVirtualSubnet(c *cli.Context, w io.Writer, routerId string) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -168,14 +185,13 @@ func createSubnet(c *cli.Context, w io.Writer) error {
 	name := c.String("name")
 	description := c.String("description")
 	privateIpCidr := c.String("privateIpCidr")
-	routerID := c.String("router")
 
 	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
 		return err
 	}
 
-	router, err := client.Photonclient.Routers.Get(routerID)
+	router, err := client.Photonclient.Routers.Get(routerId)
 	if err != nil {
 		return err
 	}
@@ -203,8 +219,6 @@ func createSubnet(c *cli.Context, w io.Writer) error {
 	subnetSpec.Name = name
 	subnetSpec.Description = description
 	subnetSpec.PrivateIpCidr = privateIpCidr
-
-	// (TODO:ysheng) Hard code "NAT" here since it is the only type we support for now.
 	subnetSpec.Type = "NAT"
 
 	if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
@@ -228,6 +242,78 @@ func createSubnet(c *cli.Context, w io.Writer) error {
 
 	} else {
 		fmt.Println("OK. Canceled")
+	}
+
+	return nil
+}
+
+// Creates a PORT_GROUP type subnet
+// Returns an error if one occurred
+func createPhysicalSubnet(c *cli.Context, w io.Writer) error {
+	err := checkArgCount(c, 0)
+	if err != nil {
+		return err
+	}
+
+	name := c.String("name")
+	description := c.String("description")
+	portGroups := c.String("portgroups")
+
+	if !c.GlobalIsSet("non-interactive") {
+		name, err = askForInput("Subnet name: ", name)
+		if err != nil {
+			return err
+		}
+		description, err = askForInput("Description of subnet: ", description)
+		if err != nil {
+			return err
+		}
+		portGroups, err = askForInput("PortGroups of subnet: ", portGroups)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(name) == 0 {
+		return fmt.Errorf("Please provide subnet name")
+	}
+	if len(portGroups) == 0 {
+		return fmt.Errorf("Please provide portgroups")
+	}
+
+	portGroupList := regexp.MustCompile(`\s*,\s*`).Split(portGroups, -1)
+	portGroupNames := photon.PortGroups{
+		Names: portGroupList,
+	}
+
+	createSpec := &photon.SubnetCreateSpec{
+		Name:        name,
+		Description: description,
+		Type:        "PORT_GROUP",
+		PortGroups:  portGroupNames,
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	task, err := client.Photonclient.Subnets.Create(createSpec)
+	if err != nil {
+		return err
+	}
+
+	id, err := waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		network, err := client.Photonclient.Subnets.Get(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(network, w, c)
 	}
 
 	return nil
@@ -298,7 +384,7 @@ func listSubnets(c *cli.Context, w io.Writer) error {
 	if c.GlobalIsSet("non-interactive") {
 		for _, subnet := range subnetList.Items {
 			fmt.Printf("%s\t%s\t%s\t%s\t%t\t%s\n", subnet.ID, subnet.Name, subnet.Kind, subnet.PrivateIpCidr,
-				subnet.IsDefault, subnet.PortGroups.PortGroups)
+				subnet.IsDefault, subnet.PortGroups.Names)
 		}
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObjects(subnetList, w, c)
@@ -309,7 +395,7 @@ func listSubnets(c *cli.Context, w io.Writer) error {
 		for _, subnet := range subnetList.Items {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%t\t%s\n", subnet.ID, subnet.Name, subnet.Kind,
 				subnet.Description, subnet.PrivateIpCidr, subnet.ReservedIps, subnet.State,
-				subnet.IsDefault, subnet.PortGroups.PortGroups)
+				subnet.IsDefault, subnet.PortGroups.Names)
 		}
 		err := w.Flush()
 		if err != nil {
@@ -339,7 +425,7 @@ func showSubnet(c *cli.Context, w io.Writer) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		portGroups := getCommaSeparatedStringFromStringArray(subnet.PortGroups.PortGroups)
+		portGroups := getCommaSeparatedStringFromStringArray(subnet.PortGroups.Names)
 		fmt.Printf("%s\t%s\t%s\t%s\t%t\t%s\n",
 			subnet.ID, subnet.Name, subnet.Description, subnet.PrivateIpCidr, subnet.IsDefault, portGroups)
 	} else if utils.NeedsFormatting(c) {
@@ -350,7 +436,7 @@ func showSubnet(c *cli.Context, w io.Writer) error {
 		fmt.Println("  description:          ", subnet.Description)
 		fmt.Println("  privateIpCidr:        ", subnet.PrivateIpCidr)
 		fmt.Println("  isDefault:            ", subnet.IsDefault)
-		fmt.Println("  Port Groups:          ", subnet.PortGroups.PortGroups)
+		fmt.Println("  Port Groups:          ", subnet.PortGroups.Names)
 	}
 
 	return nil
