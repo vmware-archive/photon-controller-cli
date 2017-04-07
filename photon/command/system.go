@@ -227,7 +227,7 @@ func showSystemInfo(c *cli.Context, w io.Writer) error {
 			deployment.LoadBalancerAddress)
 
 		fmt.Printf("%s\t%s\t%d\t%s\n", deployment.Auth.Endpoint,
-			deployment.Auth.Tenant, deployment.Auth.Port, securityGroups)
+			deployment.Auth.Domain, deployment.Auth.Port, securityGroups)
 
 	} else {
 		syslogEndpoint := deployment.SyslogEndpoint
@@ -254,7 +254,7 @@ func showSystemInfo(c *cli.Context, w io.Writer) error {
 
 		fmt.Printf("\n  Auth:\n")
 		fmt.Printf("    Endpoint:                  %s\n", deployment.Auth.Endpoint)
-		fmt.Printf("    Tenant:                    %s\n", deployment.Auth.Tenant)
+		fmt.Printf("    Domain:                    %s\n", deployment.Auth.Domain)
 		fmt.Printf("    Port:                      %d\n", deployment.Auth.Port)
 		fmt.Printf("    SecurityGroups:            %v\n", deployment.Auth.SecurityGroups)
 	}

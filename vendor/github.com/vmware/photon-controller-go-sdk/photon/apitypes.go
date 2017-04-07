@@ -501,7 +501,7 @@ type StatsInfo struct {
 type AuthInfo struct {
 	Password       string   `json:"password,omitempty"`
 	Endpoint       string   `json:"endpoint,omitempty"`
-	Tenant         string   `json:"tenant,omitempty"`
+	Domain         string   `json:"domain,omitempty"`
 	Port           int      `json:"port,omitempty"`
 	SecurityGroups []string `json:"securityGroups,omitempty"`
 	Username       string   `json:"username,omitempty"`
@@ -604,6 +604,7 @@ type Service struct {
 	ImageID            string                `json:"imageId"`
 	UpgradeStatus      *ServiceUpgradeStatus `json:"upgradeStatus,omitempty"`
 	ProjectID          string                `json:"projectID,omitempty"`
+	ClientID           string                `json:"clientId,omitempty"`
 	WorkerCount        int                   `json:"workerCount"`
 	SelfLink           string                `json:"selfLink,omitempty"`
 	ErrorReason        string                `json:"errorReason,omitempty"`

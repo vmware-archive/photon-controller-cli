@@ -15,6 +15,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -29,6 +30,8 @@ import (
 	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
 
+	"encoding/pem"
+	"github.com/vmware/photon-controller-go-sdk/photon/lightwave"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -337,6 +340,31 @@ func GetServiceCommand() cli.Command {
 				},
 				Action: func(c *cli.Context) {
 					err := changeVersion(c, os.Stdout)
+					if err != nil {
+						log.Fatal("Error: ", err)
+					}
+				},
+			},
+			{
+				Name:      "get-kubectl-auth",
+				Usage:     "Generate the kubectl command for authentication",
+				ArgsUsage: "service-id",
+				Description: "Generate the kubectl (Kubernetes command line client) command which " +
+					"can be used to configure kubectl with authentication. \n" +
+					"Example: photon service get-kubectl-auth -u admin -p password " +
+					"9b159e92-9495-49a4-af58-53ad4764f616",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "username, u",
+						Usage: "Username used for Photon Controller login",
+					},
+					cli.StringFlag{
+						Name:  "password, p",
+						Usage: "Password used for Photon Controller login",
+					},
+				},
+				Action: func(c *cli.Context) {
+					err := getKubectlAuth(c)
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
@@ -1025,6 +1053,99 @@ func changeVersion(c *cli.Context, w io.Writer) error {
 	return nil
 }
 
+func getKubectlAuth(c *cli.Context) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+
+	serviceID := c.Args().First()
+	username := c.String("username")
+	password := c.String("password")
+
+	if len(serviceID) == 0 {
+		return fmt.Errorf("Provide a valid service ID")
+	}
+
+	if !c.GlobalIsSet("non-interactive") {
+		username, err = askForInput("User name (username@tenant): ", username)
+		if err != nil {
+			return err
+		}
+		if len(password) == 0 {
+			fmt.Printf("Password: ")
+			// Casting syscall.Stdin to int because during
+			// Windows cross-compilation syscall.Stdin is incorrectly
+			// treated as a String.
+			bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				return err
+			}
+			password = string(bytePassword)
+			fmt.Printf("\n")
+		}
+	}
+
+	if len(username) == 0 || len(password) == 0 {
+		return fmt.Errorf("Please provide a valid username/password")
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	service, err := client.Photonclient.Services.Get(serviceID)
+	if err != nil {
+		return err
+	}
+
+	authInfo, err := client.Photonclient.System.GetAuthInfo()
+	if err != nil {
+		return err
+	}
+
+	oidcClient := lightwave.NewOIDCClient(fmt.Sprintf("https://%s:%v", authInfo.Endpoint, authInfo.Port), nil, nil)
+	certs, err := oidcClient.GetRootCerts()
+	if err != nil {
+		return err
+	}
+
+	certFile := "/tmp/lw-ca-cert-" + generateRandomString(4) + ".pem"
+	file, err := os.Create(certFile)
+	if err != nil {
+		return err
+	}
+
+	for _, cert := range certs {
+		_, err := file.Write(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Headers: nil, Bytes: cert.Raw}))
+		if err != nil {
+			return err
+		}
+	}
+
+	err = file.Close()
+	if err != nil {
+		return err
+	}
+
+	options, err := client.Photonclient.Auth.GetClientTokensByPassword(username, password, service.ClientID)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("kubectl config set-credentials %s \\ \n", username)
+	fmt.Printf("    --auth-provider=oidc \\ \n")
+	fmt.Printf("    --auth-provider-arg=idp-issuer-url=https://%s/openidconnect/%s \\ \n", authInfo.Endpoint, authInfo.Domain)
+	fmt.Printf("    --auth-provider-arg=client-id=%s \\ \n", service.ClientID)
+	fmt.Printf("    --auth-provider-arg=client-secret=%s \\ \n", service.ClientID)
+	fmt.Printf("    --auth-provider-arg=refresh-token=%s \\ \n", options.RefreshToken)
+	fmt.Printf("    --auth-provider-arg=id-token=%s \\ \n", options.IdToken)
+	fmt.Printf("    --auth-provider-arg=idp-certificate-authority=%s \n", certFile)
+
+	return nil
+}
+
 // Helper routine which waits for a service to enter the READY state.
 func waitForService(id string) (service *photon.Service, err error) {
 	start := time.Now()
@@ -1203,4 +1324,19 @@ func validateHarborPassword(password string) bool {
 		}
 	}
 	return correct && number && upper && lower && (count >= 7)
+}
+
+func generateRandomString(length int) string {
+	const asciiA = 65
+	const asciiZ = 90
+	rand.Seed(time.Now().UTC().UnixNano())
+	bytes := make([]byte, length)
+	for i := 0; i < length; i++ {
+		bytes[i] = byte(randInt(asciiA, asciiZ))
+	}
+	return string(bytes)
+}
+
+func randInt(min int, max int) int {
+	return min + rand.Intn(max-min)
 }

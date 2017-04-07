@@ -34,6 +34,21 @@ func (api *AuthAPI) GetTokensByPassword(username string, password string) (token
 	return api.toTokenOptions(tokenResponse), nil
 }
 
+// Gets tokens for client from username, password and a client ID.
+func (api *AuthAPI) GetClientTokensByPassword(username string, password string, clientID string) (tokenOptions *TokenOptions, err error) {
+	oidcClient, err := api.buildOIDCClient()
+	if err != nil {
+		return
+	}
+
+	tokenResponse, err := oidcClient.GetClientTokenByPasswordGrant(username, password, clientID)
+	if err != nil {
+		return
+	}
+
+	return api.toTokenOptions(tokenResponse), nil
+}
+
 // GetTokensFromWindowsLogInContext gets tokens based on Windows logged in context
 // In case of running on platform other than Windows, it returns error
 func (api *AuthAPI) GetTokensFromWindowsLogInContext() (tokenOptions *TokenOptions, err error) {
