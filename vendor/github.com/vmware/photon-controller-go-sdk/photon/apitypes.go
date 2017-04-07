@@ -188,11 +188,10 @@ type DiskList struct {
 
 // Creation spec for projects.
 type ProjectCreateSpec struct {
-	ResourceTicket             ResourceTicketReservation `json:"resourceTicket"`
-	Name                       string                    `json:"name"`
-	SecurityGroups             []string                  `json:"securityGroups,omitempty"`
-	DefaultRouterPrivateIpCidr string                    `json:"defaultRouterPrivateIpCidr,omitempty"`
-	ResourceQuota              Quota                     `json:"quota,omitempty"`
+	Name                       string   `json:"name"`
+	SecurityGroups             []string `json:"securityGroups,omitempty"`
+	DefaultRouterPrivateIpCidr string   `json:"defaultRouterPrivateIpCidr,omitempty"`
+	ResourceQuota              Quota    `json:"quota,omitempty"`
 }
 
 // Represents multiple projects returned by the API.
@@ -203,20 +202,12 @@ type ProjectList struct {
 // Compact representation of projects.
 type ProjectCompact struct {
 	Kind           string          `json:"kind"`
-	ResourceTicket ProjectTicket   `json:"resourceTicket"`
 	Name           string          `json:"name"`
 	ID             string          `json:"id"`
 	Tags           []string        `json:"tags"`
 	SelfLink       string          `json:"selfLink"`
 	SecurityGroups []SecurityGroup `json:"securityGroups"`
 	ResourceQuota  Quota           `json:"quota,omitempty"`
-}
-
-type ProjectTicket struct {
-	TenantTicketID   string          `json:"tenantTicketId"`
-	Usage            []QuotaLineItem `json:"usage"`
-	TenantTicketName string          `json:"tenantTicketName"`
-	Limits           []QuotaLineItem `json:"limits"`
 }
 
 // Represents an image.
@@ -227,6 +218,7 @@ type Image struct {
 	State               string         `json:"state"`
 	ID                  string         `json:"id"`
 	Tags                []string       `json:"tags"`
+	Scope               ImageScope     `json:"scope"`
 	SelfLink            string         `json:"selfLink"`
 	Settings            []ImageSetting `json:"settings"`
 	ReplicationType     string         `json:"replicationType"`
@@ -234,7 +226,13 @@ type Image struct {
 	SeedingProgress     string         `json:"seedingProgress"`
 }
 
-// Represents an image setting
+// Represents an image scope.
+type ImageScope struct {
+	Kind string `json:"kind"`
+	ID   string `json:"id"`
+}
+
+// Represents an image setting.
 type ImageSetting struct {
 	Name         string `json:"name"`
 	DefaultValue string `json:"defaultValue"`
@@ -265,15 +263,14 @@ type Status struct {
 
 // Represents a single tenant.
 type Tenant struct {
-	Projects        []BaseCompact   `json:"projects"`
-	ResourceTickets []BaseCompact   `json:"resourceTickets"`
-	Kind            string          `json:"kind"`
-	Name            string          `json:"name"`
-	ID              string          `json:"id"`
-	SelfLink        string          `json:"selfLink"`
-	Tags            []string        `json:"tags"`
-	SecurityGroups  []SecurityGroup `json:"securityGroups"`
-	ResourceQuota   Quota           `json:"quota,omitempty"`
+	Projects       []BaseCompact   `json:"projects"`
+	Kind           string          `json:"kind"`
+	Name           string          `json:"name"`
+	ID             string          `json:"id"`
+	SelfLink       string          `json:"selfLink"`
+	Tags           []string        `json:"tags"`
+	SecurityGroups []SecurityGroup `json:"securityGroups"`
+	ResourceQuota  Quota           `json:"quota,omitempty"`
 }
 
 // Represents multiple tenants returned by the API.
@@ -286,35 +283,6 @@ type TenantCreateSpec struct {
 	Name           string   `json:"name"`
 	SecurityGroups []string `json:"securityGroups,omitempty"`
 	ResourceQuota  Quota    `json:"quota,omitempty"`
-}
-
-// Creation spec for resource tickets.
-type ResourceTicketCreateSpec struct {
-	Name   string          `json:"name"`
-	Limits []QuotaLineItem `json:"limits"`
-}
-
-// Represents a single resource ticket.
-type ResourceTicket struct {
-	Kind     string          `json:"kind"`
-	Usage    []QuotaLineItem `json:"usage"`
-	TenantId string          `json:"tenantId"`
-	Name     string          `json:"name"`
-	ID       string          `json:"id"`
-	Limits   []QuotaLineItem `json:"limits"`
-	Tags     []string        `json:"tags"`
-	SelfLink string          `json:"selfLink"`
-}
-
-// Represents multiple resource tickets returned by the API.
-type ResourceList struct {
-	Items []ResourceTicket `json:"items"`
-}
-
-// Represents a resource reservation on a resource ticket.
-type ResourceTicketReservation struct {
-	Name   string          `json:"name"`
-	Limits []QuotaLineItem `json:"limits"`
 }
 
 // Represents the quota
@@ -574,13 +542,6 @@ type NetworkConfiguration struct {
 	SnatIp          string   `json:"snatIp,omitempty"`
 }
 
-// Creation spec for networks.
-type NetworkCreateSpec struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description,omitempty"`
-	PortGroups  []string `json:"portGroups"`
-}
-
 // Represents a router
 type Router struct {
 	ID            string `json:"id"`
@@ -684,25 +645,6 @@ type SecurityGroupsSpec struct {
 	Items []string `json:"items"`
 }
 
-// Represents single availability zone.
-type AvailabilityZone struct {
-	Kind     string `json:"kind"`
-	Name     string `json:"name"`
-	State    string `json:"state"`
-	ID       string `json:"id"`
-	SelfLink string `json:"selfLink"`
-}
-
-// Represents multiple availability zones returned by the API.
-type AvailabilityZones struct {
-	Items []AvailabilityZone `json:"items"`
-}
-
-// Creation spec for availability zones.
-type AvailabilityZoneCreateSpec struct {
-	Name string `json:"name"`
-}
-
 // Represents availability zone that can be set for host
 type HostSetAvailabilityZoneOperation struct {
 	AvailabilityZoneId string `json:"availabilityZoneId"`
@@ -725,11 +667,6 @@ type Zones struct {
 // Creation spec for zones.
 type ZoneCreateSpec struct {
 	Name string `json:"name"`
-}
-
-// Represents zone that can be set for host
-type HostSetZoneOperation struct {
-	ZoneId string `json:"zoneId"`
 }
 
 // Represents the list of image datastores.

@@ -337,6 +337,17 @@ func deleteImage(c *cli.Context) error {
 	return nil
 }
 
+func imageScopeToString(scope *photon.ImageScope) string {
+	if scope == nil {
+		return ""
+	}
+	if scope.Kind == "deployment" {
+		return "infrastructure"
+	} else {
+		return scope.Kind + ": " + scope.ID
+	}
+}
+
 // Lists all images
 func listImages(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 0)
@@ -359,18 +370,18 @@ func listImages(c *cli.Context, w io.Writer) error {
 
 	if c.GlobalIsSet("non-interactive") {
 		for _, image := range images.Items {
-			fmt.Printf("%s\t%s\t%s\t%d\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size,
-				image.ReplicationType, image.ReplicationProgress, image.SeedingProgress)
+			fmt.Printf("%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size,
+				image.ReplicationType, image.ReplicationProgress, image.SeedingProgress, imageScopeToString(&image.Scope))
 		}
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObjects(images.Items, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w, "ID\tName\tState\tSize(Byte)\tReplication_type\tReplicationProgress\tSeedingProgress\n")
+		fmt.Fprintf(w, "ID\tName\tState\tSize(Byte)\tReplication_type\tReplicationProgress\tSeedingProgress\tScope\n")
 		for _, image := range images.Items {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%d\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size,
-				image.ReplicationType, image.ReplicationProgress, image.SeedingProgress)
+			fmt.Fprintf(w, "%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size,
+				image.ReplicationType, image.ReplicationProgress, image.SeedingProgress, imageScopeToString(&image.Scope))
 		}
 		err = w.Flush()
 		if err != nil {
@@ -415,8 +426,8 @@ func showImage(c *cli.Context, w io.Writer) error {
 			settings = append(settings, fmt.Sprintf("%s:%s", setting.Name, setting.DefaultValue))
 		}
 		scriptSettings := strings.Join(settings, ",")
-		fmt.Printf("%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size, image.ReplicationType,
-			image.ReplicationProgress, image.SeedingProgress, scriptSettings)
+		fmt.Printf("%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s\n", image.ID, image.Name, image.State, image.Size, image.ReplicationType,
+			image.ReplicationProgress, image.SeedingProgress, scriptSettings, imageScopeToString(&image.Scope))
 
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(image, w, c)
@@ -425,6 +436,7 @@ func showImage(c *cli.Context, w io.Writer) error {
 		fmt.Printf("  Name:                       %s\n", image.Name)
 		fmt.Printf("  State:                      %s\n", image.State)
 		fmt.Printf("  Size:                       %d Byte(s)\n", image.Size)
+		fmt.Printf("  Image Scope:                %s\n", imageScopeToString(&image.Scope))
 		fmt.Printf("  Image Replication Type:     %s\n", image.ReplicationType)
 		fmt.Printf("  Image Replication Progress: %s\n", image.ReplicationProgress)
 		fmt.Printf("  Image Seeding Progress:     %s\n", image.SeedingProgress)

@@ -21,31 +21,29 @@ import (
 
 // Represents stateless context needed to call photon APIs.
 type Client struct {
-	options           ClientOptions
-	restClient        *restClient
-	logger            *log.Logger
-	Endpoint          string
-	Tenants           *TenantsAPI
-	Tasks             *TasksAPI
-	Projects          *ProjectsAPI
-	Flavors           *FlavorsAPI
-	Images            *ImagesAPI
-	Disks             *DisksAPI
-	VMs               *VmAPI
-	Hosts             *HostsAPI
-	Datastores        *DatastoresAPI
-	Deployments       *DeploymentsAPI
-	ResourceTickets   *ResourceTicketsAPI
-	Services          *ServicesAPI
-	Auth              *AuthAPI
-	AvailabilityZones *AvailabilityZonesAPI
-	Info              *InfoAPI
-	Routers           *RoutersAPI
-	Subnets           *SubnetsAPI
-	System            *SystemAPI
-	Zones             *ZonesAPI
-	Infra             *InfraAPI
-	InfraHosts        *InfraHostsAPI
+	options     ClientOptions
+	restClient  *restClient
+	logger      *log.Logger
+	Endpoint    string
+	Tenants     *TenantsAPI
+	Tasks       *TasksAPI
+	Projects    *ProjectsAPI
+	Flavors     *FlavorsAPI
+	Images      *ImagesAPI
+	Disks       *DisksAPI
+	VMs         *VmAPI
+	Hosts       *HostsAPI
+	Datastores  *DatastoresAPI
+	Deployments *DeploymentsAPI
+	Services    *ServicesAPI
+	Auth        *AuthAPI
+	Info        *InfoAPI
+	Routers     *RoutersAPI
+	Subnets     *SubnetsAPI
+	System      *SystemAPI
+	Zones       *ZonesAPI
+	Infra       *InfraAPI
+	InfraHosts  *InfraHostsAPI
 }
 
 // Represents Tokens
@@ -164,10 +162,8 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	c.Hosts = &HostsAPI{c}
 	c.Datastores = &DatastoresAPI{c}
 	c.Deployments = &DeploymentsAPI{c}
-	c.ResourceTickets = &ResourceTicketsAPI{c}
 	c.Services = &ServicesAPI{c}
 	c.Auth = &AuthAPI{c}
-	c.AvailabilityZones = &AvailabilityZonesAPI{c}
 	c.Info = &InfoAPI{c}
 	c.Routers = &RoutersAPI{c}
 	c.Subnets = &SubnetsAPI{c}

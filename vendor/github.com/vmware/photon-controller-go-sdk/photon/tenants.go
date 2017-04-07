@@ -76,42 +76,6 @@ func (api *TenantsAPI) Delete(id string) (task *Task, err error) {
 	return
 }
 
-// Creates a resource ticket on the specified tenant.
-func (api *TenantsAPI) CreateResourceTicket(tenantId string, spec *ResourceTicketCreateSpec) (task *Task, err error) {
-	body, err := json.Marshal(spec)
-	if err != nil {
-		return
-	}
-	res, err := api.client.restClient.Post(
-		api.client.Endpoint+tenantUrl+"/"+tenantId+"/resource-tickets",
-		"application/json",
-		bytes.NewReader(body),
-		api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	task, err = getTask(getError(res))
-	return
-}
-
-// Gets resource tickets for tenant with the specified ID, using options to filter the results.
-// If options is nil, no filtering will occur.
-func (api *TenantsAPI) GetResourceTickets(tenantId string, options *ResourceTicketGetOptions) (tickets *ResourceList, err error) {
-	uri := api.client.Endpoint + tenantUrl + "/" + tenantId + "/resource-tickets"
-	if options != nil {
-		uri += getQueryString(options)
-	}
-	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
-	if err != nil {
-		return
-	}
-
-	tickets = &ResourceList{}
-	err = json.Unmarshal(res, tickets)
-	return
-}
-
 // Creates a project on the specified tenant.
 func (api *TenantsAPI) CreateProject(tenantId string, spec *ProjectCreateSpec) (task *Task, err error) {
 	body, err := json.Marshal(spec)

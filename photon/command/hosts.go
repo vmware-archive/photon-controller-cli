@@ -449,41 +449,6 @@ func setHostAvailabilityZone(c *cli.Context, w io.Writer) error {
 	return nil
 }
 
-// Set host's zone with the specified host ID, returns an error if one occurred
-func setHostZone(c *cli.Context, w io.Writer) error {
-	err := checkArgCount(c, 2)
-	if err != nil {
-		return err
-	}
-	id := c.Args().First()
-	zoneId := c.Args()[1]
-
-	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	setZoneSpec := photon.HostSetZoneOperation{}
-	setZoneSpec.ZoneId = zoneId
-	setTask, err := client.Photonclient.Hosts.SetZone(id, &setZoneSpec)
-	if err != nil {
-		return err
-	}
-	id, err = waitOnTaskOperation(setTask.ID, c)
-	if err != nil {
-		return err
-	}
-	if utils.NeedsFormatting(c) {
-		host, err := client.Photonclient.InfraHosts.Get(id)
-		if err != nil {
-			return err
-		}
-		utils.FormatObject(host, w, c)
-	}
-
-	return nil
-}
-
 func getHostTasks(c *cli.Context, w io.Writer) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
