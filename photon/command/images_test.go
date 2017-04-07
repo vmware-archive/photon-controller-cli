@@ -70,6 +70,7 @@ func TestCreateDeleteImage(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	set.String("name", "n", "testname")
 	set.String("image_replication", "EAGER", "image replication")
+	set.String("scope", "project", "image scope")
 	set.String("project", projectId, "project id")
 	err = set.Parse([]string{"../../testdata/tty_tiny.ova"})
 	if err != nil {
