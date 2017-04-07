@@ -20,6 +20,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/vmware/photon-controller-cli/photon/client"
+	"github.com/vmware/photon-controller-cli/photon/configuration"
 	"github.com/vmware/photon-controller-cli/photon/utils"
 
 	"github.com/urfave/cli"
@@ -47,8 +48,8 @@ func GetImagesCommand() cli.Command {
 				Description: "Upload a new image to Photon Controller.\n" +
 					"   If the image replication is EAGER, it will be distributed to all allowed datastores on all ESXi hosts\n" +
 					"   If the image replication is ON_DEMAND, it will be distributed to all image datastores\n" +
-					"   An image can have project scope or infrastructure scope. To create infrastructure images, enter empty\n" +
-					"   value for project_id. Only system administrators can create infrastructure images.",
+					"   An image can have project scope or infrastructure scope. Only system administrators can create\n" +
+					"   infrastructure images.",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
@@ -59,8 +60,12 @@ func GetImagesCommand() cli.Command {
 						Usage: "Image replication type (EAGER or ON_DEMAND)",
 					},
 					cli.StringFlag{
+						Name:  "scope, s",
+						Usage: "Image scope (infrastructure/infra or project; default to project)",
+					},
+					cli.StringFlag{
 						Name:  "project, p",
-						Usage: "Project ID, or enter empty value for infrastructure images.",
+						Usage: "Project ID, required for image with project scope.",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -209,6 +214,7 @@ func createImage(c *cli.Context, w io.Writer) error {
 	filePath := c.Args().First()
 	name := c.String("name")
 	replicationType := c.String("image_replication")
+	scope := c.String("scope")
 	projectID := c.String("project")
 
 	if !c.GlobalIsSet("non-interactive") {
@@ -253,9 +259,37 @@ func createImage(c *cli.Context, w io.Writer) error {
 			replicationType = defaultReplication
 		}
 
-		projectID, err = askForInput("Project ID (ENTER to create infrastructure image): ", projectID)
+		defaultScope := "project"
+		scope, err = askForInput("Image scope (default: "+defaultScope+"): ", scope)
 		if err != nil {
 			return err
+		}
+		if len(scope) == 0 {
+			scope = defaultScope
+		}
+		if scope != "infrastructure" && scope != "infra" && scope != "project" {
+			return fmt.Errorf(scope + " is not a supported scope. Enter infrastructure, infra or project.")
+		}
+
+		if scope == "project" && len(projectID) == 0 {
+			// Try loading default Project from configuration
+			config, err := configuration.LoadConfig()
+			if err != nil {
+				return err
+			}
+			if config != nil && config.Project != nil {
+				projectID = config.Project.ID
+			}
+			// If no default Project, prompt for Project ID
+			if len(projectID) == 0 {
+				projectID, err = askForInput("Project ID: ", projectID)
+				if err != nil {
+					return err
+				}
+			}
+			if len(projectID) == 0 {
+				return fmt.Errorf("Please provide project ID")
+			}
 		}
 	}
 
