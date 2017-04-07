@@ -1134,13 +1134,13 @@ func getKubectlAuth(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("kubectl config set-credentials %s \\ \n", username)
-	fmt.Printf("    --auth-provider=oidc \\ \n")
-	fmt.Printf("    --auth-provider-arg=idp-issuer-url=https://%s/openidconnect/%s \\ \n", authInfo.Endpoint, authInfo.Domain)
-	fmt.Printf("    --auth-provider-arg=client-id=%s \\ \n", service.ClientID)
-	fmt.Printf("    --auth-provider-arg=client-secret=%s \\ \n", service.ClientID)
-	fmt.Printf("    --auth-provider-arg=refresh-token=%s \\ \n", options.RefreshToken)
-	fmt.Printf("    --auth-provider-arg=id-token=%s \\ \n", options.IdToken)
+	fmt.Printf("kubectl config set-credentials %s \\\n", username)
+	fmt.Printf("    --auth-provider=oidc \\\n")
+	fmt.Printf("    --auth-provider-arg=idp-issuer-url=https://%s/openidconnect/%s \\\n", authInfo.Endpoint, authInfo.Domain)
+	fmt.Printf("    --auth-provider-arg=client-id=%s \\\n", service.ClientID)
+	fmt.Printf("    --auth-provider-arg=client-secret=%s \\\n", service.ClientID)
+	fmt.Printf("    --auth-provider-arg=refresh-token=%s \\\n", options.RefreshToken)
+	fmt.Printf("    --auth-provider-arg=id-token=%s \\\n", options.IdToken)
 	fmt.Printf("    --auth-provider-arg=idp-certificate-authority=%s \n", certFile)
 
 	return nil
