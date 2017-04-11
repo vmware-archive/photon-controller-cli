@@ -74,28 +74,32 @@ For instance, you can see the top-level commands with:
        Git commit hash: 4607b29
 
     COMMANDS:
-       auth			options for auth
-       system		options for system operations
-       target		options for target
-       tenant		options for tenant
-       host			options for host
-       deployment		options for deployment
-       resource-ticket	options for resource-ticket
-       image		options for image
-       task			options for task
-       flavor		options for flavor
-       project		options for project
-       disk			options for disk
-       vm			options for vm
-       network		options for network
-       service		Options for services
-       availability-zone	options for availability-zone
-       help, h		Shows a list of commands or help for one command
+       auth         options for auth
+       system       options for system operations
+       target       options for target
+       tenant       options for tenant
+       host         options for host
+       datastore    options for datastore
+       deployment   options for deployment
+       image        options for image
+       task         options for task
+       flavor       options for flavor
+       project      options for project
+       disk         options for disk
+       vm           options for vm
+       service      Options for services
+       router       options for router
+       subnet       options for subnet
+       zone         options for zone
+       help, h      Shows a list of commands or help for one command
 
     GLOBAL OPTIONS:
-       --non-interactive, -n	trigger for non-interactive mode (scripting)
-       --help, -h			show help
-       --version, -v		print the version
+       --non-interactive, -n       trigger for non-interactive mode (scripting)
+       --log-file value, -l value  write logging information into a logfile at the specified path
+       --output value, -o value    select output format
+       --detail, -d                print the current target, user, tenant and project
+       --help, -h                  show help
+       --version, -v               print the version
 
 You can see help for an individual command too:
 
@@ -107,14 +111,16 @@ You can see help for an individual command too:
        photon tenant command [command options] [arguments...]
 
     COMMANDS:
-       create		Create a new tenant
-       delete		Delete a tenant
-       list			List tenants
-       set			Select tenant to work with
-       show			Show current tenant
-       tasks		Show tenant tasks
-       set_security_groups	Set security groups for a tenant
-       help, h		Shows a list of commands or help for one command
+       create               Create a new tenant
+       delete               Delete a tenant
+       list                 List tenants
+       set                  Select tenant to work with
+       show                 Show current tenant
+       tasks                Show tenant tasks
+       set-security-groups  Set security groups for a tenant
+       iam                  options for identity and access management
+       quota                options for tenant quota
+       help, h              Shows a list of commands or help for one command
 
     OPTIONS:
        --help, -h	show help
@@ -137,7 +143,7 @@ Usage: `photon target set <PHOTON-CONTROLLER-URL>`
 
 Example:
 
-    % photon target set https://198.51.100.41
+    % photon target set -c https://198.51.100.41
     API target set to 'https://198.51.100.41'
 
 If you are not using HTTPS, specify the port:
@@ -181,64 +187,49 @@ You can see what the current tenant is:
     % photon tenant get
     Current tenant is 'cloud-dev' 502f9a79-96b6-451d-bfb9-6292ca5b6cfd
 
-### Resource tickets
-You create resource tickets to control the allocations granted to projects,
-which are owned by tenants.
+### Quota
+You assign quota to control the resource allocations granted to tenants and projects.
 
-A resource ticket must specify the number of VMs that can be created as well
-as the total amount of RAM consumed by those VMs. It's possible to have user-defined
-resources as well. These are specified as comma-separated limits, and each
-limit is a set of three things:
+A quota must specify the number of VMs that can be created as well as the total amount
+of RAM consumed by those VMs. If a flavor is used for VM creation, all of its costs
+must be in the quota including ephemeral and persistent disk capacities. It's possible
+to have user-defined quota as well. These are specified as comma-separated limits, and
+each limit is a set of three things:
 
 * Name (e.g. vm.memory)
 * Value (e.g. 2000)
 * Units (GB, MB, KB, COUNT)
 
-Creating a ticket in the current tenant (see above, or use the --tenant flag):
+Creating a tenant with quota assigned (see above, or use the --tenant flag):
 
-Usage `photon resource-ticket create --name <RESOURCE-TICKET-NAME> --limits "<LIMITS>"`
+Usage `photon tenant create cloud-dev --limits "<LIMITS>"`
 
 Example:
 
-    % photon -n resource-ticket create --name cloud-dev-resources
-             --limits "vm.memory 2000 GB, vm 1000 COUNT"
+    % photon -n tenant create --name cloud-dev
+             --limits "vm.memory 2000 GB, vm 1000 COUNT, ephemeral-disk.capacity 2000 GB"
     32ad527e-d21a-4b2a-a235-b0883bd64354
 
-Creating a ticket with user-defined resources:
+Creating a tenant with user-defined resources:
 
-    % photon -n resource-ticket create --name cloud-dev-resources
-             --limits "vm.memory 2000 GB, vm 1000 COUNT vm.potrzebie 250 COUNT"
+    % photon -n tenant create --name cloud-dev
+             --limits "vm.memory 2000 GB, vm 1000 COUNT, ephemeral-disk.capacity 2000 GB, vm.potrzebie 250 COUNT"
     32ad527e-d21a-4b2a-a235-b0883bd64354
 
-
-Viewing tickets:
-
-    % photon -n resource-ticket list
-    1
-    32ad527e-d21a-4b2a-a235-b0883bd64354	cloud-dev-resources vm.memory:2000:GB,vm:1000:COUNT
-
-    % photon -n resource-ticket show cloud-dev-resources
-    cloud-dev-resources	32ad527e-d21a-4b2a-a235-b0883bd64354 vm.memory:2000:GB,vm:1000:COUNT vm.memory:0:GB,vm:0:COUNT
-
-    % photon resource-ticket show cloud-dev-resources
-    ID                                    Name                 Limit              Usage
-    32ad527e-d21a-4b2a-a235-b0883bd64354  cloud-dev-resources  vm.memory 2000 GB  vm.memory 1000 GB
-                                                               vm 1000 COUNT      vm 500 COUNT
 
 ### Projects
 A project is owned by a tenant and all VMs are created within a project. Each
-project is associated with a resource ticket that controls the total resources
-that can be used. See above for more information about resource tickets.
+project is assigned with a quota that controls the total resources
+that can be used. See above for more information about quota.
 
-A project has a set of limits. These are specified just like the resource ticket above,
-but they must not exceed the limits in the associated resource ticket.
+A project has a set of limits. These are specified just like the quota above,
+but they must not exceed the limits in the tenant.
 
 Creating a project:
 
-Usage: `photon project create --resource-ticket <RESOURCE-TICKET-NAME> --name <PROJECT-NAME> --limits <LIMITS>`
+Usage: `photon project create <PROJECT-NAME> --limits <LIMITS>`
 
-    % photon -n project create --resource-ticket cloud-dev-resources
-             --name cloud-dev-staging --limits "vm.memory 1000 GB, vm 500 COUNT"
+    % photon -n project create cloud-dev-staging --limits "vm.memory 1000 GB, vm 500 COUNT"
     fabb9236-d0a4-4d30-8935-ee65d6729f78
 
 Viewing projects:
