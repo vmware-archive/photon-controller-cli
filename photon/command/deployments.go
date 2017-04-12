@@ -114,10 +114,6 @@ func GetDeploymentsCommand() cli.Command {
 						Usage: "NSX password",
 					},
 					cli.StringFlag{
-						Name:  "private-ip-root-cidr",
-						Usage: "Root CIDR of the private IP pool",
-					},
-					cli.StringFlag{
 						Name:  "floating-ip-root-range-start",
 						Usage: "Start of the root range of the floating IP pool",
 					},
@@ -425,7 +421,6 @@ func configureNsx(c *cli.Context) error {
 	nsxAddress := c.String("nsx-address")
 	nsxUsername := c.String("nsx-username")
 	nsxPassword := c.String("nsx-password")
-	privateIpRootCidr := c.String("private-ip-root-cidr")
 	floatingIpRootRangeStart := c.String("floating-ip-root-range-start")
 	floatingIpRootRangeEnd := c.String("floating-ip-root-range-end")
 	t0RouterId := c.String("t0-router-id")
@@ -444,9 +439,6 @@ func configureNsx(c *cli.Context) error {
 	}
 	if len(nsxPassword) == 0 {
 		return fmt.Errorf("Please provide NSX password")
-	}
-	if len(privateIpRootCidr) == 0 {
-		return fmt.Errorf("Please provide root CIDR of the private IP pool")
 	}
 	if len(floatingIpRootRangeStart) == 0 {
 		return fmt.Errorf("Please provide the start of the root range of the floating IP pool")
@@ -488,7 +480,6 @@ func configureNsx(c *cli.Context) error {
 			NsxAddress:             nsxAddress,
 			NsxUsername:            nsxUsername,
 			NsxPassword:            nsxPassword,
-			PrivateIpRootCidr:      privateIpRootCidr,
 			FloatingIpRootRange:    photon.IpRange{Start: floatingIpRootRangeStart, End: floatingIpRootRangeEnd},
 			T0RouterId:             t0RouterId,
 			EdgeClusterId:          edgeClusterId,
