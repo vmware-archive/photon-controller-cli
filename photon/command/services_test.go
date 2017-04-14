@@ -155,6 +155,8 @@ func TestCreateDeleteService(t *testing.T) {
 	set.String("name", "fake_service_name", "service name")
 	set.String("type", "KUBERNETES", "service type")
 	set.String("vm_flavor", "fake_vm_flavor", "vm flavor name")
+	set.String("master-vm-flavor", "fake_master_vm_flavor", "master vm flavor name")
+	set.String("worker-vm-flavor", "fake_worker_vm_flavor", "worker vm flavor name")
 	set.String("disk_flavor", "fake_disk_flavor", "disk flavor name")
 	set.Int("worker_count", 50, "worker count")
 	set.String("dns", "1.1.1.1", "VM network DNS")
