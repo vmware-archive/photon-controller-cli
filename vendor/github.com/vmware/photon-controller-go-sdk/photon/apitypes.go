@@ -702,7 +702,6 @@ type NsxConfigurationSpec struct {
 	TunnelIpPoolId         string            `json:"tunnelIpPoolId"`
 	HostUplinkPnic         string            `json:"hostUplinkPnic"`
 	HostUplinkVlanId       int               `json:"hostUplinkVlanId"`
-	DnsServerAddresses     []string          `json:"dnsServerAddresses"`
 }
 
 // Represents port groups.
@@ -712,15 +711,16 @@ type PortGroups struct {
 
 // Represents a subnet
 type Subnet struct {
-	ID            string            `json:"id"`
-	Kind          string            `json:"kind"`
-	Name          string            `json:"name"`
-	Description   string            `json:"description,omitempty"`
-	PrivateIpCidr string            `json:"privateIpCidr"`
-	ReservedIps   map[string]string `json:"reservedIps"`
-	State         string            `json:"state"`
-	IsDefault     bool              `json:"isDefault"`
-	PortGroups    PortGroups        `json:"portGroups"`
+	ID                 string            `json:"id"`
+	Kind               string            `json:"kind"`
+	Name               string            `json:"name"`
+	Description        string            `json:"description,omitempty"`
+	PrivateIpCidr      string            `json:"privateIpCidr"`
+	ReservedIps        map[string]string `json:"reservedIps"`
+	State              string            `json:"state"`
+	IsDefault          bool              `json:"isDefault"`
+	PortGroups         PortGroups        `json:"portGroups"`
+	DnsServerAddresses []string          `json:"dnsServerAddresses"`
 }
 
 // Represents multiple subnets returned by the API.
@@ -730,11 +730,12 @@ type Subnets struct {
 
 // Creation spec for subnets.
 type SubnetCreateSpec struct {
-	Name          string     `json:"name"`
-	Description   string     `json:"description"`
-	PrivateIpCidr string     `json:"privateIpCidr"`
-	Type          string     `json:"type"`
-	PortGroups    PortGroups `json:"portGroups"`
+	Name               string     `json:"name"`
+	Description        string     `json:"description"`
+	PrivateIpCidr      string     `json:"privateIpCidr"`
+	Type               string     `json:"type"`
+	PortGroups         PortGroups `json:"portGroups"`
+	DnsServerAddresses []string   `json:"dnsServerAddresses"`
 }
 
 // Represents name that can be set for subnet
