@@ -1134,6 +1134,7 @@ func getKubectlAuth(c *cli.Context) error {
 		return err
 	}
 
+	// Command for create the uesr in the kubectl config
 	fmt.Printf("kubectl config set-credentials %s \\\n", username)
 	fmt.Printf("    --auth-provider=oidc \\\n")
 	fmt.Printf("    --auth-provider-arg=idp-issuer-url=https://%s/openidconnect/%s \\\n", authInfo.Endpoint, authInfo.Domain)
@@ -1142,6 +1143,25 @@ func getKubectlAuth(c *cli.Context) error {
 	fmt.Printf("    --auth-provider-arg=refresh-token=%s \\\n", options.RefreshToken)
 	fmt.Printf("    --auth-provider-arg=id-token=%s \\\n", options.IdToken)
 	fmt.Printf("    --auth-provider-arg=idp-certificate-authority=%s \n", certFile)
+	fmt.Println("")
+
+	loadBalancerIp := service.ExtendedProperties[photon.ExtendedPropertyLoadBalancerIP]
+	clusterName := service.Name
+
+	// Command for create the cluster in the kubectl config
+	fmt.Printf("kubectl config set-cluster %s \\\n", clusterName)
+	fmt.Printf("    --server=https://%s:6443 \\\n", loadBalancerIp)
+	fmt.Printf("    --insecure-skip-tls-verify=true \n")
+	fmt.Println("")
+
+	// Command for create the context in the kubectl config
+	fmt.Printf("kubectl config set-context %s-context \\\n", clusterName)
+	fmt.Printf("    --cluster %s \\\n", clusterName)
+	fmt.Printf("    --user=%s \n", username)
+	fmt.Println("")
+
+	// Command for use the kubectl text just created as default
+	fmt.Printf("kubectl config use-context %s-context \n", clusterName)
 
 	return nil
 }
