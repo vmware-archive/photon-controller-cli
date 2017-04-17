@@ -1,0 +1,8 @@
+Verified+1: Gerrit-Jenkins
+Code-Review+2: Thiru Bhat <tbhat@vmware.com>
+Code-Review+2: Tao Jiang <taoj@vmware.com>
+Submitted-by: Long Zhou <longz@vmware.com>
+Submitted-at: Mon, 17 Apr 2017 12:37:26 -0700
+Reviewed-on: https://review.ec.eng.vmware.com/18371
+Project: photon-controller-cli
+Branch: refs/heads/v1.2.1
