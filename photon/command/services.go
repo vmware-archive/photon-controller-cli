@@ -352,7 +352,10 @@ func GetServiceCommand() cli.Command {
 				Description: "Generate the kubectl (Kubernetes command line client) command which " +
 					"can be used to configure kubectl with authentication. \n" +
 					"Example: photon service get-kubectl-auth -u admin -p password " +
-					"9b159e92-9495-49a4-af58-53ad4764f616",
+					"9b159e92-9495-49a4-af58-53ad4764f616 \n" +
+					"To directly set the user, cluster and context for kubectl config \n" +
+					"Please run: eval \"$(photon service get-kubectl-auth -u admin -p password " +
+					"9b159e92-9495-49a4-af58-53ad4764f616)\"",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "username, u",
@@ -1100,6 +1103,16 @@ func getKubectlAuth(c *cli.Context) error {
 		return err
 	}
 
+	// Check load balancer IP is non-empty
+	if service.ExtendedProperties[photon.ExtendedPropertyLoadBalancerIP] == "" {
+		return fmt.Errorf("Load balancer ip is empty")
+	}
+
+	// Check the service name is non-empty
+	if service.Name == "" {
+		return fmt.Errorf("Service Name is empty")
+	}
+
 	authInfo, err := client.Photonclient.System.GetAuthInfo()
 	if err != nil {
 		return err
@@ -1134,6 +1147,7 @@ func getKubectlAuth(c *cli.Context) error {
 		return err
 	}
 
+	// Command for create the user in the kubectl config
 	fmt.Printf("kubectl config set-credentials %s \\\n", username)
 	fmt.Printf("    --auth-provider=oidc \\\n")
 	fmt.Printf("    --auth-provider-arg=idp-issuer-url=https://%s/openidconnect/%s \\\n", authInfo.Endpoint, authInfo.Domain)
@@ -1142,6 +1156,25 @@ func getKubectlAuth(c *cli.Context) error {
 	fmt.Printf("    --auth-provider-arg=refresh-token=%s \\\n", options.RefreshToken)
 	fmt.Printf("    --auth-provider-arg=id-token=%s \\\n", options.IdToken)
 	fmt.Printf("    --auth-provider-arg=idp-certificate-authority=%s \n", certFile)
+	fmt.Println("")
+
+	loadBalancerIp := service.ExtendedProperties[photon.ExtendedPropertyLoadBalancerIP]
+	clusterName := service.Name
+
+	// Command for create the cluster in the kubectl config
+	fmt.Printf("kubectl config set-cluster %s \\\n", clusterName)
+	fmt.Printf("    --server=https://%s:6443 \\\n", loadBalancerIp)
+	fmt.Printf("    --insecure-skip-tls-verify=true \n")
+	fmt.Println("")
+
+	// Command for create the context in the kubectl config
+	fmt.Printf("kubectl config set-context %s-context \\\n", clusterName)
+	fmt.Printf("    --cluster %s \\\n", clusterName)
+	fmt.Printf("    --user=%s \n", username)
+	fmt.Println("")
+
+	// Command for use the kubectl text just created as default
+	fmt.Printf("kubectl config use-context %s-context \n", clusterName)
 
 	return nil
 }
