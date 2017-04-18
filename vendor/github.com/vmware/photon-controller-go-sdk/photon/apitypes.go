@@ -756,3 +756,22 @@ type PolicyDelta struct {
 	Action    string `json:"action"`
 	Role      string `json:"role"`
 }
+
+type SystemInfo struct {
+	NTPEndpoint             string                 `json:"ntpEndpoint,omitempty"`
+	UseImageDatastoreForVms bool                   `json:"useImageDatastoreForVms,omitempty"`
+	Auth                    *AuthInfo              `json:"auth"`
+	NetworkConfiguration    *NetworkConfiguration  `json:"networkConfiguration"`
+	Kind                    string                 `json:"kind"`
+	SyslogEndpoint          string                 `json:"syslogEndpoint,omitempty"`
+	Stats                   *StatsInfo             `json:"stats,omitempty"`
+	State                   string                 `json:"state"`
+	ImageDatastores         []string               `json:"imageDatastores"`
+	ServiceConfigurations   []ServiceConfiguration `json:"serviceConfigurations,omitempty"`
+	LoadBalancerEnabled     bool                   `json:"loadBalancerEnabled"`
+	LoadBalancerAddress     string                 `json:"loadBalancerAddress"`
+	BaseVersion             string                 `json:"baseVersion"`
+	FullVersion             string                 `json:"fullVersion"`
+	GitCommitHash           string                 `json:"gitCommitHash"`
+	NetworkType             string                 `json:"networkType"`
+}
