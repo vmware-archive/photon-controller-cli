@@ -38,7 +38,7 @@ func (api *SystemAPI) GetSystemStatus() (status *Status, err error) {
 }
 
 // Gets the system info.
-func (api *SystemAPI) GetSystemInfo() (deployment *Deployment, err error) {
+func (api *SystemAPI) GetSystemInfo() (systemInfo *SystemInfo, err error) {
 	res, err := api.client.restClient.Get(api.getEndpointUrl("info"), api.client.options.TokenOptions)
 	if err != nil {
 		return
@@ -48,7 +48,7 @@ func (api *SystemAPI) GetSystemInfo() (deployment *Deployment, err error) {
 	if err != nil {
 		return
 	}
-	var result Deployment
+	var result SystemInfo
 	err = json.NewDecoder(res.Body).Decode(&result)
 	return &result, nil
 }
