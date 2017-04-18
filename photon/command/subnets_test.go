@@ -93,6 +93,9 @@ func TestCreateDeleteVirtualSubnet(t *testing.T) {
 	set.String("description", "test subnet", "Subnet description")
 	set.String("privateIpCidr", "fake_subnet_privateIpCidr", "Subnet privateIpCidr")
 	set.String("router", "fake_router_ID", "Router id")
+	set.String("dns-server-addresses", "dnsServerAddress1,dnsServerAddress2", "Comma separated DNS server "+
+		"addresses")
+
 	cxt := cli.NewContext(nil, set, globalCtx)
 
 	err = createSubnet(cxt, os.Stdout)
