@@ -76,7 +76,7 @@ func GetSystemCommand() cli.Command {
 				Usage:     "Show system info",
 				ArgsUsage: " ",
 				Description: "Show detailed information about the system.\n" +
-					"   Requires system administrator access,",
+					"   Requires system administrator access for viewing all system information",
 				Action: func(c *cli.Context) {
 					err := showSystemInfo(c, os.Stdout)
 					if err != nil {
@@ -184,115 +184,134 @@ func showSystemInfo(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	deployment, err := client.Photonclient.System.GetSystemInfo()
-
-	if err != nil {
-		return err
-	}
-
-	vms, err := client.Photonclient.Deployments.GetVms("default")
-	if err != nil {
-		return err
-	}
-
 	var data []VM_NetworkIPs
 
-	for _, vm := range vms.Items {
-		networks, err := getVMNetworks(vm.ID, c)
+	systemInfo, err := client.Photonclient.System.GetSystemInfo()
+
+	if err != nil {
+		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		utils.FormatObject(systemInfo, w, c)
+		return nil
+	}
+
+	if c.GlobalIsSet("non-interactive") {
+		fmt.Printf("%s\t%s\t%s\t%s\n", systemInfo.BaseVersion,
+			systemInfo.FullVersion, systemInfo.GitCommitHash, systemInfo.NetworkType)
+	} else {
+		fmt.Printf("\n  Base Version:                %s\n", systemInfo.BaseVersion)
+		fmt.Printf("  Full Version:                %s\n", systemInfo.FullVersion)
+		fmt.Printf("  Git Commit Hash:             %s\n", systemInfo.GitCommitHash)
+		fmt.Printf("  Network Type:                %s\n", systemInfo.NetworkType)
+		fmt.Printf("\n")
+	}
+	if systemInfo.State != "" {
+		vms, err := client.Photonclient.Deployments.GetVms("default")
 		if err != nil {
 			return err
 		}
-		ipAddr := "N/A"
-		for _, nt := range networks {
-			network := nt.(map[string]interface{})
-			if len(network) != 0 && network["network"] != nil {
-				if val, ok := network["ipAddress"]; ok && val != nil {
-					ipAddr = val.(string)
-					break
+
+		for _, vm := range vms.Items {
+			networks, err := getVMNetworks(vm.ID, c)
+			if err != nil {
+				return err
+			}
+			ipAddr := "N/A"
+			for _, nt := range networks {
+				network := nt.(map[string]interface{})
+				if len(network) != 0 && network["network"] != nil {
+					if val, ok := network["ipAddress"]; ok && val != nil {
+						ipAddr = val.(string)
+						break
+					}
 				}
 			}
-
+			data = append(data, VM_NetworkIPs{vm, ipAddr})
 		}
-		data = append(data, VM_NetworkIPs{vm, ipAddr})
-	}
-	if utils.NeedsFormatting(c) {
-		utils.FormatObject(deployment, w, c)
-	} else if c.GlobalIsSet("non-interactive") {
-		imageDataStores := getCommaSeparatedStringFromStringArray(deployment.ImageDatastores)
-		securityGroups := getCommaSeparatedStringFromStringArray(deployment.Auth.SecurityGroups)
-
-		fmt.Printf("%s\t%s\t%s\t%t\t%s\t%s\t%t\t%s\n", deployment.ID, deployment.State,
-			imageDataStores, deployment.UseImageDatastoreForVms, deployment.SyslogEndpoint,
-			deployment.NTPEndpoint, deployment.LoadBalancerEnabled,
-			deployment.LoadBalancerAddress)
-
-		fmt.Printf("%s\t%s\t%d\t%s\n", deployment.Auth.Endpoint,
-			deployment.Auth.Domain, deployment.Auth.Port, securityGroups)
-
-	} else {
-		syslogEndpoint := deployment.SyslogEndpoint
-		if len(deployment.SyslogEndpoint) == 0 {
-			syslogEndpoint = "-"
-		}
-		ntpEndpoint := deployment.NTPEndpoint
-		if len(deployment.NTPEndpoint) == 0 {
-			ntpEndpoint = "-"
-		}
-
-		fmt.Printf("\n")
-		fmt.Printf("Deployment ID: %s\n", deployment.ID)
-		fmt.Printf("  State:                       %s\n", deployment.State)
-		fmt.Printf("\n  Image Datastores:            %s\n", deployment.ImageDatastores)
-		fmt.Printf("  Use image datastore for vms: %t\n", deployment.UseImageDatastoreForVms)
-		fmt.Printf("\n  Syslog Endpoint:             %s\n", syslogEndpoint)
-		fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
-		fmt.Printf("\n  LoadBalancer:\n")
-		fmt.Printf("    Enabled:                   %t\n", deployment.LoadBalancerEnabled)
-		if deployment.LoadBalancerEnabled {
-			fmt.Printf("    Address:                   %s\n", deployment.LoadBalancerAddress)
-		}
-
-		fmt.Printf("\n  Auth:\n")
-		fmt.Printf("    Endpoint:                  %s\n", deployment.Auth.Endpoint)
-		fmt.Printf("    Domain:                    %s\n", deployment.Auth.Domain)
-		fmt.Printf("    Port:                      %d\n", deployment.Auth.Port)
-		fmt.Printf("    SecurityGroups:            %v\n", deployment.Auth.SecurityGroups)
-	}
-
-	if deployment.Stats != nil {
-		stats := deployment.Stats
 		if c.GlobalIsSet("non-interactive") {
-			fmt.Printf("%t\t%s\t%d\n", stats.Enabled, stats.StoreEndpoint, stats.StorePort)
-		} else if !utils.NeedsFormatting(c) {
+			imageDataStores := getCommaSeparatedStringFromStringArray(systemInfo.ImageDatastores)
+			securityGroups := getCommaSeparatedStringFromStringArray(systemInfo.Auth.SecurityGroups)
 
-			fmt.Printf("\n  Stats:\n")
-			fmt.Printf("    Enabled:               %t\n", stats.Enabled)
-			if stats.Enabled {
-				fmt.Printf("    Store Endpoint:        %s\n", stats.StoreEndpoint)
-				fmt.Printf("    Store Port:            %d\n", stats.StorePort)
+			fmt.Printf("%s\t%s\t%t\t%s\t%s\t%t\t%s\n", systemInfo.State,
+				imageDataStores, systemInfo.UseImageDatastoreForVms, systemInfo.SyslogEndpoint,
+				systemInfo.NTPEndpoint, systemInfo.LoadBalancerEnabled,
+				systemInfo.LoadBalancerAddress)
+
+			fmt.Printf("%s\t%s\t%d\t%s\n", systemInfo.Auth.Endpoint,
+				systemInfo.Auth.Domain, systemInfo.Auth.Port, securityGroups)
+
+		} else {
+			syslogEndpoint := systemInfo.SyslogEndpoint
+			if len(systemInfo.SyslogEndpoint) == 0 {
+				syslogEndpoint = "-"
+			}
+			ntpEndpoint := systemInfo.NTPEndpoint
+			if len(systemInfo.NTPEndpoint) == 0 {
+				ntpEndpoint = "-"
+			}
+
+			fmt.Printf("  State:                       %s\n", systemInfo.State)
+			fmt.Printf("\n  Image Datastores:            %s\n", systemInfo.ImageDatastores)
+			fmt.Printf("  Use image datastore for vms: %t\n", systemInfo.UseImageDatastoreForVms)
+			fmt.Printf("\n  Syslog Endpoint:             %s\n", syslogEndpoint)
+			fmt.Printf("  Ntp Endpoint:                %s\n", ntpEndpoint)
+			fmt.Printf("\n  LoadBalancer:\n")
+			fmt.Printf("    Enabled:                   %t\n", systemInfo.LoadBalancerEnabled)
+			if systemInfo.LoadBalancerEnabled {
+				fmt.Printf("    Address:                   %s\n", systemInfo.LoadBalancerAddress)
+			}
+
+			fmt.Printf("\n  Auth:\n")
+			fmt.Printf("    Endpoint:                  %s\n", systemInfo.Auth.Endpoint)
+			fmt.Printf("    Domain:                    %s\n", systemInfo.Auth.Domain)
+			fmt.Printf("    Port:                      %d\n", systemInfo.Auth.Port)
+			fmt.Printf("    SecurityGroups:            %v\n", systemInfo.Auth.SecurityGroups)
+		}
+
+		if systemInfo.Stats != nil {
+			stats := systemInfo.Stats
+			if c.GlobalIsSet("non-interactive") {
+				fmt.Printf("%t\t%s\t%d\n", stats.Enabled, stats.StoreEndpoint, stats.StorePort)
+			} else if !utils.NeedsFormatting(c) {
+
+				fmt.Printf("\n  Stats:\n")
+				fmt.Printf("    Enabled:               %t\n", stats.Enabled)
+				if stats.Enabled {
+					fmt.Printf("    Store Endpoint:        %s\n", stats.StoreEndpoint)
+					fmt.Printf("    Store Port:            %d\n", stats.StorePort)
+				}
+			}
+		} else {
+			if c.GlobalIsSet("non-interactive") {
+				fmt.Printf("\n")
 			}
 		}
-	} else {
-		if c.GlobalIsSet("non-interactive") {
-			fmt.Printf("\n")
-		}
-	}
 
-	if deployment.ServiceConfigurations != nil && len(deployment.ServiceConfigurations) != 0 {
-		if c.GlobalIsSet("non-interactive") {
-			serviceConfigurations := []string{}
-			for _, c := range deployment.ServiceConfigurations {
-				serviceConfigurations = append(serviceConfigurations, fmt.Sprintf("%s\t%s", c.Type, c.ImageID))
+		if systemInfo.ServiceConfigurations != nil && len(systemInfo.ServiceConfigurations) != 0 {
+			if c.GlobalIsSet("non-interactive") {
+				serviceConfigurations := []string{}
+				for _, c := range systemInfo.ServiceConfigurations {
+					serviceConfigurations = append(serviceConfigurations, fmt.Sprintf("%s\t%s", c.Type, c.ImageID))
+				}
+				scriptServiceConfigurations := strings.Join(serviceConfigurations, ",")
+				fmt.Printf("%s\n", scriptServiceConfigurations)
+			} else if !utils.NeedsFormatting(c) {
+				fmt.Println("\n  Service Configurations:")
+				for i, c := range systemInfo.ServiceConfigurations {
+					fmt.Printf("    ServiceConfiguration %d:\n", i+1)
+					fmt.Println("      Kind:     ", c.Kind)
+					fmt.Println("      Type:     ", c.Type)
+					fmt.Println("      ImageID:  ", c.ImageID)
+				}
 			}
-			scriptServiceConfigurations := strings.Join(serviceConfigurations, ",")
-			fmt.Printf("%s\n", scriptServiceConfigurations)
-		} else if !utils.NeedsFormatting(c) {
-			fmt.Println("\n  Service Configurations:")
-			for i, c := range deployment.ServiceConfigurations {
-				fmt.Printf("    ServiceConfiguration %d:\n", i+1)
-				fmt.Println("      Kind:     ", c.Kind)
-				fmt.Println("      Type:     ", c.Type)
-				fmt.Println("      ImageID:  ", c.ImageID)
+		} else {
+			if c.GlobalIsSet("non-interactive") {
+				fmt.Printf("\n")
+			} else if !utils.NeedsFormatting(c) {
+				fmt.Println("\n  Service Configurations:")
+				fmt.Printf("    No Service is supported")
 			}
 		}
 	} else {
