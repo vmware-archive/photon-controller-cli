@@ -163,6 +163,8 @@ func TestCreateDeleteService(t *testing.T) {
 	set.String("gateway", "1.1.1.2", "VM network gateway")
 	set.String("netmask", "0.0.0.255", "VM network netmask")
 	set.String("ssh-key", "../../testdata/TestKey.pub", "ssh key")
+	set.String("master-ip", "7.7.7.7", "master ip")
+	set.String("load-balancer-ip", "8.8.8.8", "load balancer ip")
 	ctx := cli.NewContext(nil, set, globalCtx)
 
 	err = createService(ctx, os.Stdout)
