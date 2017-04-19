@@ -42,7 +42,7 @@ func GetSubnetsCommand() cli.Command {
 				ArgsUsage: " ",
 				Description: "Create a new subnet. \n" +
 					"   Example: \n" +
-					"   (Virtual Subnet) photon subnet create -n subnet-1 -d test-subnet -i 192.168.0.0/16 -r 5f8cap789 \n" +
+					"   (Virtual Subnet) photon subnet create -n subnet-1 -d test-subnet -i 192.168.0.0/16 -r 5f8cap789 -s 172.10.0.1\n" +
 					"   (Physical Subnet) photon subnet create -n subnet-1 -d test-subnet -p port1,port2 \n",
 				Flags: []cli.Flag{
 					cli.StringFlag{
@@ -68,6 +68,10 @@ func GetSubnetsCommand() cli.Command {
 					cli.StringFlag{
 						Name:  "portgroups, p",
 						Usage: "PortGroups associated with subnet (only for physical subnet)",
+					},
+					cli.StringFlag{
+						Name:  "dns-server-addresses, s",
+						Usage: "Comma-separated list of DNS server addresses (Max allowed addresses: 2)",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -191,6 +195,7 @@ func createVirtualSubnet(c *cli.Context, w io.Writer, routerId string) error {
 	description := c.String("description")
 	privateIpCidr := c.String("privateIpCidr")
 	subnetType := c.String("type")
+	dnsServerAddresses := c.String("dns-server-addresses")
 
 	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
@@ -219,6 +224,10 @@ func createVirtualSubnet(c *cli.Context, w io.Writer, routerId string) error {
 		if err != nil {
 			return err
 		}
+		dnsServerAddresses, err = askForInput("DNS server addresses (comma separated, Max allowed addresses: 2): ", dnsServerAddresses)
+		if err != nil {
+			return err
+		}
 	}
 
 	if len(name) == 0 || len(description) == 0 || len(privateIpCidr) == 0 {
@@ -229,15 +238,21 @@ func createVirtualSubnet(c *cli.Context, w io.Writer, routerId string) error {
 		subnetType = "NAT"
 	}
 
+	dnsServerAddressList := []string{}
+	if dnsServerAddresses != "" {
+		dnsServerAddressList = regexp.MustCompile(`\s*,\s*`).Split(dnsServerAddresses, -1)
+	}
+
 	subnetSpec := photon.SubnetCreateSpec{}
 	subnetSpec.Name = name
 	subnetSpec.Description = description
 	subnetSpec.PrivateIpCidr = privateIpCidr
 	subnetSpec.Type = subnetType
+	subnetSpec.DnsServerAddresses = dnsServerAddressList
 
 	if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
-		fmt.Printf("\nCreating Subnet: '%s', Description: '%s', PrivateIpCidr: '%s'\n\n",
-			subnetSpec.Name, subnetSpec.Description, subnetSpec.PrivateIpCidr)
+		fmt.Printf("\nCreating Subnet: '%s', Description: '%s', PrivateIpCidr: '%s', DnsServerAddresses: '%s'\n\n",
+			subnetSpec.Name, subnetSpec.Description, subnetSpec.PrivateIpCidr, dnsServerAddresses)
 	}
 
 	if confirmed(c) {
@@ -397,19 +412,19 @@ func listSubnets(c *cli.Context, w io.Writer) error {
 
 	if c.GlobalIsSet("non-interactive") {
 		for _, subnet := range subnetList.Items {
-			fmt.Printf("%s\t%s\t%s\t%s\t%t\t%s\n", subnet.ID, subnet.Name, subnet.Kind, subnet.PrivateIpCidr,
-				subnet.IsDefault, subnet.PortGroups.Names)
+			fmt.Printf("%s\t%s\t%s\t%s\t%t\t%s\t%s\n", subnet.ID, subnet.Name, subnet.Kind, subnet.PrivateIpCidr,
+				subnet.IsDefault, subnet.PortGroups.Names, subnet.DnsServerAddresses)
 		}
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObjects(subnetList, w, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w, "ID\tName\tKind\tDescription\tPrivateIpCidr\tReservedIps\tState\tIsDefault\tPortGroups\n")
+		fmt.Fprintf(w, "ID\tName\tKind\tDescription\tPrivateIpCidr\tReservedIps\tState\tIsDefault\tPortGroups\tDnsServerAddresses\n")
 		for _, subnet := range subnetList.Items {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%t\t%s\n", subnet.ID, subnet.Name, subnet.Kind,
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%t\t%s\t%s\n", subnet.ID, subnet.Name, subnet.Kind,
 				subnet.Description, subnet.PrivateIpCidr, subnet.ReservedIps, subnet.State,
-				subnet.IsDefault, subnet.PortGroups.Names)
+				subnet.IsDefault, subnet.PortGroups.Names, subnet.DnsServerAddresses)
 		}
 		err := w.Flush()
 		if err != nil {
@@ -451,6 +466,7 @@ func showSubnet(c *cli.Context, w io.Writer) error {
 		fmt.Println("  privateIpCidr:        ", subnet.PrivateIpCidr)
 		fmt.Println("  isDefault:            ", subnet.IsDefault)
 		fmt.Println("  Port Groups:          ", subnet.PortGroups.Names)
+		fmt.Println("  DNS Server Addresses: ", subnet.DnsServerAddresses)
 	}
 
 	return nil
