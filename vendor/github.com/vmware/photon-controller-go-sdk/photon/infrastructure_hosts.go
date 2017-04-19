@@ -96,6 +96,22 @@ func (api *InfraHostsAPI) Suspend(id string) (task *Task, err error) {
 	return
 }
 
+// Gets all the VMs with the specified host ID.
+func (api *InfraHostsAPI) GetVMs(id string) (result *VMs, err error) {
+	res, err := api.client.restClient.Get(api.client.Endpoint+InfraHostsUrl+"/"+id+"/vms", api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	res, err = getError(res)
+	if err != nil {
+		return
+	}
+	result = &VMs{}
+	err = json.NewDecoder(res.Body).Decode(result)
+	return
+}
+
 // Resume the host with the specified id
 func (api *InfraHostsAPI) Resume(id string) (task *Task, err error) {
 	body := []byte{}
