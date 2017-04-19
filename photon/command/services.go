@@ -550,15 +550,24 @@ func createService(c *cli.Context, w io.Writer) error {
 				if err != nil {
 					return err
 				}
+				if len(masterIP) == 0 {
+					return fmt.Errorf("Must specify at least one master IP")
+				}
+
 				masterIP2, err = askForInput("Kubernetes master 2 static IP address (leave blank for none): ",
 					masterIP2)
 				if err != nil {
 					return err
 				}
+
 				loadBalancerIP, err = askForInput("Kubernetes load balancer static IP address: ", loadBalancerIP)
 				if err != nil {
 					return err
 				}
+				if len(loadBalancerIP) == 0 {
+					return fmt.Errorf("Must specify a load balancer IP")
+				}
+
 				etcd1, err = askForInput("etcd server 1 static IP address: ", etcd1)
 				if err != nil {
 					return err
@@ -575,9 +584,15 @@ func createService(c *cli.Context, w io.Writer) error {
 				}
 			}
 
+			if len(masterIP) == 0 {
+				return fmt.Errorf("Must specify at least one master IP")
+			}
 			extended_properties[photon.ExtendedPropertyMasterIP] = masterIP
 			if len(masterIP2) != 0 {
 				extended_properties[photon.ExtendedPropertyMasterIP2] = masterIP2
+			}
+			if len(loadBalancerIP) == 0 {
+				return fmt.Errorf("Must specify a load balancer IP")
 			}
 			extended_properties[photon.ExtendedPropertyLoadBalancerIP] = loadBalancerIP
 			extended_properties[photon.ExtendedPropertyETCDIP1] = etcd1
@@ -593,6 +608,9 @@ func createService(c *cli.Context, w io.Writer) error {
 			masterIP, err = askForInput("Harbor master static IP address: ", masterIP)
 			if err != nil {
 				return err
+			}
+			if len(masterIP) == 0 {
+				return fmt.Errorf("Must specify at least a master IP for Harbor")
 			}
 			if len(admin_password) == 0 {
 				fmt.Printf("Harbor registry admin password: ")
@@ -613,6 +631,9 @@ func createService(c *cli.Context, w io.Writer) error {
 				}
 				fmt.Printf("\n")
 			}
+		}
+		if len(masterIP) == 0 {
+			return fmt.Errorf("Must specify at least a master IP for Harbor")
 		}
 		extended_properties[photon.ExtendedPropertyMasterIP] = masterIP
 		extended_properties[photon.ExtendedPropertyAdminPassword] = admin_password
