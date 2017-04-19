@@ -550,15 +550,24 @@ func createService(c *cli.Context, w io.Writer) error {
 				if err != nil {
 					return err
 				}
+				if len(masterIP) == 0 {
+					return fmt.Errorf("Must Specify at least one master IP")
+				}
+
 				masterIP2, err = askForInput("Kubernetes master 2 static IP address (leave blank for none): ",
 					masterIP2)
 				if err != nil {
 					return err
 				}
+
 				loadBalancerIP, err = askForInput("Kubernetes load balancer static IP address: ", loadBalancerIP)
 				if err != nil {
 					return err
 				}
+				if len(loadBalancerIP) == 0 {
+					return fmt.Errorf("Must Specify a load balancer IP")
+				}
+
 				etcd1, err = askForInput("etcd server 1 static IP address: ", etcd1)
 				if err != nil {
 					return err
@@ -593,6 +602,9 @@ func createService(c *cli.Context, w io.Writer) error {
 			masterIP, err = askForInput("Harbor master static IP address: ", masterIP)
 			if err != nil {
 				return err
+			}
+			if len(masterIP) == 0 {
+				return fmt.Errorf("Must Specify at least a master IP for Harbor")
 			}
 			if len(admin_password) == 0 {
 				fmt.Printf("Harbor registry admin password: ")
