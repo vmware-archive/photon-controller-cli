@@ -441,53 +441,13 @@ type Datastores struct {
 	Items []Datastore `json:"items"`
 }
 
-// Creation spec for deployments.
-type DeploymentCreateSpec struct {
-	NTPEndpoint             interface{}                     `json:"ntpEndpoint"`
-	UseImageDatastoreForVms bool                            `json:"useImageDatastoreForVms"`
-	SyslogEndpoint          interface{}                     `json:"syslogEndpoint"`
-	Stats                   *StatsInfo                      `json:"stats"`
-	ImageDatastores         []string                        `json:"imageDatastores"`
-	Auth                    *AuthInfo                       `json:"auth"`
-	NetworkConfiguration    *NetworkConfigurationCreateSpec `json:"networkConfiguration"`
-	LoadBalancerEnabled     bool                            `json:"loadBalancerEnabled"`
-}
-
-// Deployment deploy config.
-type DeploymentDeployOperation struct {
-	DesiredState string `json:"desiredState"`
-}
-
-// Represents a deployment
-type Deployment struct {
-	NTPEndpoint             string                 `json:"ntpEndpoint,omitempty"`
-	UseImageDatastoreForVms bool                   `json:"useImageDatastoreForVms,omitempty"`
-	Auth                    *AuthInfo              `json:"auth"`
-	NetworkConfiguration    *NetworkConfiguration  `json:"networkConfiguration"`
-	Kind                    string                 `json:"kind"`
-	SyslogEndpoint          string                 `json:"syslogEndpoint,omitempty"`
-	Stats                   *StatsInfo             `json:"stats,omitempty"`
-	State                   string                 `json:"state"`
-	ID                      string                 `json:"id"`
-	ImageDatastores         []string               `json:"imageDatastores"`
-	SelfLink                string                 `json:"selfLink"`
-	ServiceConfigurations   []ServiceConfiguration `json:"serviceConfigurations,omitempty"`
-	LoadBalancerEnabled     bool                   `json:"loadBalancerEnabled"`
-	LoadBalancerAddress     string                 `json:"loadBalancerAddress"`
-}
-
-type DeploymentSize struct {
+type SystemUsage struct {
 	NumberHosts      int `json:"numberHosts"`
 	NumberVMs        int `json:"numberVMs"`
 	NumberTenants    int `json:"numberTenants"`
 	NumberProjects   int `json:"numberProjects"`
 	NumberDatastores int `json:"numberDatastores"`
 	NumberServices   int `json:"numberServices"`
-}
-
-// Represents multiple deployments returned by the API.
-type Deployments struct {
-	Items []Deployment `json:"items"`
 }
 
 // Represents stats information

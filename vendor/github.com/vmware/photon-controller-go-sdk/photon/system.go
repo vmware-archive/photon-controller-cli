@@ -122,7 +122,7 @@ func (api *SystemAPI) SetSecurityGroups(securityGroups *SecurityGroupsSpec) (tas
 }
 
 // Gets the system info.
-func (api *SystemAPI) GetSystemSize() (deploymentSize *DeploymentSize, err error) {
+func (api *SystemAPI) GetSystemSize() (deploymentSize *SystemUsage, err error) {
 	res, err := api.client.restClient.Get(api.getEndpointUrl("usage"), api.client.options.TokenOptions)
 	if err != nil {
 		return
@@ -132,7 +132,7 @@ func (api *SystemAPI) GetSystemSize() (deploymentSize *DeploymentSize, err error
 	if err != nil {
 		return
 	}
-	var result DeploymentSize
+	var result SystemUsage
 	err = json.NewDecoder(res.Body).Decode(&result)
 	return &result, nil
 }
