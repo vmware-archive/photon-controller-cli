@@ -601,16 +601,20 @@ func listProjects(c *cli.Context, w io.Writer) error {
 		fmt.Fprintf(w, "ID\tName\tLimit\tUsage\n")
 		for _, t := range projects.Items {
 			qt := t.ResourceQuota
-			count := 0
-			for k, v := range qt.QuotaLineItems {
-				if count == 0 {
-					fmt.Fprintf(w, "%s\t%s\t%s %g %s\t%s %g %s\n", t.ID, t.Name,
-						k, v.Limit, v.Unit, k, v.Usage, v.Unit)
-				} else {
-					fmt.Fprintf(w, "\t\t%s %g %s\t%s %g %s\n",
-						k, v.Limit, v.Unit, k, v.Usage, v.Unit)
+			if len(qt.QuotaLineItems) == 0 {
+				fmt.Fprintf(w, "%s\t%s\n", t.ID, t.Name)
+			} else {
+				count := 0
+				for k, v := range qt.QuotaLineItems {
+					if count == 0 {
+						fmt.Fprintf(w, "%s\t%s\t%s %g %s\t%s %g %s\n", t.ID, t.Name,
+							k, v.Limit, v.Unit, k, v.Usage, v.Unit)
+					} else {
+						fmt.Fprintf(w, "\t\t%s %g %s\t%s %g %s\n",
+							k, v.Limit, v.Unit, k, v.Usage, v.Unit)
+					}
+					count++
 				}
-				count++
 			}
 		}
 		err := w.Flush()
