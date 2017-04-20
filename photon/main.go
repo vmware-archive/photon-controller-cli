@@ -61,7 +61,6 @@ func BuildApp() *cli.App {
 		command.GetTenantsCommand(),
 		command.GetHostsCommand(),
 		command.GetDatastoresCommand(),
-		command.GetDeploymentsCommand(),
 		command.GetImagesCommand(),
 		command.GetTasksCommand(),
 		command.GetFlavorsCommand(),
@@ -72,6 +71,7 @@ func BuildApp() *cli.App {
 		command.GetRoutersCommand(),
 		command.GetSubnetsCommand(),
 		command.GetZonesCommand(),
+		command.GetInfrastructureCommand(),
 	}
 	app.Before = func(c *cli.Context) error {
 		logFile := c.GlobalString("log-file")
