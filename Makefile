@@ -1,7 +1,8 @@
 # Makefile to help building go components
 
 COMMAND_NAME=photon
-LDFLAGS="-X main.githash=`git rev-parse --short HEAD` -X main.commandName=$(COMMAND_NAME)"
+VERSION=$(shell cat VERSION)
+LDFLAGS="-X main.githash=`git rev-parse --short HEAD` -X main.commandName=$(COMMAND_NAME) -X main.version=$(VERSION)"
 GOBUILD=go build -ldflags $(LDFLAGS)
 
 all: test build binaries
