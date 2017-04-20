@@ -21,6 +21,7 @@ import (
 
 var commandName = ""
 var githash = ""
+var version = ""
 
 func main() {
 	app := BuildApp()
@@ -35,7 +36,7 @@ func BuildApp() *cli.App {
 	app := cli.NewApp()
 	app.Name = commandName
 	app.Usage = "Command line interface for Photon Controller"
-	app.Version = "Git commit hash: " + githash
+	app.Version = version + " (Git commit hash: " + githash + ")"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:  "non-interactive, n",
