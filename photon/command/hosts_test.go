@@ -73,25 +73,6 @@ func TestCreateDeleteHost(t *testing.T) {
 	set.String("deployment_id", "fake-deployment-id", "deployment_id")
 	cxt := cli.NewContext(nil, set, nil)
 
-	expectedStruct := photon.Deployments{
-		Items: []photon.Deployment{
-			{
-				ImageDatastores: []string{"testname"},
-				ID:              "fake-deployment-id",
-			},
-		},
-	}
-
-	response, err = json.Marshal(expectedStruct)
-	if err != nil {
-		t.Error("Not expecting error serializing expected status")
-	}
-
-	mocks.RegisterResponder(
-		"GET",
-		server.URL+rootUrl+"/deployments",
-		mocks.CreateResponder(200, string(response[:])))
-
 	err = createHost(cxt, os.Stdout)
 	if err != nil {
 		t.Error("Not expecting error creating host: " + err.Error())

@@ -71,9 +71,8 @@ func TestGetSystemInfo(t *testing.T) {
 	stats := &photon.StatsInfo{
 		Enabled: false,
 	}
-	getStruct := photon.Deployment{
+	getStruct := photon.SystemInfo{
 		ImageDatastores: []string{"testname"},
-		ID:              "1",
 		Auth:            auth,
 		State:           "COMPLETED",
 		Stats:           stats,
@@ -91,7 +90,7 @@ func TestGetSystemInfo(t *testing.T) {
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+rootUrl+"/deployments/default/vms",
+		server.URL+rootUrl+"/system/vms",
 		mocks.CreateResponder(200, string(response[:])))
 
 	defer server.Close()
@@ -101,15 +100,11 @@ func TestGetSystemInfo(t *testing.T) {
 	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
-	err = set.Parse([]string{getStruct.ID})
-	if err != nil {
-		t.Error("Not expecting arguments parsing to fail")
-	}
 	cxt := cli.NewContext(nil, set, nil)
 
 	err = showSystemInfo(cxt, os.Stdout)
 	if err != nil {
-		t.Error("Not expecting get deployment to fail")
+		t.Error("Not expecting get system info to fail")
 	}
 }
 

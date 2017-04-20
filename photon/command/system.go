@@ -347,7 +347,7 @@ func showSystemInfo(c *cli.Context, w io.Writer) error {
 		fmt.Printf("\n")
 	}
 	if systemInfo.State != "" {
-		vms, err := client.Photonclient.Deployments.GetVms("default")
+		vms, err := client.Photonclient.System.GetSystemVms()
 		if err != nil {
 			return err
 		}
