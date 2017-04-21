@@ -712,15 +712,16 @@ type PortGroups struct {
 
 // Represents a subnet
 type Subnet struct {
-	ID            string            `json:"id"`
-	Kind          string            `json:"kind"`
-	Name          string            `json:"name"`
-	Description   string            `json:"description,omitempty"`
-	PrivateIpCidr string            `json:"privateIpCidr"`
-	ReservedIps   map[string]string `json:"reservedIps"`
-	State         string            `json:"state"`
-	IsDefault     bool              `json:"isDefault"`
-	PortGroups    PortGroups        `json:"portGroups"`
+	ID                 string            `json:"id"`
+	Kind               string            `json:"kind"`
+	Name               string            `json:"name"`
+	Description        string            `json:"description,omitempty"`
+	PrivateIpCidr      string            `json:"privateIpCidr"`
+	ReservedIps        map[string]string `json:"reservedIps"`
+	State              string            `json:"state"`
+	IsDefault          bool              `json:"isDefault"`
+	PortGroups         PortGroups        `json:"portGroups"`
+	DnsServerAddresses []string          `json:"dnsServerAddresses"`
 }
 
 // Represents multiple subnets returned by the API.
@@ -730,11 +731,12 @@ type Subnets struct {
 
 // Creation spec for subnets.
 type SubnetCreateSpec struct {
-	Name          string     `json:"name"`
-	Description   string     `json:"description"`
-	PrivateIpCidr string     `json:"privateIpCidr"`
-	Type          string     `json:"type"`
-	PortGroups    PortGroups `json:"portGroups"`
+	Name               string     `json:"name"`
+	Description        string     `json:"description"`
+	PrivateIpCidr      string     `json:"privateIpCidr"`
+	Type               string     `json:"type"`
+	PortGroups         PortGroups `json:"portGroups"`
+	DnsServerAddresses []string   `json:"dnsServerAddresses"`
 }
 
 // Represents name that can be set for subnet
@@ -753,23 +755,4 @@ type PolicyDelta struct {
 	Principal string `json:"principal"`
 	Action    string `json:"action"`
 	Role      string `json:"role"`
-}
-
-type SystemInfo struct {
-	NTPEndpoint             string                 `json:"ntpEndpoint,omitempty"`
-	UseImageDatastoreForVms bool                   `json:"useImageDatastoreForVms,omitempty"`
-	Auth                    *AuthInfo              `json:"auth"`
-	NetworkConfiguration    *NetworkConfiguration  `json:"networkConfiguration"`
-	Kind                    string                 `json:"kind"`
-	SyslogEndpoint          string                 `json:"syslogEndpoint,omitempty"`
-	Stats                   *StatsInfo             `json:"stats,omitempty"`
-	State                   string                 `json:"state"`
-	ImageDatastores         []string               `json:"imageDatastores"`
-	ServiceConfigurations   []ServiceConfiguration `json:"serviceConfigurations,omitempty"`
-	LoadBalancerEnabled     bool                   `json:"loadBalancerEnabled"`
-	LoadBalancerAddress     string                 `json:"loadBalancerAddress"`
-	BaseVersion             string                 `json:"baseVersion"`
-	FullVersion             string                 `json:"fullVersion"`
-	GitCommitHash           string                 `json:"gitCommitHash"`
-	NetworkType             string                 `json:"networkType"`
 }

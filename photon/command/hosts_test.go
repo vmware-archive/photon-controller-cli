@@ -396,7 +396,7 @@ func TestHostGetVMs(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+rootUrl+"/hosts/1/vms",
+		server.URL+rootUrl+"/infrastructure/hosts/1/vms",
 		mocks.CreateResponder(200, string(response[:])))
 	defer server.Close()
 

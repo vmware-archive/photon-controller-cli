@@ -490,7 +490,7 @@ func listHostVMs(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	vmList, err := client.Photonclient.Hosts.GetVMs(id)
+	vmList, err := client.Photonclient.InfraHosts.GetVMs(id)
 	if err != nil {
 		return err
 	}
