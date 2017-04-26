@@ -48,10 +48,12 @@ func GetHostsCommand() cli.Command {
 		Usage: "options for host",
 		Subcommands: []cli.Command{
 			{
-				Name:        "create",
-				Usage:       "Add a new host",
-				ArgsUsage:   " ",
-				Description: "Add a new host to Photon Controller. You must a system administrator to add a host.",
+				Name:      "create",
+				Usage:     "Add a new host",
+				ArgsUsage: " ",
+				Description: "Add a new host to Photon Controller. You must a system administrator to add a host.\n" +
+					"   Example:\n" +
+					"     photon host create --username root --password pwd --address <ip-address-of-ESXi-host>",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "username, u",
