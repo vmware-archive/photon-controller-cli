@@ -45,27 +45,38 @@ func GetProjectsCommand() cli.Command {
 				Usage:     "Create a new project",
 				ArgsUsage: "<project-name>",
 				Description: "Create a new project within a tenant and assigns some or all of its tenant quota.\n" +
-					"   Only system administrators can create new projects.\n" +
-					"   If default-router-private-ip-cidr option is omitted,\n" +
-					"   it will use 192.168.0.0/16 as default router's private IP CIDR." +
-					"   A quota for the project can be defined during project creation and " +
-					"   it is defined by a set of maximum resource costs. Each usage has a type,\n" +
-					"   a numnber (e.g. 1) and a unit (e.g. GB). You must specify at least one cost\n" +
-					"   Valid units:  GB, MB, KB, B, or COUNT\n" +
+					"   Only system administrators can create new projects. If default-router-private-ip-cidr\n" +
+					"   option is omitted, it will use 192.168.0.0/16 as default router's private IP CIDR.\n" +
+					"   A quota for the project can be defined during project creation and it is defined by\n" +
+					"   a set of maximum resource costs. Each usage has a type, a numnber (e.g. 1) and a unit (e.g. GB).\n" +
+					"   You must specify at least one cost Valid units: GB, MB, KB, B, or COUNT\n\n" +
 					"   Common costs:\n" +
-					"     vm.count:            Total number of VMs (use with COUNT)\n" +
-					"     vm.cpu:              Total number of vCPUs for a VM (use with COUNT)\n" +
-					"     vm.memory:           Total amount of RAM for a VM (use with GB, MB, KB, or B)\n" +
-					"     disk.capacity:       Total disk capacity (use with GB, MB, KB, or B)\n" +
-					"     disk.count:          Number of disks (use with COUNT)\n" +
-					"     sdn.floatingip.size: Number of floating ip \n" +
+					"     vm.count:                     Total number of VMs (use with COUNT)\n" +
+					"     vm.cpu:                       Total number of vCPUs for a VM (use with COUNT)\n" +
+					"     vm.memory:                    Total amount of RAM for a VM (use with GB, MB, KB, or B)\n" +
+					"     ephemeral-disk.capacity:      Total ephemeral disk capacity (use with GB, MB, KB, or B)\n" +
+					"     persistent-disk.capacity:     Total persistent disk capacity (use with GB, MB, KB, or B)\n" +
+					"     ephemeral-disk.count:         Number of ephemeral disks (use with COUNT)\n" +
+					"     persistent-disk.count:        Number of persistent disks (use with COUNT)\n" +
+					"     sdn.floatingip.size:          Number of floating ip \n\n" +
 					"   Example:\n" +
 					"      Set project quota with 100 VMs, 1000 GB of RAM and 500 vCPUs:\n" +
-					"      photon project create project1 --tenant tenant1 \n" +
-					"             --limits 'vm.count 100 COUNT, vm.memory 1000 GB, vm.cpu 500 COUNT'\n\n" +
-					"      Set project quota to 30% of its tenant quota\n" +
-					"      photon project create project2 --tenant tenant1 --percent 30 \n",
-
+					"        photon project create project1 --tenant tenant1 \\ \n" +
+					"          --limits 'vm.count 100 COUNT,\n" +
+					"                    vm.cost 1000 COUNT,\n" +
+					"                    vm.memory 1000 GB,\n" +
+					"                    vm.cpu 500 COUNT, \n" +
+					"                    ephemeral-disk 1000 COUNT,\n" +
+					"                    ephemeral-disk.capacity 1000 GB,\n" +
+					"                    ephemeral-disk.cost 1000 GB,\n" +
+					"                    persistent-disk 1000 COUNT,\n" +
+					"                    persistent-disk.capacity 1000 GB,\n" +
+					"                    persistent-disk.cost 1000 GB, \n" +
+					"                    storage.LOCAL_VMFS 1000 COUNT,\n" +
+					"                    storage.VSAN 1000 COUNT,\n" +
+					"                    sdn.floatingip.size 1000 COUNT'\n\n" +
+					"      Set project quota to 30% of its tenant quota:\n" +
+					"        photon project create project2 --tenant tenant1 --percent 30",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "limits, l",
@@ -515,11 +526,11 @@ func getProject(c *cli.Context, w io.Writer) error {
 	}
 
 	if c.GlobalIsSet("non-interactive") {
-		fmt.Printf("%s\t%s\n", project.ID, project.Name)
+		fmt.Printf("%s\t%s\n", project.Name, project.ID)
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObject(project, w, c)
 	} else {
-		fmt.Printf("Current project is '%s' with ID %s\n", project.ID, project.Name)
+		fmt.Printf("Current project name is '%s', with ID '%s' \n", project.Name, project.ID)
 	}
 	return nil
 }

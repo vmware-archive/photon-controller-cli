@@ -40,10 +40,12 @@ func GetSubnetsCommand() cli.Command {
 				Name:      "create",
 				Usage:     "Create a new subnet",
 				ArgsUsage: " ",
-				Description: "Create a new subnet. \n" +
+				Description: "Create a new subnet. \n\n" +
 					"   Example: \n" +
-					"   (Virtual Subnet) photon subnet create -n subnet-1 -d test-subnet -i 192.168.0.0/16 -r 5f8cap789 -s 172.10.0.1\n" +
-					"   (Physical Subnet) photon subnet create -n subnet-1 -d test-subnet -p port1,port2 \n",
+					"    Virtual Subnet:\n" +
+					"      photon subnet create -n test -d \"Testing Subnet\" -i 192.168.0.0/16 -r id -s 172.10.0.1\n" +
+					"    Physical Subnet:\n" +
+					"      photon subnet create -n test -d \"Testing Subnet\" -p port1,port2 \n",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",

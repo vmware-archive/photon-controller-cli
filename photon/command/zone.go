@@ -35,10 +35,12 @@ func GetZonesCommand() cli.Command {
 		Usage: "options for zone",
 		Subcommands: []cli.Command{
 			{
-				Name:        "create",
-				Usage:       "Create a new zone",
-				ArgsUsage:   " ",
-				Description: "This creates a new zone. Only a system adminstrator can create one.",
+				Name:      "create",
+				Usage:     "Create a new zone",
+				ArgsUsage: " ",
+				Description: "This creates a new zone. Only a system adminstrator can create one.\n\n" +
+					"   Example:\n" +
+					"     photon zone create --name \"zone-name\"",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
