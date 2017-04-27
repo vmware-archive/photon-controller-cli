@@ -453,19 +453,12 @@ func showSystemInfo(c *cli.Context, w io.Writer) error {
 				fmt.Printf("    No Service is supported")
 			}
 		}
-	} else {
-		if c.GlobalIsSet("non-interactive") {
-			fmt.Printf("\n")
-		} else if !utils.NeedsFormatting(c) {
-			fmt.Println("\n  Service Configurations:")
-			fmt.Printf("    No Service is supported")
-		}
-	}
 
-	if !utils.NeedsFormatting(c) {
-		err = displayInfoSummary(data, c.GlobalIsSet("non-interactive"))
-		if err != nil {
-			return err
+		if !utils.NeedsFormatting(c) {
+			err = displayInfoSummary(data, c.GlobalIsSet("non-interactive"))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
