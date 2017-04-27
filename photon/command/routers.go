@@ -42,7 +42,7 @@ func GetRoutersCommand() cli.Command {
 					"   The private IP range of router will be sub-divided into smaller CIDRs for each subnet \n" +
 					"   created under this router \n\n" +
 					"   Example: \n" +
-					"   photon router create -n router-1 -i 192.168.0.0/16 -t cloud-dev -p cloud-dev-staging \\ \n",
+					"   photon router create -n router-1 -i 192.168.0.0/16 -t cloud-dev -p cloud-dev-staging \n",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",

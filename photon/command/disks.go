@@ -44,7 +44,10 @@ func GetDiskCommand() cli.Command {
 				Description: "This creates a new disk on a datastore selected by Photon Controller.\n" +
 					"   If you wish to create the disk on the same datastore as a given VM, specify the\n" +
 					"   affinities flag. If you wish to create the disk on a particularly type of datastore\n" +
-					"   specify the appropriate flavor.",
+					"   specify the appropriate flavor.\n\n" +
+					"   Example:\n" +
+					"     photon disk create --name persistent-disk-1 --flavor disk-flavor --capacityGB 10 \\ \n" +
+					"       --affinities vm:\"ID of VM\"",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",

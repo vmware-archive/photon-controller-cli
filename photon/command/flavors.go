@@ -42,18 +42,18 @@ func GetFlavorsCommand() cli.Command {
 					"   A flavor is defined by a set of costs. Each cost has a type (e.g. vm.memory),\n" +
 					"   a numnber (e.g. 1) and a unit (e.g. GB). VM flavors must specify at\n" +
 					"   least two costs: vm.memory and vm.cpu. Disk flavors must specify at\n" +
-					"   least one cost, and it's typically the number of disk (typically one)\n\n" +
-					"   Valid units:  GB, MB, KB, B, or COUNT\n" +
+					"   least one cost, and it's typically the number of disk (typically one)\n" +
+					"   Valid units:  GB, MB, KB, B, or COUNT\n\n" +
 					"   Common costs:\n" +
 					"     vm.count:               Number of VMs this is (probably 1 COUNT)\n" +
 					"     vm.cpu:                 Number of vCPUs for a VM (use with COUNT)\n" +
 					"     vm.memory:              Amount of RAM for a VM (use with GB, MB, KB, or B)\n" +
 					"     persistent-disk.count:  Number of persistent disk (probably 1 COUNT)\n" +
-					"     ephemeral-disk.count:   Number of ephemeral disks (probably 1 COUNT)\n" +
+					"     ephemeral-disk.count:   Number of ephemeral disks (probably 1 COUNT)\n\n" +
 					"   Example VM flavor command:\n" +
 					"      photon flavor create --name f1 --kind vm --cost 'vm.memory 1 GB, vm.cpu 1 COUNT'\n" +
 					"   Example disk flavor:\n" +
-					"      photon flavor create --name f1 --kind persistent-disk.count --cost 'persistent-disk.count 1 COUNT'\n",
+					"      photon flavor create --name f1 --kind persistent-disk.count --cost 'persistent-disk.count 1 COUNT'",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",

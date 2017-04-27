@@ -58,6 +58,11 @@ func GetVMCommand() cli.Command {
 				Name:      "create",
 				Usage:     "Create a new VM",
 				ArgsUsage: " ",
+				Description: "To create a VM in interactive mode, use the photon vm create command \n" +
+					"   with no options. The command prompts you for the VM name, flavor, and source image.\n" +
+					"   Also, photon provides non-interactive option to supply this information with '-n' \n\n" +
+					"   Example:\n" +
+					"     photon vm create -n vm-1 -f flavor-1 -d \"disk-1 disk-flavor boot=true\" -i [image_id]",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
