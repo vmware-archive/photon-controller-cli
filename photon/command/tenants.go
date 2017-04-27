@@ -45,20 +45,34 @@ func GetTenantsCommand() cli.Command {
 				Usage:     "Create a new tenant",
 				ArgsUsage: "<tenant-name>",
 				Description: "Create a tenant. Only system administrators can create new tenant.\n" +
-					"   A quota for the tenant can be defined during tenant creation and " +
-					"   it is defined by a set of maximum resource costs. Each usage has a type,\n" +
-					"   a numnber (e.g. 1) and a unit (e.g. GB). You must specify at least one cost\n" +
-					"   Valid units:  GB, MB, KB, B, or COUNT\n" +
+					"   A quota for the tenant can be defined during tenant creation and it is defined by \n" +
+					"   a set of maximum resource costs. Each usage has a type, a numnber (e.g. 1) and a unit (e.g. GB).\n" +
+					"   You must specify at least one cost Valid units: GB, MB, KB, B, or COUNT\n\n" +
 					"   Common costs:\n" +
-					"     vm.count:            Total number of VMs (use with COUNT)\n" +
-					"     vm.cpu:              Total number of vCPUs for a VM (use with COUNT)\n" +
-					"     vm.memory:           Total amount of RAM for a VM (use with GB, MB, KB, or B)\n" +
-					"     disk.capacity:       Total disk capacity (use with GB, MB, KB, or B)\n" +
-					"     disk.count:          Number of disks (use with COUNT)\n" +
-					"     sdn.floatingip.size: Number of floating ip \n" +
-					"   Example: set tenant quota with 100 VMs, 1000 GB of RAM and 500 vCPUs:\n" +
-					"      photon tenant create tenant1 \\\n" +
-					"             --limits 'vm.count 100 COUNT, vm.memory 1000 GB, vm.cpu 500 COUNT'\n",
+					"     vm.count:                     Total number of VMs (use with COUNT)\n" +
+					"     vm.cpu:                       Total number of vCPUs for a VM (use with COUNT)\n" +
+					"     vm.memory:                    Total amount of RAM for a VM (use with GB, MB, KB, or B)\n" +
+					"     ephemeral-disk.capacity:      Total ephemeral disk capacity (use with GB, MB, KB, or B)\n" +
+					"     persistent-disk.capacity:     Total persistent disk capacity (use with GB, MB, KB, or B)\n" +
+					"     ephemeral-disk.count:         Number of ephemeral disks (use with COUNT)\n" +
+					"     persistent-disk.count:        Number of persistent disks (use with COUNT)\n" +
+					"     sdn.floatingip.size:          Number of floating ip \n\n" +
+					"   Example:\n" +
+					"     set tenant quota with 100 VMs, 1000 GB of RAM and 500 vCPUs:\n" +
+					"        photon tenant create tenant1 \\ \n" +
+					"          --limits 'vm.count 100 COUNT,\n" +
+					"                    vm.cost 1000 COUNT,\n" +
+					"                    vm.memory 1000 GB,\n" +
+					"                    vm.cpu 500 COUNT,\n" +
+					"                    ephemeral-disk 1000 COUNT,\n" +
+					"                    ephemeral-disk.capacity 1000 GB,\n" +
+					"                    ephemeral-disk.cost 1000 GB, \n" +
+					"                    persistent-disk 1000 COUNT,\n" +
+					"                    persistent-disk.capacity 1000 GB,\n" +
+					"                    persistent-disk.cost 1000 GB,\n" +
+					"                    storage.LOCAL_VMFS 1000 COUNT,\n" +
+					"                    storage.VSAN 1000 COUNT,\n" +
+					"                    sdn.floatingip.size 1000 COUNT'",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "security-groups, s",

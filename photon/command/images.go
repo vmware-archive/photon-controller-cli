@@ -49,7 +49,10 @@ func GetImagesCommand() cli.Command {
 					"   If the image replication is EAGER, it will be distributed to all allowed datastores on all ESXi hosts\n" +
 					"   If the image replication is ON_DEMAND, it will be distributed to all image datastores\n" +
 					"   An image can have project scope or infrastructure scope. Only system administrators can create\n" +
-					"   infrastructure images.",
+					"   infrastructure images.\n\n" +
+					"   Example:\n" +
+					"   create image:\n" +
+					"        photon image create kubernetes-1.6.ova -n kube-demo -i EAGER",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name, n",
