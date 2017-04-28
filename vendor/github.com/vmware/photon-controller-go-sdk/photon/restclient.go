@@ -221,13 +221,13 @@ func (client *restClient) SendRequest(req *request, bodyRewinder bodyRewinder) (
 		req.Body = bodyRewinder()
 	}
 	res, err = client.sendRequestHelper(req)
-	return res, nil
+	return res, err
 }
 
 func (client *restClient) sendRequestHelper(req *request) (res *http.Response, err error) {
 	r, err := http.NewRequest(req.Method, req.URL, req.Body)
 	if err != nil {
-		client.logger.Printf("An error occured creating request %s on %s. Error: %s", req.Method, req.URL, err)
+		client.logger.Printf("An error occurred creating request %s on %s. Error: %s", req.Method, req.URL, err)
 		return
 	}
 	if req.ContentType != "" {
@@ -238,7 +238,7 @@ func (client *restClient) sendRequestHelper(req *request) (res *http.Response, e
 	}
 	res, err = client.httpClient.Do(r)
 	if err != nil {
-		client.logger.Printf("An error occured when calling %s on %s. Error: %s", req.Method, req.URL, err)
+		client.logger.Printf("An error occurred when calling %s on %s. Error: %s", req.Method, req.URL, err)
 		return
 	}
 

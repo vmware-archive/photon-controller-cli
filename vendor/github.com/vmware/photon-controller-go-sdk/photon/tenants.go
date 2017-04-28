@@ -137,6 +137,9 @@ func (api *TenantsAPI) Get(identity string) (tenant *Tenant, err error) {
 	}
 	defer res.Body.Close()
 	res, err = getError(res)
+	if err != nil {
+		return
+	}
 	tenant = &Tenant{}
 	if res != nil {
 		err = json.NewDecoder(res.Body).Decode(tenant)
@@ -193,6 +196,9 @@ func (api *TenantsAPI) GetQuota(tenantId string) (quota *Quota, err error) {
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
 
 	quota = &Quota{}
 	err = json.Unmarshal(body, quota)

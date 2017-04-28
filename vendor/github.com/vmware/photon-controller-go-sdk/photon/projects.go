@@ -259,6 +259,9 @@ func (api *ProjectsAPI) GetQuota(projectId string) (quota *Quota, err error) {
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
 
 	quota = &Quota{}
 	err = json.Unmarshal(body, quota)
