@@ -66,7 +66,7 @@ func (api *InfraHostsAPI) Get(id string) (host *Host, err error) {
 	}
 	var result Host
 	err = json.NewDecoder(res.Body).Decode(&result)
-	return &result, nil
+	return &result, err
 }
 
 // Deletes a host with specified ID.

@@ -34,7 +34,7 @@ func (api *RoutersAPI) Get(id string) (router *Router, err error) {
 	}
 	var result Router
 	err = json.NewDecoder(res.Body).Decode(&result)
-	return &result, nil
+	return &result, err
 }
 
 // Updates router's attributes.

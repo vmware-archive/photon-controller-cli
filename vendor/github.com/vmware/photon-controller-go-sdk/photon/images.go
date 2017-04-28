@@ -84,7 +84,7 @@ func (api *ImagesAPI) Get(imageID string) (image *Image, err error) {
 	}
 	var result Image
 	err = json.NewDecoder(res.Body).Decode(&result)
-	return &result, nil
+	return &result, err
 }
 
 // Deletes image with the specified ID.

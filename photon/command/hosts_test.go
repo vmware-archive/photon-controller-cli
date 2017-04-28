@@ -284,7 +284,7 @@ func TestSetHostAvailabilityZone(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/set_availability_zone",
+		server.URL+rootUrl+"/infrastructure/hosts"+"/fake-host-id"+"/set_availability_zone",
 		mocks.CreateResponder(200, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",
@@ -328,7 +328,7 @@ func TestHostTasks(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+rootUrl+"/hosts/1/tasks",
+		server.URL+rootUrl+"/infrastructure/hosts/1/tasks",
 		mocks.CreateResponder(200, string(response[:])))
 
 	taskList = MockTasksPage{
@@ -442,7 +442,7 @@ func TestProvisionHost(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"POST",
-		server.URL+rootUrl+"/hosts"+"/fake-host-id"+"/provision",
+		server.URL+rootUrl+"/infrastructure/hosts"+"/fake-host-id"+"/provision",
 		mocks.CreateResponder(202, string(response[:])))
 	mocks.RegisterResponder(
 		"GET",

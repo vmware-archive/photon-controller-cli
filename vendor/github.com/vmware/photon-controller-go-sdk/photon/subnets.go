@@ -71,7 +71,7 @@ func (api *SubnetsAPI) Get(id string) (subnet *Subnet, err error) {
 	}
 	var result Subnet
 	err = json.NewDecoder(res.Body).Decode(&result)
-	return &result, nil
+	return &result, err
 }
 
 // Updates subnet's attributes.
@@ -102,6 +102,9 @@ func (api *SubnetsAPI) GetAll(options *SubnetGetOptions) (result *Subnets, err e
 		uri += getQueryString(options)
 	}
 	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
 
 	result = &Subnets{}
 	err = json.Unmarshal(res, result)
