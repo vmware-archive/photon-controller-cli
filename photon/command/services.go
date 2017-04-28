@@ -1145,8 +1145,9 @@ func getKubectlAuth(c *cli.Context) error {
 		return err
 	}
 
-	certFile := "/tmp/lw-ca-cert-" + generateRandomString(4) + ".pem"
-	file, err := os.Create(certFile)
+	filename := "lw-ca-cert-" + generateRandomString(4) + ".pem"
+	file, err := ioutil.TempFile(os.TempDir(), filename)
+
 	if err != nil {
 		return err
 	}
@@ -1168,6 +1169,8 @@ func getKubectlAuth(c *cli.Context) error {
 		return err
 	}
 
+
+
 	// Command for create the user in the kubectl config
 	fmt.Printf("kubectl config set-credentials %s \\\n", username)
 	fmt.Printf("    --auth-provider=oidc \\\n")
@@ -1176,7 +1179,7 @@ func getKubectlAuth(c *cli.Context) error {
 	fmt.Printf("    --auth-provider-arg=client-secret=%s \\\n", service.ClientID)
 	fmt.Printf("    --auth-provider-arg=refresh-token=%s \\\n", options.RefreshToken)
 	fmt.Printf("    --auth-provider-arg=id-token=%s \\\n", options.IdToken)
-	fmt.Printf("    --auth-provider-arg=idp-certificate-authority=%s \n", certFile)
+	fmt.Printf("    --auth-provider-arg=idp-certificate-authority=%s \n", file.Name())
 	fmt.Println("")
 
 	loadBalancerIp := service.ExtendedProperties[photon.ExtendedPropertyLoadBalancerIP]
