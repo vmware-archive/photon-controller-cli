@@ -48,7 +48,6 @@ import (
 func GetServiceCommand() cli.Command {
 	command := cli.Command{
 		Name:    "service",
-		Aliases: []string{"cluster"},
 		Usage:   "Options for services",
 		Subcommands: []cli.Command{
 			{
