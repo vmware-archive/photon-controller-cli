@@ -205,7 +205,7 @@ func showInfo(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	info, err := client.Photonclient.Info.Get()
+	info, err := client.Photonclient.System.GetSystemInfo()
 
 	if utils.NeedsFormatting(c) {
 		utils.FormatObject(info, w, c)

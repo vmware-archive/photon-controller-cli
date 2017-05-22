@@ -34,7 +34,7 @@ func TestCheckSoftwareDefinedNetworkEnabled(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+rootUrl+"/info",
+		server.URL+rootUrl+"/system/info",
 		mocks.CreateResponder(200, string(infoString[:])))
 
 	defer server.Close()
@@ -74,7 +74,7 @@ func TestCheckNetworkTypeNotDefined(t *testing.T) {
 	server := mocks.NewTestServer()
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+rootUrl+"/info",
+		server.URL+rootUrl+"/system/info",
 		mocks.CreateResponder(200, string(infoString[:])))
 
 	defer server.Close()

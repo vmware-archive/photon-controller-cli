@@ -322,7 +322,7 @@ func TestLogout(t *testing.T) {
 
 func mockInfo(t *testing.T, server *httptest.Server) error {
 
-	info := photon.Info{
+	info := photon.SystemInfo{
 		BaseVersion:   "1.1.0",
 		FullVersion:   "1.1.0-12345abcde",
 		GitCommitHash: "12345abcde",
@@ -336,7 +336,7 @@ func mockInfo(t *testing.T, server *httptest.Server) error {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+rootUrl+"/info",
+		server.URL+rootUrl+"/system/info",
 		mocks.CreateResponder(200, string(response[:])))
 	return nil
 }

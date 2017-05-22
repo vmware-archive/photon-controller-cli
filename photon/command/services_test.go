@@ -118,7 +118,7 @@ func TestCreateDeleteService(t *testing.T) {
 
 	mocks.RegisterResponder(
 		"GET",
-		server.URL+rootUrl+"/info",
+		server.URL+rootUrl+"/system/info",
 		mocks.CreateResponder(200, string(infoResponse)))
 	mocks.RegisterResponder(
 		"GET",

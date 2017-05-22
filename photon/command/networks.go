@@ -29,7 +29,7 @@ func isSoftwareDefinedNetwork(c *cli.Context) (sdnEnabled bool, err error) {
 		return
 	}
 
-	info, err := client.Photonclient.Info.Get()
+	info, err := client.Photonclient.System.GetSystemInfo()
 	if err != nil {
 		return
 	}
