@@ -251,6 +251,11 @@ func createVirtualSubnet(c *cli.Context, w io.Writer, routerId string) error {
 	subnetSpec.PrivateIpCidr = privateIpCidr
 	subnetSpec.Type = subnetType
 	subnetSpec.DnsServerAddresses = dnsServerAddressList
+	subnetSpec.PortGroups = photon.PortGroups{
+		Names: []string{
+			"helloWorld",
+		},
+	}
 
 	if !c.GlobalIsSet("non-interactive") && !utils.NeedsFormatting(c) {
 		fmt.Printf("\nCreating Subnet: '%s', Description: '%s', PrivateIpCidr: '%s', DnsServerAddresses: '%s'\n\n",
