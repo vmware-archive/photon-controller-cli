@@ -32,13 +32,14 @@ import (
 func GetRoutersCommand() cli.Command {
 	command := cli.Command{
 		Name:  "router",
-		Usage: "options for router",
+		Usage: "(Should soon be deprecated and replaced by the \"network\" command) options for router",
 		Subcommands: []cli.Command{
 			{
 				Name:      "create",
 				Usage:     "Create a new router",
 				ArgsUsage: " ",
-				Description: "Create a new router within a project. Subnets can be created under this router. \n" +
+				Description: "(Should soon be deprecated and replaced by the \"network\" command)\n" +
+					"   Create a new router within a project. Subnets can be created under this router. \n" +
 					"   The private IP range of router will be sub-divided into smaller CIDRs for each subnet \n" +
 					"   created under this router \n\n" +
 					"   Example: \n" +
@@ -69,10 +70,11 @@ func GetRoutersCommand() cli.Command {
 				},
 			},
 			{
-				Name:        "delete",
-				Usage:       "Delete router with specified id",
-				ArgsUsage:   "<router-id>",
-				Description: "Delete the specified router. Example: photon router delete 4f9caq234",
+				Name:      "delete",
+				Usage:     "Delete router with specified id",
+				ArgsUsage: "<router-id>",
+				Description: "(Should soon be deprecated and replaced by the \"network\" command)\n" +
+					"   Delete the specified router. Example: photon router delete 4f9caq234",
 				Action: func(c *cli.Context) {
 					err := deleteRouter(c)
 					if err != nil {
@@ -84,7 +86,8 @@ func GetRoutersCommand() cli.Command {
 				Name:      "list",
 				Usage:     "List all routers in a project",
 				ArgsUsage: " ",
-				Description: "List all routers in a project. It will show routers id, name, kind and\n" +
+				Description: "(Should soon be deprecated and replaced by the \"network\" command)\n" +
+					"   List all routers in a project. It will show routers id, name, kind and\n" +
 					"   private IP range. If tenant and project names are not mentioned, it will list routers\n" +
 					"   for current tenant and project.\n" +
 					"   Example: \n" +
@@ -114,7 +117,8 @@ func GetRoutersCommand() cli.Command {
 				Name:      "show",
 				Usage:     "Show router info with specified id",
 				ArgsUsage: "<router-id>",
-				Description: "List the router's name and private IP range. \n\n" +
+				Description: "(Should soon be deprecated and replaced by the \"network\" command)\n" +
+					"   List the router's name and private IP range. \n\n" +
 					"  Example: photon router show 4f9caq234",
 				Action: func(c *cli.Context) {
 					err := showRouter(c, os.Stdout)
@@ -127,7 +131,8 @@ func GetRoutersCommand() cli.Command {
 				Name:      "update",
 				Usage:     "Update router",
 				ArgsUsage: "<router-id>",
-				Description: "Update an existing router given its id. \n" +
+				Description: "(Should soon be deprecated and replaced by the \"network\" command)\n" +
+					"   Update an existing router given its id. \n" +
 					"   Currently only the router name can be updated \n" +
 					"   Example: \n" +
 					"   photon router update -n new-router 4f9caq234",

@@ -60,8 +60,13 @@ func GetSubnetsCommand() cli.Command {
 						Usage: "The private IP range of subnet in CIDR format, e.g.: 192.168.0.0/16",
 					},
 					cli.StringFlag{
-						Name:  "router, r",
-						Usage: "The id of the router on which subnet is to be created",
+						Name: "router, r",
+						Usage: "(Should soon be deprecated and replaced by the \"network\" paramenter)\n" +
+							"     The id of the router on which subnet is to be created",
+					},
+					cli.StringFlag{
+						Name:  "network, w",
+						Usage: "The id of the network in which subnet is to be created",
 					},
 					cli.StringFlag{
 						Name:  "type, t",
@@ -108,8 +113,13 @@ func GetSubnetsCommand() cli.Command {
 						Usage: "subnet name",
 					},
 					cli.StringFlag{
-						Name:  "router-id, r",
-						Usage: "router id",
+						Name: "router, r",
+						Usage: "(Should soon be deprecated and replaced by the \"network\" paramenter)\n" +
+							"     router id",
+					},
+					cli.StringFlag{
+						Name:  "network, w",
+						Usage: "network id",
 					},
 				},
 				Action: func(c *cli.Context) {
@@ -177,17 +187,18 @@ func GetSubnetsCommand() cli.Command {
 // Returns an error if one occurred
 func createSubnet(c *cli.Context, w io.Writer) error {
 	routerID := c.String("router")
+	networkID := c.String("network")
 
-	if len(routerID) == 0 {
+	if len(routerID) == 0 && len(networkID) == 0 {
 		return createPhysicalSubnet(c, w)
 	} else {
-		return createVirtualSubnet(c, w, routerID)
+		return createVirtualSubnet(c, w, routerID, networkID)
 	}
 }
 
 // Creates a virtual subnet under a router
 // Returns an error if one occurred
-func createVirtualSubnet(c *cli.Context, w io.Writer, routerId string) error {
+func createVirtualSubnet(c *cli.Context, w io.Writer, routerId, networkId string) error {
 	err := checkArgCount(c, 0)
 	if err != nil {
 		return err
@@ -200,11 +211,6 @@ func createVirtualSubnet(c *cli.Context, w io.Writer, routerId string) error {
 	dnsServerAddresses := c.String("dns-server-addresses")
 
 	client.Photonclient, err = client.GetClient(c)
-	if err != nil {
-		return err
-	}
-
-	router, err := client.Photonclient.Routers.Get(routerId)
 	if err != nil {
 		return err
 	}
@@ -263,7 +269,23 @@ func createVirtualSubnet(c *cli.Context, w io.Writer, routerId string) error {
 	}
 
 	if confirmed(c) {
-		createTask, err := client.Photonclient.Routers.CreateSubnet(router.ID, &subnetSpec)
+		var createTask *photon.Task
+		var err error
+
+		if len(routerId) != 0 {
+			router, err := client.Photonclient.Routers.Get(routerId)
+			if err != nil {
+				return err
+			}
+			createTask, err = client.Photonclient.Routers.CreateSubnet(router.ID, &subnetSpec)
+		} else {
+			network, err := client.Photonclient.Networks.Get(networkId)
+			if err != nil {
+				return err
+			}
+			createTask, err = client.Photonclient.Networks.CreateSubnet(network.ID, &subnetSpec)
+		}
+
 		if err != nil {
 			return err
 		}
@@ -393,7 +415,8 @@ func listSubnets(c *cli.Context, w io.Writer) error {
 		Name: name,
 	}
 
-	routerId := c.String("router-id")
+	routerId := c.String("router")
+	networkId := c.String("network")
 
 	client.Photonclient, err = client.GetClient(c)
 	if err != nil {
@@ -402,10 +425,14 @@ func listSubnets(c *cli.Context, w io.Writer) error {
 
 	var subnetList *photon.Subnets
 
-	if len(routerId) == 0 {
+	if len(routerId) == 0 && len(networkId) == 0 {
 		subnetList, err = client.Photonclient.Subnets.GetAll(options)
 	} else {
-		subnetList, err = client.Photonclient.Routers.GetSubnets(routerId, options)
+		if len(routerId) != 0 {
+			subnetList, err = client.Photonclient.Routers.GetSubnets(routerId, options)
+		} else {
+			subnetList, err = client.Photonclient.Networks.GetSubnets(networkId, options)
+		}
 	}
 
 	if err != nil {
