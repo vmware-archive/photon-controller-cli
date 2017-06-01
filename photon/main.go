@@ -69,7 +69,8 @@ func BuildApp() *cli.App {
 		command.GetDiskCommand(),
 		command.GetVMCommand(),
 		command.GetServiceCommand(),
-		command.GetRoutersCommand(),
+		command.GetRoutersCommand(), // TODO: deprecate router later
+		command.GetNetworksCommand(),
 		command.GetSubnetsCommand(),
 		command.GetZonesCommand(),
 		command.GetInfrastructureCommand(),

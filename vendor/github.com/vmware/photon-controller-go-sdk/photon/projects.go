@@ -36,6 +36,11 @@ type RouterGetOptions struct {
 	Name string `urlParam:"name"`
 }
 
+// Options for GetNetworks API.
+type NetworkGetOptions struct {
+	Name string `urlParam:"name"`
+}
+
 var projectUrl string = rootUrl + "/projects/"
 
 // Deletes the project with specified ID. Any VMs, disks, etc., owned by the project must be deleted first.
@@ -239,6 +244,42 @@ func (api *ProjectsAPI) GetRouters(projectID string, options *RouterGetOptions) 
 	}
 
 	result = &Routers{}
+	err = json.Unmarshal(res, result)
+	return
+}
+
+// Creates a network on the specified project.
+func (api *ProjectsAPI) CreateNetwork(projectID string, spec *NetworkCreateSpec) (task *Task, err error) {
+	body, err := json.Marshal(spec)
+	if err != nil {
+		return
+	}
+	res, err := api.client.restClient.Post(
+		api.client.Endpoint+projectUrl+projectID+"/networks",
+		"application/json",
+		bytes.NewReader(body),
+		api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	task, err = getTask(getError(res))
+	return
+}
+
+// Gets networks for project with the specified ID, using options to filter the results.
+// If options is nil, no filtering will occur.
+func (api *ProjectsAPI) GetNetworks(projectID string, options *NetworkGetOptions) (result *Networks, err error) {
+	uri := api.client.Endpoint + projectUrl + projectID + "/networks"
+	if options != nil {
+		uri += getQueryString(options)
+	}
+	res, err := api.client.restClient.GetList(api.client.Endpoint, uri, api.client.options.TokenOptions)
+	if err != nil {
+		return
+	}
+
+	result = &Networks{}
 	err = json.Unmarshal(res, result)
 	return
 }

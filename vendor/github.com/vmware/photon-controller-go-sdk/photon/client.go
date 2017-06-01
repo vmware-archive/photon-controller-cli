@@ -38,6 +38,7 @@ type Client struct {
 	Auth       *AuthAPI
 	Info       *InfoAPI
 	Routers    *RoutersAPI
+	Networks   *NetworksAPI
 	Subnets    *SubnetsAPI
 	System     *SystemAPI
 	Zones      *ZonesAPI
@@ -164,6 +165,7 @@ func NewClient(endpoint string, options *ClientOptions, logger *log.Logger) (c *
 	c.Auth = &AuthAPI{c}
 	c.Info = &InfoAPI{c}
 	c.Routers = &RoutersAPI{c}
+	c.Networks = &NetworksAPI{c}
 	c.Subnets = &SubnetsAPI{c}
 	c.System = &SystemAPI{c}
 	c.Zones = &ZonesAPI{c}

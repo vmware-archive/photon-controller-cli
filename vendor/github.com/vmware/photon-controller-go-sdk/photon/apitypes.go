@@ -665,6 +665,30 @@ type NsxConfigurationSpec struct {
 	DnsServerAddresses     []string          `json:"dnsServerAddresses"`
 }
 
+// Represents a network
+type Network struct {
+	ID            string `json:"id"`
+	Kind          string `json:"kind"`
+	Name          string `json:"name"`
+	PrivateIpCidr string `json:"privateIpCidr"`
+	IsDefault     bool   `json:"isDefault"`
+}
+
+// Represents multiple networks returned by the API.
+type Networks struct {
+	Items []Network `json:"items"`
+}
+
+type NetworkCreateSpec struct {
+	Name          string `json:"name"`
+	PrivateIpCidr string `json:"privateIpCidr"`
+}
+
+// Represents name that can be set for network
+type NetworkUpdateSpec struct {
+	NetworkName string `json:"name"`
+}
+
 // Represents port groups.
 type PortGroups struct {
 	Names []string `json:"names"`
