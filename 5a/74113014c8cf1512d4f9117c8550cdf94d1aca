@@ -1,0 +1,6 @@
+Code-Review+2: Mehmet Albayrak <malbayrak@vmware.com>
+Verified-1: Gerrit-Jenkins
+Verified+1: Alain Roy <alainr@vmware.com>
+Reviewed-on: https://review.ec.eng.vmware.com/19075
+Project: photon-controller-cli
+Branch: refs/heads/develop
