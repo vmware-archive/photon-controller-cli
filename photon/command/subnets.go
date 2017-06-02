@@ -558,14 +558,14 @@ func setDefaultSubnet(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	var task *photon.Task
-	task, err = client.Photonclient.Subnets.SetDefault(id)
-
-	if err != nil {
-		return err
-	}
-
 	if confirmed(c) {
+    var task *photon.Task
+    task, err = client.Photonclient.Subnets.SetDefault(id)
+
+    if err != nil {
+      return err
+    }
+
 		id, err := waitOnTaskOperation(task.ID, c)
 		if err != nil {
 			return err
