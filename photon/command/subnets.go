@@ -565,21 +565,17 @@ func setDefaultSubnet(c *cli.Context, w io.Writer) error {
 		return err
 	}
 
-	if confirmed(c) {
-		id, err := waitOnTaskOperation(task.ID, c)
+	id, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		subnet, err := client.Photonclient.Subnets.Get(id)
 		if err != nil {
 			return err
 		}
-
-		if utils.NeedsFormatting(c) {
-			subnet, err := client.Photonclient.Subnets.Get(id)
-			if err != nil {
-				return err
-			}
-			utils.FormatObject(subnet, w, c)
-		}
-	} else {
-		fmt.Println("OK. Canceled")
+		utils.FormatObject(subnet, w, c)
 	}
 	return nil
 }

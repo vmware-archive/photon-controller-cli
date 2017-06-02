@@ -340,7 +340,7 @@ func TestShowSubnet(t *testing.T) {
 	}
 }
 
-func TestListSubnets(t *testing.T) {
+func TestListSubnetsUnderRouter(t *testing.T) {
 	subnetList := MockSubnetsPage{
 		Items: []photon.Subnet{
 			{
@@ -385,7 +385,61 @@ func TestListSubnets(t *testing.T) {
 	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
 
 	set := flag.NewFlagSet("test", 0)
-	set.String("router-id", "fake-router-id", "Router id")
+	set.String("router", "fake-router-id", "Router id")
+	cxt := cli.NewContext(nil, set, nil)
+
+	err = listSubnets(cxt, os.Stdout)
+	if err != nil {
+		t.Error("Not expecting error listing subnets: " + err.Error())
+	}
+}
+
+func TestListSubnetsUnderNetwork(t *testing.T) {
+	subnetList := MockSubnetsPage{
+		Items: []photon.Subnet{
+			{
+				Name:          "fake_subnet_name",
+				ID:            "fake_subnet_ID",
+				Kind:          "fake_subnet_kind",
+				PrivateIpCidr: "fake_cidr",
+				State:         "READY",
+				IsDefault:     false,
+			},
+		},
+		NextPageLink:     "fake-next-page-link",
+		PreviousPageLink: "",
+	}
+	listResponse, err := json.Marshal(subnetList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected subnetList")
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+rootUrl+"/networks/"+"fake-network-id"+"/subnets",
+		mocks.CreateResponder(200, string(listResponse[:])))
+
+	subnetList = MockSubnetsPage{
+		Items:            []photon.Subnet{},
+		NextPageLink:     "",
+		PreviousPageLink: "",
+	}
+	listResponse, err = json.Marshal(subnetList)
+	if err != nil {
+		t.Error("Not expecting error serializaing expected subnetList")
+	}
+
+	mocks.RegisterResponder(
+		"GET",
+		server.URL+"fake-next-page-link",
+		mocks.CreateResponder(200, string(listResponse[:])))
+
+	mocks.Activate(true)
+	httpClient := &http.Client{Transport: mocks.DefaultMockTransport}
+	client.Photonclient = photon.NewTestClient(server.URL, nil, httpClient)
+
+	set := flag.NewFlagSet("test", 0)
+	set.String("network", "fake-network-id", "Network id")
 	cxt := cli.NewContext(nil, set, nil)
 
 	err = listSubnets(cxt, os.Stdout)
