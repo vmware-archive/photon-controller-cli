@@ -24,6 +24,7 @@ import (
 	cf "github.com/vmware/photon-controller-cli/photon/configuration"
 	"github.com/vmware/photon-controller-cli/photon/utils"
 
+	"encoding/json"
 	"github.com/urfave/cli"
 	"github.com/vmware/photon-controller-go-sdk/photon"
 	"net/http/httptest"
@@ -543,6 +544,9 @@ func getVMNetworks(id string, c *cli.Context) (networks []interface{}, err error
 	if err != nil {
 		return nil, err
 	}
+	if len(networks) != 0 {
+		return networks, nil
+	}
 
 	if c.GlobalIsSet("non-interactive") {
 		task, err = client.Photonclient.Tasks.Wait(task.ID)
@@ -555,8 +559,20 @@ func getVMNetworks(id string, c *cli.Context) (networks []interface{}, err error
 			return nil, err
 		}
 	}
-	networkConnections := task.ResourceProperties.(map[string]interface{})
-	networks = networkConnections["networkConnections"].([]interface{})
+
+	resourceProperties := task.ResourceProperties.(map[string]interface{})
+	if networkConnections, ok := resourceProperties["networkConnections"]; ok {
+		switch networkConnections.(type) {
+		case string:
+			err = json.Unmarshal([]byte(networkConnections.(string)), &networks)
+			if err != nil {
+				return nil, err
+			}
+		default:
+			networks = networkConnections.([]interface{})
+		}
+	}
+
 	return networks, nil
 }
 
