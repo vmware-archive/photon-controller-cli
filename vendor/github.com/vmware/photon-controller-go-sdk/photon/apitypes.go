@@ -729,16 +729,16 @@ type SubnetUpdateSpec struct {
 }
 
 // Identity and Access Management (IAM)
-// IAM Policy entry
-type PolicyEntry struct {
-	Principal string   `json:"principal"`
-	Roles     []string `json:"roles"`
+// IAM role binding
+type RoleBinding struct {
+	Role     string   `json:"role"`
+	Subjects []string `json:"subjects"`
 }
 
-type PolicyDelta struct {
-	Principal string `json:"principal"`
-	Action    string `json:"action"`
-	Role      string `json:"role"`
+type RoleBindingDelta struct {
+	Action  string `json:"action"`
+	Role    string `json:"role"`
+	Subject string `json:"subject"`
 }
 
 type SystemInfo struct {

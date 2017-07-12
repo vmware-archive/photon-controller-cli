@@ -245,7 +245,7 @@ func (api *TenantsAPI) modifyQuota(method string, tenantId string, spec *QuotaSp
 }
 
 // Gets IAM Policy of a tenant.
-func (api *TenantsAPI) GetIam(tenantId string) (policy *[]PolicyEntry, err error) {
+func (api *TenantsAPI) GetIam(tenantId string) (policy []*RoleBinding, err error) {
 	res, err := api.client.restClient.Get(
 		api.client.Endpoint+tenantUrl+"/"+tenantId+"/iam",
 		api.client.options.TokenOptions)
@@ -257,13 +257,12 @@ func (api *TenantsAPI) GetIam(tenantId string) (policy *[]PolicyEntry, err error
 	if err != nil {
 		return
 	}
-	var result []PolicyEntry
-	err = json.NewDecoder(res.Body).Decode(&result)
-	return &result, err
+	err = json.NewDecoder(res.Body).Decode(&policy)
+	return policy, err
 }
 
 // Sets IAM Policy on a tenant.
-func (api *TenantsAPI) SetIam(tenantId string, policy *[]PolicyEntry) (task *Task, err error) {
+func (api *TenantsAPI) SetIam(tenantId string, policy []*RoleBinding) (task *Task, err error) {
 	body, err := json.Marshal(policy)
 	if err != nil {
 		return
@@ -282,7 +281,7 @@ func (api *TenantsAPI) SetIam(tenantId string, policy *[]PolicyEntry) (task *Tas
 }
 
 // Modifies IAM Policy on a tenant.
-func (api *TenantsAPI) ModifyIam(tenantId string, policyDelta *PolicyDelta) (task *Task, err error) {
+func (api *TenantsAPI) ModifyIam(tenantId string, policyDelta []*RoleBindingDelta) (task *Task, err error) {
 	body, err := json.Marshal(policyDelta)
 	if err != nil {
 		return

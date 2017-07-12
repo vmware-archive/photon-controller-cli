@@ -244,16 +244,16 @@ func GetProjectsCommand() cli.Command {
 						ArgsUsage: "<project-id>",
 						Description: "Grant a role to a user or group on a project. \n\n" +
 							"   Example: \n" +
-							"   photon project iam add <project-id> -p user1@photon.local -r contributor\n" +
+							"   photon project iam add <project-id> -p user1@photon.local -r editor\n" +
 							"   photon project iam add <project-id> -p photon.local\\group1 -r viewer",
 						Flags: []cli.Flag{
 							cli.StringFlag{
-								Name:  "principal, p",
+								Name:  "subject, s",
 								Usage: "User or group",
 							},
 							cli.StringFlag{
 								Name:  "role, r",
-								Usage: "'owner', 'contributor' and 'viewer'",
+								Usage: "'owner', 'editor' and 'viewer'",
 							},
 						},
 						Action: func(c *cli.Context) {
@@ -269,16 +269,16 @@ func GetProjectsCommand() cli.Command {
 						ArgsUsage: "<project-id>",
 						Description: "Remove a role from a user or group on a project. \n\n" +
 							"   Example: \n" +
-							"   photon project iam remove <project-id> -p user1@photon.local -r contributor \n" +
+							"   photon project iam remove <project-id> -p user1@photon.local -r editor \n" +
 							"   photon project iam remove <project-id> -p photon.local\\group1 -r viewer",
 						Flags: []cli.Flag{
 							cli.StringFlag{
-								Name:  "principal, p",
+								Name:  "subject, s",
 								Usage: "User or group",
 							},
 							cli.StringFlag{
 								Name:  "role, r",
-								Usage: "'owner', 'contributor' and 'viewer'. Or use '*' to remove all existing roles.",
+								Usage: "'owner', 'editor' and 'viewer'. Or use '*' to remove all existing roles.",
 							},
 						},
 						Action: func(c *cli.Context) {
@@ -716,7 +716,7 @@ func getProjectIam(c *cli.Context) error {
 		return err
 	}
 
-	err = printIamPolicy(*policy, c)
+	err = printIamPolicy(policy, c)
 	if err != nil {
 		return err
 	}
@@ -724,26 +724,26 @@ func getProjectIam(c *cli.Context) error {
 	return nil
 }
 
-// Grant or remove a role from a principal on the specified project
+// Grant or remove a role from a subject on the specified project
 func modifyProjectIamPolicy(c *cli.Context, w io.Writer, action string) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
 	projectID := c.Args()[0]
-	principal := c.String("principal")
+	subject := c.String("subject")
 	role := c.String("role")
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
-		principal, err = askForInput("Principal: ", principal)
+		subject, err = askForInput("Subject: ", subject)
 		if err != nil {
 			return err
 		}
 	}
 
-	if len(principal) == 0 {
-		return fmt.Errorf("Please provide principal")
+	if len(subject) == 0 {
+		return fmt.Errorf("Please provide subject")
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
@@ -763,9 +763,9 @@ func modifyProjectIamPolicy(c *cli.Context, w io.Writer, action string) error {
 		return err
 	}
 
-	var delta photon.PolicyDelta
-	delta = photon.PolicyDelta{Principal: principal, Action: action, Role: role}
-	task, err := client.Photonclient.Projects.ModifyIam(projectID, &delta)
+	var delta []*photon.RoleBindingDelta
+	delta = []*photon.RoleBindingDelta{{Subject: subject, Action: action, Role: role}}
+	task, err := client.Photonclient.Projects.ModifyIam(projectID, delta)
 
 	if err != nil {
 		return err

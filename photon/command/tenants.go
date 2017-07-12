@@ -217,16 +217,16 @@ func GetTenantsCommand() cli.Command {
 						ArgsUsage: "<tenant-id>",
 						Description: "Grant a role to a user or group on a tenant. \n\n" +
 							"   Example: \n" +
-							"   photon tenant iam add <tenant-id> -p user1@photon.local -r contributor\n" +
+							"   photon tenant iam add <tenant-id> -p user1@photon.local -r editor\n" +
 							"   photon tenant iam add <tenant-id> -p photon.local\\group1 -r viewer",
 						Flags: []cli.Flag{
 							cli.StringFlag{
-								Name:  "principal, p",
+								Name:  "subject, s",
 								Usage: "User or group",
 							},
 							cli.StringFlag{
 								Name:  "role, r",
-								Usage: "'owner', 'contributor' and 'viewer'",
+								Usage: "'owner', 'editor' and 'viewer'",
 							},
 						},
 						Action: func(c *cli.Context) {
@@ -242,16 +242,16 @@ func GetTenantsCommand() cli.Command {
 						ArgsUsage: "<tenant-id>",
 						Description: "Remove a role from a user or group on a tenant. \n\n" +
 							"   Example: \n" +
-							"   photon tenant iam remove <tenant-id> -p user1@photon.local -r contributor \n" +
+							"   photon tenant iam remove <tenant-id> -p user1@photon.local -r editor \n" +
 							"   photon tenant iam remove <tenant-id> -p photon.local\\group1 -r viewer",
 						Flags: []cli.Flag{
 							cli.StringFlag{
-								Name:  "principal, p",
+								Name:  "subject, s",
 								Usage: "User or group",
 							},
 							cli.StringFlag{
 								Name:  "role, r",
-								Usage: "'owner', 'contributor' and 'viewer'. Or use '*' to remove all existing roles.",
+								Usage: "'owner', 'editor' and 'viewer'. Or use '*' to remove all existing roles.",
 							},
 						},
 						Action: func(c *cli.Context) {
@@ -625,7 +625,7 @@ func getTenantIam(c *cli.Context) error {
 		return err
 	}
 
-	err = printIamPolicy(*policy, c)
+	err = printIamPolicy(policy, c)
 	if err != nil {
 		return err
 	}
@@ -633,26 +633,26 @@ func getTenantIam(c *cli.Context) error {
 	return nil
 }
 
-// Grant or remove a role from a principal on the specified tenant
+// Grant or remove a role from a subject on the specified tenant
 func modifyTenantIamPolicy(c *cli.Context, w io.Writer, action string) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
 	tenantID := c.Args()[0]
-	principal := c.String("principal")
+	subject := c.String("subject")
 	role := c.String("role")
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
-		principal, err = askForInput("Principal: ", principal)
+		subject, err = askForInput("Subject: ", subject)
 		if err != nil {
 			return err
 		}
 	}
 
-	if len(principal) == 0 {
-		return fmt.Errorf("Please provide principal")
+	if len(subject) == 0 {
+		return fmt.Errorf("Please provide subject")
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
@@ -672,9 +672,9 @@ func modifyTenantIamPolicy(c *cli.Context, w io.Writer, action string) error {
 		return err
 	}
 
-	var delta photon.PolicyDelta
-	delta = photon.PolicyDelta{Principal: principal, Action: action, Role: role}
-	task, err := client.Photonclient.Tenants.ModifyIam(tenantID, &delta)
+	var delta []*photon.RoleBindingDelta
+	delta = []*photon.RoleBindingDelta{{Subject: subject, Action: action, Role: role}}
+	task, err := client.Photonclient.Tenants.ModifyIam(tenantID, delta)
 
 	if err != nil {
 		return err

@@ -158,16 +158,16 @@ func GetImagesCommand() cli.Command {
 						ArgsUsage: "<image-id>",
 						Description: "Grant a role to a user or group on an image. \n\n" +
 							"   Example: \n" +
-							"   photon image iam add <image-id> -p user1@photon.local -r contributor\n" +
+							"   photon image iam add <image-id> -p user1@photon.local -r editor\n" +
 							"   photon image iam add <image-id> -p photon.local\\group1 -r viewer",
 						Flags: []cli.Flag{
 							cli.StringFlag{
-								Name:  "principal, p",
+								Name:  "subject, s",
 								Usage: "User or group",
 							},
 							cli.StringFlag{
 								Name:  "role, r",
-								Usage: "'owner', 'contributor' and 'viewer'",
+								Usage: "'owner', 'editor' and 'viewer'",
 							},
 						},
 						Action: func(c *cli.Context) {
@@ -183,16 +183,16 @@ func GetImagesCommand() cli.Command {
 						ArgsUsage: "<image-id>",
 						Description: "Remove a role from a user or group on an image. \n\n" +
 							"   Example: \n" +
-							"   photon image iam remove <image-id> -p user1@photon.local -r contributor \n" +
+							"   photon image iam remove <image-id> -p user1@photon.local -r editor \n" +
 							"   photon image iam remove <image-id> -p photon.local\\group1 -r viewer",
 						Flags: []cli.Flag{
 							cli.StringFlag{
-								Name:  "principal, p",
+								Name:  "subject, s",
 								Usage: "User or group",
 							},
 							cli.StringFlag{
 								Name:  "role, r",
-								Usage: "'owner', 'contributor' and 'viewer'. Or use '*' to remove all existing roles.",
+								Usage: "'owner', 'editor' and 'viewer'. Or use '*' to remove all existing roles.",
 							},
 						},
 						Action: func(c *cli.Context) {
@@ -535,7 +535,7 @@ func getImageIam(c *cli.Context) error {
 		return err
 	}
 
-	err = printIamPolicy(*policy, c)
+	err = printIamPolicy(policy, c)
 	if err != nil {
 		return err
 	}
@@ -543,26 +543,26 @@ func getImageIam(c *cli.Context) error {
 	return nil
 }
 
-// Grant or remove a role from a principal on the specified image
+// Grant or remove a role from a subject on the specified image
 func modifyImageIamPolicy(c *cli.Context, w io.Writer, action string) error {
 	err := checkArgCount(c, 1)
 	if err != nil {
 		return err
 	}
 	imageID := c.Args()[0]
-	principal := c.String("principal")
+	subject := c.String("subject")
 	role := c.String("role")
 
 	if !c.GlobalIsSet("non-interactive") {
 		var err error
-		principal, err = askForInput("Principal: ", principal)
+		subject, err = askForInput("Subject: ", subject)
 		if err != nil {
 			return err
 		}
 	}
 
-	if len(principal) == 0 {
-		return fmt.Errorf("Please provide principal")
+	if len(subject) == 0 {
+		return fmt.Errorf("Please provide subject")
 	}
 
 	if !c.GlobalIsSet("non-interactive") {
@@ -582,9 +582,9 @@ func modifyImageIamPolicy(c *cli.Context, w io.Writer, action string) error {
 		return err
 	}
 
-	var delta photon.PolicyDelta
-	delta = photon.PolicyDelta{Principal: principal, Action: action, Role: role}
-	task, err := client.Photonclient.Images.ModifyIam(imageID, &delta)
+	var delta []*photon.RoleBindingDelta
+	delta = []*photon.RoleBindingDelta{{Subject: subject, Action: action, Role: role}}
+	task, err := client.Photonclient.Images.ModifyIam(imageID, delta)
 
 	if err != nil {
 		return err

@@ -349,7 +349,7 @@ func (api *ProjectsAPI) modifyQuota(method string, projectId string, spec *Quota
 }
 
 // Gets IAM Policy of a project.
-func (api *ProjectsAPI) GetIam(projectId string) (policy *[]PolicyEntry, err error) {
+func (api *ProjectsAPI) GetIam(projectId string) (policy []*RoleBinding, err error) {
 	res, err := api.client.restClient.Get(
 		api.client.Endpoint+projectUrl+projectId+"/iam",
 		api.client.options.TokenOptions)
@@ -361,13 +361,12 @@ func (api *ProjectsAPI) GetIam(projectId string) (policy *[]PolicyEntry, err err
 	if err != nil {
 		return
 	}
-	var result []PolicyEntry
-	err = json.NewDecoder(res.Body).Decode(&result)
-	return &result, err
+	err = json.NewDecoder(res.Body).Decode(&policy)
+	return policy, err
 }
 
 // Sets IAM Policy on a project.
-func (api *ProjectsAPI) SetIam(projectId string, policy *[]PolicyEntry) (task *Task, err error) {
+func (api *ProjectsAPI) SetIam(projectId string, policy []*RoleBinding) (task *Task, err error) {
 	body, err := json.Marshal(policy)
 	if err != nil {
 		return
@@ -386,7 +385,7 @@ func (api *ProjectsAPI) SetIam(projectId string, policy *[]PolicyEntry) (task *T
 }
 
 // Modifies IAM Policy on a project.
-func (api *ProjectsAPI) ModifyIam(projectId string, policyDelta *PolicyDelta) (task *Task, err error) {
+func (api *ProjectsAPI) ModifyIam(projectId string, policyDelta []*RoleBindingDelta) (task *Task, err error) {
 	body, err := json.Marshal(policyDelta)
 	if err != nil {
 		return

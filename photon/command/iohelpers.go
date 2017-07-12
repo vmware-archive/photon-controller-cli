@@ -218,20 +218,20 @@ func printTaskList(taskList []photon.Task, c *cli.Context) error {
 }
 
 // Prints out IAM policy
-func printIamPolicy(policy []photon.PolicyEntry, c *cli.Context) error {
+func printIamPolicy(policy []*photon.RoleBinding, c *cli.Context) error {
 	if c.GlobalIsSet("non-interactive") {
 		for _, entry := range policy {
-			fmt.Printf("%s\t%s\n", entry.Principal, entry.Roles)
+			fmt.Printf("%s\t%s\n", entry.Role, entry.Subjects)
 		}
 	} else if utils.NeedsFormatting(c) {
 		utils.FormatObjects(policy, os.Stdout, c)
 	} else {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 4, 4, 2, ' ', 0)
-		fmt.Fprintf(w, "\nPrincipal\tRoles\n")
+		fmt.Fprintf(w, "Role\tSubjects\n")
 
 		for _, entry := range policy {
-			fmt.Fprintf(w, "%s\t%s\n", entry.Principal, entry.Roles)
+			fmt.Fprintf(w, "%s\t%s\n", entry.Role, entry.Subjects)
 			err := w.Flush()
 			if err != nil {
 				return err
