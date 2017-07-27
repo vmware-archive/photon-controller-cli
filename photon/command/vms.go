@@ -49,6 +49,9 @@ import (
 //      create-image; Usage: vm create-image <id> [<options>]
 //      aquire-floating-ip; Usage: vm aquare-floating-ip <id> [<options>]
 //      release-floating-ip; Usage: vm release-floating-ip <id> [<options>]
+//      iam show;  Usage: vm iam show <id> [<options>]
+//      iam add; Usage: vm iam add <id> [<options>]
+//      iam remove; Usage: vm iam remove <id> [<options>]
 func GetVMCommand() cli.Command {
 	command := cli.Command{
 		Name:  "vm",
@@ -416,6 +419,73 @@ func GetVMCommand() cli.Command {
 					if err != nil {
 						log.Fatal(err)
 					}
+				},
+			},
+			{
+				Name:  "iam",
+				Usage: "Options for identity and access management",
+				Subcommands: []cli.Command{
+					{
+						Name:      "show",
+						Usage:     "Show the IAM policy associated with a VM",
+						ArgsUsage: "<vm-id>",
+						Action: func(c *cli.Context) {
+							err := getVMIam(c)
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name:      "add",
+						Usage:     "Grant a role to a user or group on a VM",
+						ArgsUsage: "<vm-id>",
+						Description: "Grant a role to a user or group on a VM. \n\n" +
+							"   Example: \n" +
+							"   photon vm iam add <vm-id> -s user1@photon.local -r editor\n" +
+							"   photon vm iam add <vm-id> -s photon.local\\group1 -r viewer",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "subject, s",
+								Usage: "User or group",
+							},
+							cli.StringFlag{
+								Name:  "role, r",
+								Usage: "'owner', 'editor' and 'viewer'",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := modifyVMIamPolicy(c, os.Stdout, "ADD")
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name:      "remove",
+						Usage:     "Remove a role from a user or group on a VM",
+						ArgsUsage: "<vm-id>",
+						Description: "Remove a role from a user or group on a VM. \n\n" +
+							"   Example: \n" +
+							"   photon vm iam remove <vm-id> -s user1@photon.local -r editor \n" +
+							"   photon vm iam remove <vm-id> -s photon.local\\group1 -r viewer",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "subject, s",
+								Usage: "User or group",
+							},
+							cli.StringFlag{
+								Name:  "role, r",
+								Usage: "'owner', 'editor' and 'viewer'. Or use '*' to remove all existing roles.",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := modifyVMIamPolicy(c, os.Stdout, "REMOVE")
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
 				},
 			},
 		},
@@ -1359,5 +1429,94 @@ func formatHelper(c *cli.Context, w io.Writer, client *photon.Client, id string)
 		}
 		utils.FormatObject(vm, w, c)
 	}
+	return nil
+}
+
+// Retrieves IAM Policy for specified VM
+func getVMIam(c *cli.Context) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	policy, err := client.Photonclient.VMs.GetIam(id)
+	if err != nil {
+		return err
+	}
+
+	err = printIamPolicy(policy, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Grant or remove a role from a subject on the specified image
+func modifyVMIamPolicy(c *cli.Context, w io.Writer, action string) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args()[0]
+	subject := c.String("subject")
+	role := c.String("role")
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		subject, err = askForInput("Subject: ", subject)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(subject) == 0 {
+		return fmt.Errorf("Please provide a subject")
+	}
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		role, err = askForInput("Role: ", role)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(role) == 0 {
+		return fmt.Errorf("Please provide a role")
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	var delta []*photon.RoleBindingDelta
+	delta = []*photon.RoleBindingDelta{{Subject: subject, Action: action, Role: role}}
+	task, err := client.Photonclient.VMs.ModifyIam(id, delta)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		policy, err := client.Photonclient.VMs.GetIam(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(policy, w, c)
+	}
+
 	return nil
 }
