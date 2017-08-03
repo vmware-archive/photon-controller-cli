@@ -32,6 +32,9 @@ import (
 //              show;   Usage: disk show <id>
 //              list;   Usage: disk list [<options>]
 //              tasks;  Usage: disk tasks <id> [<options>]
+//      	iam show;  Usage: disk iam show <id> [<options>]
+//              iam add; Usage: disk iam add <id> [<options>]
+//              iam remove; Usage: disk iam remove <id> [<options>]
 func GetDiskCommand() cli.Command {
 	command := cli.Command{
 		Name:  "disk",
@@ -151,6 +154,73 @@ func GetDiskCommand() cli.Command {
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
+				},
+			},
+			{
+				Name:  "iam",
+				Usage: "Options for identity and access management",
+				Subcommands: []cli.Command{
+					{
+						Name:      "show",
+						Usage:     "Show the IAM policy associated with a disk",
+						ArgsUsage: "<disk-id>",
+						Action: func(c *cli.Context) {
+							err := getDiskIam(c)
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name:      "add",
+						Usage:     "Grant a role to a user or group on a disk",
+						ArgsUsage: "<disk-id>",
+						Description: "Grant a role to a user or group on a disk. \n\n" +
+							"   Example: \n" +
+							"   photon disk iam add <disk-id> -s user1@photon.local -r editor\n" +
+							"   photon disk iam add <disk-id> -s photon.local\\group1 -r viewer",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "subject, s",
+								Usage: "User or group",
+							},
+							cli.StringFlag{
+								Name:  "role, r",
+								Usage: "'owner', 'editor' and 'viewer'",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := modifyDiskIamPolicy(c, os.Stdout, "ADD")
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name:      "remove",
+						Usage:     "Remove a role from a user or group on a disk",
+						ArgsUsage: "<disk-id>",
+						Description: "Remove a role from a user or group on a disk. \n\n" +
+							"   Example: \n" +
+							"   photon disk iam remove <disk-id> -s user1@photon.local -r editor \n" +
+							"   photon disk iam remove <disk-id> -s photon.local\\group1 -r viewer",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "subject, s",
+								Usage: "User or group",
+							},
+							cli.StringFlag{
+								Name:  "role, r",
+								Usage: "'owner', 'editor' and 'viewer'. Or use '*' to remove all existing roles.",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := modifyDiskIamPolicy(c, os.Stdout, "REMOVE")
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
 				},
 			},
 		},
@@ -428,6 +498,95 @@ func getDiskTasks(c *cli.Context, w io.Writer) error {
 		}
 	} else {
 		utils.FormatObjects(taskList, w, c)
+	}
+
+	return nil
+}
+
+// Retrieves IAM Policy for specified disk
+func getDiskIam(c *cli.Context) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	policy, err := client.Photonclient.Disks.GetIam(id)
+	if err != nil {
+		return err
+	}
+
+	err = printIamPolicy(policy, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Grant or remove a role from a subject on the specified disk
+func modifyDiskIamPolicy(c *cli.Context, w io.Writer, action string) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args()[0]
+	subject := c.String("subject")
+	role := c.String("role")
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		subject, err = askForInput("Subject: ", subject)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(subject) == 0 {
+		return fmt.Errorf("Please provide a subject")
+	}
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		role, err = askForInput("Role: ", role)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(role) == 0 {
+		return fmt.Errorf("Please provide a role")
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	var delta []*photon.RoleBindingDelta
+	delta = []*photon.RoleBindingDelta{{Subject: subject, Action: action, Role: role}}
+	task, err := client.Photonclient.Disks.ModifyIam(id, delta)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		policy, err := client.Photonclient.Disks.GetIam(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(policy, w, c)
 	}
 
 	return nil
