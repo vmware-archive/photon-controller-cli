@@ -29,6 +29,9 @@ import (
 //              show;   Usage: flavor show <id>
 //              list;   Usage: flavor list [<options>]
 //              tasks;  Usage: flavor tasks <id> [<options>]
+//      	    iam show;  Usage: flavor iam show <id> [<options>]
+//              iam add; Usage: flavor iam add <id> [<options>]
+//              iam remove; Usage: flavor iam remove <id> [<options>]
 func GetFlavorsCommand() cli.Command {
 	command := cli.Command{
 		Name:  "flavor",
@@ -134,6 +137,73 @@ func GetFlavorsCommand() cli.Command {
 					if err != nil {
 						log.Fatal("Error: ", err)
 					}
+				},
+			},
+			{
+				Name:  "iam",
+				Usage: "Options for identity and access management",
+				Subcommands: []cli.Command{
+					{
+						Name:      "show",
+						Usage:     "Show the IAM policy associated with a flavor",
+						ArgsUsage: "<flavor-id>",
+						Action: func(c *cli.Context) {
+							err := getFlavorIam(c)
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name:      "add",
+						Usage:     "Grant a role to a user or group on a flavor",
+						ArgsUsage: "<flavor-id>",
+						Description: "Grant a role to a user or group on a flavor. \n\n" +
+							"   Example: \n" +
+							"   photon flavor iam add <flavor-id> -s user1@photon.local -r editor\n" +
+							"   photon flavor iam add <flavor-id> -s photon.local\\group1 -r viewer",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "subject, s",
+								Usage: "User or group",
+							},
+							cli.StringFlag{
+								Name:  "role, r",
+								Usage: "'owner', 'editor' and 'viewer'",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := modifyFlavorIamPolicy(c, os.Stdout, "ADD")
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
+					{
+						Name:      "remove",
+						Usage:     "Remove a role from a user or group on a flavor",
+						ArgsUsage: "<flavor-id>",
+						Description: "Remove a role from a user or group on a flavor. \n\n" +
+							"   Example: \n" +
+							"   photon flavor iam remove <flavor-id> -s user1@photon.local -r editor \n" +
+							"   photon flavor iam remove <flavor-id> -s photon.local\\group1 -r viewer",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:  "subject, s",
+								Usage: "User or group",
+							},
+							cli.StringFlag{
+								Name:  "role, r",
+								Usage: "'owner', 'editor' and 'viewer'. Or use '*' to remove all existing roles.",
+							},
+						},
+						Action: func(c *cli.Context) {
+							err := modifyFlavorIamPolicy(c, os.Stdout, "REMOVE")
+							if err != nil {
+								log.Fatal("Error: ", err)
+							}
+						},
+					},
 				},
 			},
 		},
@@ -360,5 +430,94 @@ func getFlavorTasks(c *cli.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// Retrieves IAM Policy for specified flavor
+func getFlavorIam(c *cli.Context) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args().First()
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	policy, err := client.Photonclient.Flavors.GetIam(id)
+	if err != nil {
+		return err
+	}
+
+	err = printIamPolicy(policy, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Grant or remove a role from a subject on the specified flavor
+func modifyFlavorIamPolicy(c *cli.Context, w io.Writer, action string) error {
+	err := checkArgCount(c, 1)
+	if err != nil {
+		return err
+	}
+	id := c.Args()[0]
+	subject := c.String("subject")
+	role := c.String("role")
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		subject, err = askForInput("Subject: ", subject)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(subject) == 0 {
+		return fmt.Errorf("Please provide a subject")
+	}
+
+	if !c.GlobalIsSet("non-interactive") {
+		var err error
+		role, err = askForInput("Role: ", role)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(role) == 0 {
+		return fmt.Errorf("Please provide a role")
+	}
+
+	client.Photonclient, err = client.GetClient(c)
+	if err != nil {
+		return err
+	}
+
+	var delta []*photon.RoleBindingDelta
+	delta = []*photon.RoleBindingDelta{{Subject: subject, Action: action, Role: role}}
+	task, err := client.Photonclient.Flavors.ModifyIam(id, delta)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = waitOnTaskOperation(task.ID, c)
+	if err != nil {
+		return err
+	}
+
+	if utils.NeedsFormatting(c) {
+		policy, err := client.Photonclient.Flavors.GetIam(id)
+		if err != nil {
+			return err
+		}
+		utils.FormatObject(policy, w, c)
+	}
+
 	return nil
 }
